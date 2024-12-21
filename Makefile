@@ -38,7 +38,7 @@ OS = $(TOOLCHAIN)/bin/arm-none-eabi-size
 
 # Assembly directives.
 ASFLAGS += -c
-ASFLAGS += -O0
+ASFLAGS += -g
 ASFLAGS += -mcpu=$(MCU_SPEC)
 ASFLAGS += -mthumb
 ASFLAGS += -Wall
@@ -68,7 +68,7 @@ LFLAGS += -lgcc
 LFLAGS += -T$(LSCRIPT)
 
 AS_SRC   =  ./boot_code/$(MCU_FILE)_core.S
-AS_SRC   += ./vector_tables/$(MCU_FILE)_vtable.S
+AS_SRC   += ./vector_tables/$(MCU_FILE)_vt.S
 C_SRC    =  ./src/global.c ./src/main.c ./src/nvic.c
 
 INCLUDE  =  -I./

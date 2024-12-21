@@ -30,7 +30,7 @@ vtable:
   .word pending_SV_handler
   .word SysTick_handler
   // 16-31
-  .word window_watchdog_IRQ_handler
+  .word WWD_IRQ_handler
   .word PVD_IRQ_handler
   .word RTC_IRQ_handler
   .word flash_IRQ_handler
@@ -84,8 +84,8 @@ vtable:
   .thumb_set pending_SV_handler,default_interrupt_handler
   .weak SysTick_handler
   .thumb_set SysTick_handler,default_interrupt_handler
-  .weak window_watchdog_IRQ_handler
-  .thumb_set window_watchdog_IRQ_handler,default_interrupt_handler
+  .weak WWD_IRQ_handler
+  .thumb_set WWD_IRQ_handler,default_interrupt_handler
   .weak PVD_IRQ_handler
   .thumb_set PVD_IRQ_handler,default_interrupt_handler
   .weak RTC_IRQ_handler
