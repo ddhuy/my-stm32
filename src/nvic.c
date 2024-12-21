@@ -8,15 +8,14 @@
 #include "nvic.h"
 
 
-void EXTI0_1_IRQ_handler(void)
+void EXTI0_IRQHandler(void)
 {
-	led_on = led_on ? 1 : 0;
     // Check that EXTI1 (or 0?) is the line that triggered
     if (EXTI->PR & EXTI_PR_PR0) {
     	// If it was, write 1 to clear the interrupt flag.
     	EXTI->PR |= EXTI_PR_PR0;
     	// If you are using a button, toggle the LED state:
-//    	GPIOG->ODR ^= GPIO_OTYPER_OT13;
-    	led_on = !led_on;
+    	GPIOG->ODR ^= GPIO_OTYPER_OT13;
+//    	led_on = !led_on;
     }
 }

@@ -56,15 +56,15 @@ void init_syscfg(void)
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 	// Set SYSCFG to connect to the button EXTI line to PA0.
 	SYSCFG->EXTICR[SYSCFG_EXTICR1_EXTI0_Pos / 4] &= ~SYSCFG_EXTICR1_EXTI0_Msk;
-//	SYSCFG->EXTICR[SYSCFG_EXTICR1_EXTI0_Pos / 4] |=  SYSCFG_EXTICR1_EXTI0_PA;
+	SYSCFG->EXTICR[SYSCFG_EXTICR1_EXTI0_Pos / 4] |=  SYSCFG_EXTICR1_EXTI0_PA;
 	// Setup the button's EXTI line as an interrupt.
 	EXTI->IMR |= EXTI_IMR_IM0;
 	// Disable the 'rising edge' trigger (button release).
-	EXTI->RTSR |=  EXTI_RTSR_TR0;
-	// Disable the 'falling edge' trigger (button press).
-	EXTI->FTSR &= ~EXTI_FTSR_TR0;
+	EXTI->RTSR &= ~EXTI_RTSR_TR0;
+	// Enable the 'falling edge' trigger (button press).
+	EXTI->FTSR |=  EXTI_FTSR_TR0;
 	// Enable the NVIC interrupt at minimum priority
-	NVIC_SetPriority(EXTI0_IRQn, 1);
+	NVIC_SetPriority(EXTI0_IRQn, 0);
 	NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
@@ -80,9 +80,9 @@ int main(void)
 	init_led3();
 	// main program logic
 	while (1) {
-		if (led_on)
-			GPIOB->ODR |= GPIO_OTYPER_OT13;
-		else
-			GPIOB->ODR &= GPIO_OTYPER_OT13;
+//		if (led_on)
+//			GPIOB->ODR |= GPIO_OTYPER_OT13;
+//		else
+//			GPIOB->ODR &= ~GPIO_OTYPER_OT13;
 	}
 }

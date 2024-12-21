@@ -1,18 +1,22 @@
-// These instructions define attributes of our chip and
-// the assembly language we'll use:
+/**
+ * These instructions define attributes of our chip and
+ * the assembly language we'll use:
+ */
 .syntax unified
 .cpu cortex-m4
 .fpu softvfp
 .thumb
 
-// Global memory locations
-.global reset_handler
+
+/* Global memory locations */
+.global Reset_Handler
+
 
 /*
  * The Reset handler. Called on reset.
  */
-.type reset_handler, %function
-reset_handler:
+.type Reset_Handler, %function
+Reset_Handler:
     // Set the stack pointer to the end of the stack.
     // The '_estack' value is defined in our linker script.
     ldr r0, =_estack
@@ -20,7 +24,7 @@ reset_handler:
 
     // Copy data from flash to RAM data init section.
     // R2 will store our progress along the sidata section.
-    mov r0, #0
+    movs r0, #0
     // Load the start/end address of the data section,
     // and the start of the data init section
     ldr r1, =_sdata
@@ -61,5 +65,5 @@ reset_handler:
     // Branch to the 'main' method.
     b main
 
-.size reset_handler, .-reset_handler
+.size Reset_Handler, .-Reset_Handler
 

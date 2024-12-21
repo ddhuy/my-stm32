@@ -1,5 +1,5 @@
 /* Label for the program's entry point */
-ENTRY(reset_handler)
+ENTRY(Reset_Handler)
 
 
 /* End of RAM -> Start of Stack */
@@ -23,20 +23,18 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 
 MEMORY
 {
-	FLASH (rx)     : ORIGIN = 0x08000000, LENGTH = 2M
-	RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 192K
-	MEMORY_B1 (rx) : ORIGIN = 0x60000000, LENGTH = 0K
-	CCMRAM (rw)    : ORIGIN = 0x10000000, LENGTH = 64K
+	FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 2M
+	SRAM (xrw) : ORIGIN = 0x20000000, LENGTH = 192K
 }
 
 
 SECTIONS
 {
 	/* The vector table goes at the start of flash. */
-	.vector_table :
+	.isr_vector :
 	{
 		. = ALIGN(4);
-		KEEP (*(.vector_table))
+		KEEP (*(.isr_vector))
 		. = ALIGN(4);
 	} >FLASH
 
@@ -66,35 +64,33 @@ SECTIONS
 	 * things like variables, which can change.
 	 */
 	_sidata = .;
-	.data :
+	.data : AT(_sidata)
 	{
 		. = ALIGN(4);
 		/* Mark start/end locations for the 'data' section. */
 		_sdata = .;
 		*(.data)
 		*(.data*)
-		. = ALIGN(4);
 		_edata = .;
-	} >RAM AT> FLASH
+		. = ALIGN(4);
+	} >SRAM
 
 
 	/* The 'bss' section is similar to the 'data' section,
 	 * but its space is initialied to all 0s at the start
 	 * of the program.
 	 */
-	. = ALIGN(4);
 	.bss :
 	{
+		. = ALIGN(4);
 		/* Also mark the start/end of the BSS section. */
 		_sbss = .;
-		__bss_start__ = _sbss;
 		*(.bss)
 		*(.bss*)
 		*(COMMON)
 		. = ALIGN(4);
 		_ebss = .;
-		__bss_end__ = _ebss;
-	} >RAM
+	} >SRAM
 
 	
 	/* Space set aside for application's heap/stack
@@ -102,10 +98,10 @@ SECTIONS
 	.dynamic_allocations :
 	{
 		. = ALIGN(4);
-		PROVIDE ( end = . );
-		PROVIDE ( _end = . );
+		_ssystem_ram = .;
 		. = . + _Min_Heap_Size;
 		. = . + _Min_Stack_Size;
 		. = ALIGN(4);
-	} >RAM
+		_esystem_ram = .;
+	} >SRAM
 }

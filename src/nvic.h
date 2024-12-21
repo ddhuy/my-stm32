@@ -10,6 +10,6 @@
 
 #include "global.h"
 
-//void EXTI0_1_IRQ_handler(void);
+void EXTI0_IRQHandler(void);
 
 #endif // _VVC_NVIC_H_
