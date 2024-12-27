@@ -70,19 +70,54 @@ void init_syscfg(void)
 
 
 /****
+ * Initial clock setup.
+ */
+void init_sysclock(void)
+{
+	// Reset the Flash 'Access Control Register', and
+	// then set 1 wait-state and enable the pre-fetch buffer.
+	FLASH->ACR &= ~(FLASH_ACR_LATENCY | FLASH_ACR_PRFTEN);
+	FLASH->ACR |= (FLASH_ACR_LATENCY | FLASH_ACR_PRFTEN);
+	// Configure the PLL to (HSI / 2) * 12 = 48MHz.
+	// Use a PLLMUL of 0xA for *12, and keep PLLSRC at 0
+	// to use (HSI / PREDIV) as the core source. HSI = 8MHz.
+//	RCC->CFGR &= ~(RCC_CFGR_PLLMUL | RCC_PLLCFGR_PLLSRC);
+//	RCC->CFGR |= (RCC_CFGR_PLLSRC_HSI_DIV2 | RCC_CFGR_PLLMUL12);
+	// Turn the PLL on and wait for it to be ready.
+	RCC->CR |= (RCC_CR_PLLON);
+	while (!(RCC->CR & RCC_CR_PLLRDY)) {};
+	// Select the PLL as the system clock source.
+	RCC->CFGR &= ~(RCC_CFGR_SW);
+	RCC->CFGR |= (RCC_CFGR_SW_PLL);
+	while (!(RCC->CFGR & RCC_CFGR_SWS_PLL)) {};
+	// Set the global clock speed variable.
+	core_clock_hz = 48000000;
+}
+
+
+/****
  * Main program.
  */
 int main(void)
 {
 	// setup STM32F4-DISC USR_BUTTON & LED3
+	init_sysclock();
 	init_syscfg();
 	init_button();
 	init_led3();
+
+	// Enable the TIM2 clock.
+	RCC->APB1ENR |= RCC_APB1ENR_TIM12EN;
+	// Enable the NVIC interrupt for TIM2.
+	// (Timer peripheral initialized and used elsewhere)
+	NVIC_SetPriority(TIM2_IRQn, 0x01);
+	NVIC_EnableIRQ(TIM2_IRQn);
+
 	// main program logic
 	while (1) {
 //		if (led_on)
-//			GPIOB->ODR |= GPIO_OTYPER_OT13;
+//			GPIOG->ODR |= GPIO_OTYPER_OT13;
 //		else
-//			GPIOB->ODR &= ~GPIO_OTYPER_OT13;
+//			GPIOG->ODR &= ~GPIO_OTYPER_OT13;
 	}
 }
