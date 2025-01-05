@@ -1,69 +1,116 @@
 /**
- * These instructions define attributes of our chip and
- * the assembly language we'll use:
- */
-.syntax unified
-.cpu cortex-m4
-.fpu softvfp
-.thumb
+  ******************************************************************************
+  * @file      startup_stm32f429xx.s
+  * @author    MCD Application Team
+  * @brief     STM32F429xx Devices vector table for GCC based toolchains.
+  *            This module performs:
+  *                - Set the initial SP
+  *                - Set the initial PC == Reset_Handler,
+  *                - Set the vector table entries with the exceptions ISR address
+  *                - Branches to main in the C library (which eventually
+  *                  calls main()).
+  *            After Reset the Cortex-M4 processor is in Thread mode,
+  *            priority is Privileged, and the Stack is set to Main.
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
 
+  .syntax unified
+  .cpu cortex-m4
+  .fpu softvfp
+  .thumb
 
-/* Global memory locations */
-.global Reset_Handler
+.global  g_pfnVectors
+.global  Default_Handler
 
+/* start address for the initialization values of the .data section.
+defined in linker script */
+.word  _sidata
+/* start address for the .data section. defined in linker script */
+.word  _sdata
+/* end address for the .data section. defined in linker script */
+.word  _edata
+/* start address for the .bss section. defined in linker script */
+.word  _sbss
+/* end address for the .bss section. defined in linker script */
+.word  _ebss
+/* stack used for SystemInit_ExtMemCtl; always internal RAM used */
 
-/*
- * The Reset handler. Called on reset.
- */
-.type Reset_Handler, %function
+/**
+ * @brief  This is the code that gets called when the processor first
+ *          starts execution following a reset event. Only the absolutely
+ *          necessary set is performed, after which the application
+ *          supplied main() routine is called.
+ * @param  None
+ * @retval : None
+*/
+
+    .section  .text.Reset_Handler
+  .weak  Reset_Handler
+  .type  Reset_Handler, %function
 Reset_Handler:
-    // Set the stack pointer to the end of the stack.
-    // The '_estack' value is defined in our linker script.
-    ldr r0, =_estack
-    mov sp, r0
+  ldr   sp, =_estack       /* set stack pointer */
 
-    // Copy data from flash to RAM data init section.
-    // R2 will store our progress along the sidata section.
-    movs r0, #0
-    // Load the start/end address of the data section,
-    // and the start of the data init section
-    ldr r1, =_sdata
-    ldr r2, =_edata
-    ldr r3, =_sidata
-    b copy_sidata_loop
+/* Call the clock system initialization function.*/
+  bl  SystemInit
 
-    copy_sidata:
-        // Offset the data init section by our copy progress.
-        ldr r4, [r3, r0]
-        // Copy the current word into data, and increment
-        str r4, [r1, r0]
-        adds r0, r0, #4
-    copy_sidata_loop:
-        // Unless we've copied the whole data section, copy the
-        // next word from sidata->data.
-        adds r4, r0, r1
-        cmp r4, r2
-        bcc copy_sidata
+/* Copy the data segment initializers from flash to SRAM */
+  ldr r0, =_sdata
+  ldr r1, =_edata
+  ldr r2, =_sidata
+  movs r3, #0
+  b LoopCopyDataInit
 
-    // Once we are done copying the data section into RAM,
-    // move on to filling the BSS section with 0s
-    movs r0, #0
-    ldr r1, =_sbss
-    ldr r2, =_ebss
-    b reset_bss_loop
+CopyDataInit:
+  ldr r4, [r2, r3]
+  str r4, [r0, r3]
+  adds r3, r3, #4
 
-    // Fill the BSS segment with '0's.
-    reset_bss:
-        // Store a 0 and increment by a word
-        str r0, [r1]
-        adds r1, r1, #4
+LoopCopyDataInit:
+  adds r4, r0, r3
+  cmp r4, r1
+  bcc CopyDataInit
 
-    reset_bss_loop:
-        cmp r1, r2
-        bcc reset_bss
+/* Zero fill the bss segment. */
+  ldr r2, =_sbss
+  ldr r4, =_ebss
+  movs r3, #0
+  b LoopFillZerobss
 
-    // Branch to the 'main' method.
-    b main
+FillZerobss:
+  str  r3, [r2]
+  adds r2, r2, #4
 
-.size Reset_Handler, .-Reset_Handler
+LoopFillZerobss:
+  cmp r2, r4
+  bcc FillZerobss
 
+/* Call static constructors */
+/*    bl __libc_init_array */
+/* Call the application's entry point.*/
+  bl  main
+  bx  lr
+.size  Reset_Handler, .-Reset_Handler
+
+
+/**
+ * @brief  This is the code that gets called when the processor receives an
+ *         unexpected interrupt.  This simply enters an infinite loop, preserving
+ *         the system state for examination by a debugger.
+ * @param  None
+ * @retval None
+*/
+  .section .text.Default_Handler,"ax",%progbits
+Default_Handler:
+Infinite_Loop:
+  b  Infinite_Loop
+  .size  Default_Handler, .-Default_Handler
