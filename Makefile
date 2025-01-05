@@ -1,3 +1,5 @@
+BUILD_DIR = output
+
 # Default target chip. Only leave one of these un-commented.
 MCU ?= STM32F429I
 ifeq ($(MCU), STM32F429I)
@@ -79,30 +81,6 @@ INCLUDE  =  -I./ \
 	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
 
 
-TFT_LCD_SRCS  = apps/tft_lcd/main.c
-TFT_LCD_OBJS  = $(TFT_LCD_SRCS:.c=.o)
-
-tft_lcd: tft_lcd.bin
-tft_lcd.elf: $(AS_OBJS) $(TFT_LCD_OBJS)
-	$(CC) $^ $(LFLAGS) -o $@
-tft_lcd.bin: tft_lcd.elf
-	$(OC) -S -O binary $< $@
-	$(OS) $<
-
-
-ISR_BUTTON_SRCS  = apps/isr_button/global.c \
-                   apps/isr_button/main.c \
-                   apps/isr_button/nvic.c
-ISR_BUTTON_OBJS  = $(ISR_BUTTON_SRCS:.c=.o)
-
-isr_button: isr_button.bin
-isr_button.elf: $(AS_OBJS) $(ISR_BUTTON_OBJS)
-	$(CC) $^ $(LFLAGS) -o $@
-isr_button.bin: isr_button.elf
-	$(OC) -S -O binary $< $@
-	$(OS) $<
-
-
 .PHONY: all
 all: isr_button tft_lcd
 
@@ -110,5 +88,32 @@ all: isr_button tft_lcd
 .PHONY: clean
 clean:
 	rm -f $(AS_OBJS) $(TFT_LCD_OBJS) $(ISR_BUTTON_OBJS)
-	rm -f *.elf *.bin
-	
+	rm -rf $(BUILD_DIR)/
+
+
+ISR_BUTTON_SRCS  = apps/isr_button/global.c \
+                   apps/isr_button/main.c \
+                   apps/isr_button/nvic.c
+ISR_BUTTON_OBJS  = $(ISR_BUTTON_SRCS:.c=.o)
+
+.PHONY: isr_button
+isr_button: $(BUILD_DIR)/isr_button.bin
+$(BUILD_DIR)/isr_button.elf: $(AS_OBJS) $(ISR_BUTTON_OBJS)
+	mkdir -p $(BUILD_DIR)/
+	$(CC) $^ $(LFLAGS) -o $@
+$(BUILD_DIR)/isr_button.bin: $(BUILD_DIR)/isr_button.elf
+	$(OC) -S -O binary $< $@
+	$(OS) $<
+
+
+TFT_LCD_SRCS  = apps/tft_lcd/main.c
+TFT_LCD_OBJS  = $(TFT_LCD_SRCS:.c=.o)
+
+.PHONY: tft_lcd
+tft_lcd: $(BUILD_DIR)/tft_lcd.bin
+$(BUILD_DIR)/tft_lcd.elf: $(AS_OBJS) $(TFT_LCD_OBJS)
+	mkdir -p $(BUILD_DIR)/
+	$(CC) $^ $(LFLAGS) -o $@
+$(BUILD_DIR)/tft_lcd.bin: $(BUILD_DIR)/tft_lcd.elf
+	$(OC) -S -O binary $< $@
+	$(OS) $<
