@@ -10,7 +10,6 @@
 
 #include "global.h"
 #include "nvic.h"
-#include "peripherals.h"
 
 
 #endif // _VVC_MAIN_H_

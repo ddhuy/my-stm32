@@ -1,5 +1,3 @@
-TARGET = main
-
 # Default target chip. Only leave one of these un-commented.
 MCU ?= STM32F429I
 ifeq ($(MCU), STM32F429I)
@@ -67,18 +65,12 @@ LFLAGS += -nostdlib
 LFLAGS += -lgcc
 LFLAGS += -T$(LSCRIPT)
 
-AS_SRC   =  ./boot_code/$(MCU_FILE)_core.S
-AS_SRC   += ./vector_tables/$(MCU_FILE)_vt.S
-C_SRC    =  ./src/global.c ./src/main.c ./src/nvic.c
+AS_SRCS  =  ./boot_code/$(MCU_FILE)_core.S \
+            ./vector_tables/$(MCU_FILE)_vt.S
+AS_OBJS  = $(AS_SRCS:.S=.o)
 
-INCLUDE  =  -I./
-INCLUDE  += -I./device_headers
-
-OBJS  = $(AS_SRC:.S=.o)
-OBJS  += $(C_SRC:.c=.o)
-
-.PHONY: all
-all: $(TARGET).bin
+INCLUDE  =  -I./ \
+            -I./device_headers
 
 %.o: %.S
 	$(CC) -x assembler-with-cpp $(ASFLAGS) $< -o $@
@@ -86,15 +78,37 @@ all: $(TARGET).bin
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
 
-$(TARGET).elf: $(OBJS)
-	$(CC) $^ $(LFLAGS) -o $@
 
-$(TARGET).bin: $(TARGET).elf
+TFT_LCD_SRCS  = apps/tft_lcd/main.c
+TFT_LCD_OBJS  = $(TFT_LCD_SRCS:.c=.o)
+
+tft_lcd: tft_lcd.bin
+tft_lcd.elf: $(AS_OBJS) $(TFT_LCD_OBJS)
+	$(CC) $^ $(LFLAGS) -o $@
+tft_lcd.bin: tft_lcd.elf
 	$(OC) -S -O binary $< $@
 	$(OS) $<
 
+
+ISR_BUTTON_SRCS  = apps/isr_button/global.c \
+                   apps/isr_button/main.c \
+                   apps/isr_button/nvic.c
+ISR_BUTTON_OBJS  = $(ISR_BUTTON_SRCS:.c=.o)
+
+isr_button: isr_button.bin
+isr_button.elf: $(AS_OBJS) $(ISR_BUTTON_OBJS)
+	$(CC) $^ $(LFLAGS) -o $@
+isr_button.bin: isr_button.elf
+	$(OC) -S -O binary $< $@
+	$(OS) $<
+
+
+.PHONY: all
+all: isr_button tft_lcd
+
+
 .PHONY: clean
 clean:
-	rm -f $(OBJS)
-	rm -f $(TARGET).elf
-	rm -f $(TARGET).bin
+	rm -f $(AS_OBJS) $(TFT_LCD_OBJS) $(ISR_BUTTON_OBJS)
+	rm -f *.elf *.bin
+	

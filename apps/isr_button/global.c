@@ -9,6 +9,3 @@
 
 
 volatile uint8_t led_on;
-
-// (Core system clock speed; initial value depends on the chip.)
-volatile uint32_t core_clock_hz;
