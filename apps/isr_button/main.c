@@ -97,4 +97,6 @@ int main(void)
 //		else
 //			GPIOB->ODR &= ~GPIO_OTYPER_OT13;
 	}
+
+	return 0;
 }
