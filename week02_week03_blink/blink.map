@@ -1,0 +1,97 @@
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00200000         xr
+RAM              0x20000000         0x00030000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD blink.o
+                0x20030000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
+                0x080000dc                        _sidata = LOADADDR (.data)
+
+.isr_vector     0x08000000        0x8
+ *(.isr_vector)
+ .isr_vector    0x08000000        0x8 blink.o
+                0x08000000                vector_table
+
+.text           0x08000008       0xd4
+ *(.text*)
+ .text          0x08000008       0xd4 blink.o
+                0x08000028                main
+                0x08000080                reset_handler
+ *(.rodata*)
+
+.glue_7         0x080000dc        0x0
+ .glue_7        0x080000dc        0x0 linker stubs
+
+.glue_7t        0x080000dc        0x0
+ .glue_7t       0x080000dc        0x0 linker stubs
+
+.vfp11_veneer   0x080000dc        0x0
+ .vfp11_veneer  0x080000dc        0x0 linker stubs
+
+.v4_bx          0x080000dc        0x0
+ .v4_bx         0x080000dc        0x0 linker stubs
+
+.iplt           0x080000dc        0x0
+ .iplt          0x080000dc        0x0 blink.o
+
+.rel.dyn        0x080000dc        0x0
+ .rel.iplt      0x080000dc        0x0 blink.o
+
+.data           0x20000000        0x4 load address 0x080000dc
+                0x20000000                        _sdata = .
+ *(.data*)
+ .data          0x20000000        0x4 blink.o
+                0x20000000                blink_delay
+                0x20000004                        . = ALIGN (0x4)
+                0x20000004                        _edata = .
+
+.igot.plt       0x20000004        0x0 load address 0x080000e0
+ .igot.plt      0x20000004        0x0 blink.o
+
+.bss            0x20000004        0x8 load address 0x080000e0
+                0x20000004                        _sbss = .
+ *(.bss*)
+ .bss           0x20000004        0x8 blink.o
+                0x20000004                press_count
+                0x20000008                bss_check
+ *(COMMON)
+                0x2000000c                        . = ALIGN (0x4)
+                0x2000000c                        _ebss = .
+OUTPUT(blink.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000      0x1b4
+ .debug_info    0x00000000      0x1b4 blink.o
+
+.debug_abbrev   0x00000000      0x10c
+ .debug_abbrev  0x00000000      0x10c blink.o
+
+.debug_aranges  0x00000000       0x20
+ .debug_aranges
+                0x00000000       0x20 blink.o
+
+.debug_line     0x00000000      0x18e
+ .debug_line    0x00000000      0x18e blink.o
+
+.debug_str      0x00000000      0x164
+ .debug_str     0x00000000      0x164 blink.o
+                                0x1a7 (size before relaxing)
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 blink.o
+                                 0x46 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2e
+ .ARM.attributes
+                0x00000000       0x2e blink.o
+
+.debug_frame    0x00000000       0x74
+ .debug_frame   0x00000000       0x74 blink.o
