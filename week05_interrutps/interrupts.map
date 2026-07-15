@@ -1,0 +1,101 @@
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00200000         xr
+RAM              0x20000000         0x00030000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD interrupts.o
+                0x20030000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
+                0x08000538                        _sidata = LOADADDR (.data)
+
+.isr_vector     0x08000000       0x5c
+ *(.isr_vector)
+ .isr_vector    0x08000000       0x5c interrupts.o
+                0x08000000                vector_table
+
+.text           0x0800005c      0x4da
+ *(.text*)
+ .text          0x0800005c      0x468 interrupts.o
+                0x080002d8                systick_handler
+                0x080002f4                exti0_handler
+                0x08000350                default_handler
+                0x08000358                main
+                0x08000468                reset_handler
+ *(.rodata*)
+ .rodata        0x080004c4       0x72 interrupts.o
+
+.glue_7         0x08000538        0x0
+ .glue_7        0x08000538        0x0 linker stubs
+
+.glue_7t        0x08000538        0x0
+ .glue_7t       0x08000538        0x0 linker stubs
+
+.vfp11_veneer   0x08000538        0x0
+ .vfp11_veneer  0x08000538        0x0 linker stubs
+
+.v4_bx          0x08000538        0x0
+ .v4_bx         0x08000538        0x0 linker stubs
+
+.iplt           0x08000538        0x0
+ .iplt          0x08000538        0x0 interrupts.o
+
+.rel.dyn        0x08000538        0x0
+ .rel.iplt      0x08000538        0x0 interrupts.o
+
+.data           0x20000000        0x4 load address 0x08000538
+                0x20000000                        _sdata = .
+ *(.data*)
+ .data          0x20000000        0x4 interrupts.o
+                0x20000000                blink_delay
+                0x20000004                        . = ALIGN (0x4)
+                0x20000004                        _edata = .
+
+.igot.plt       0x20000004        0x0 load address 0x0800053c
+ .igot.plt      0x20000004        0x0 interrupts.o
+
+.bss            0x20000004        0xc load address 0x0800053c
+                0x20000004                        _sbss = .
+ *(.bss*)
+ .bss           0x20000004        0xc interrupts.o
+                0x20000004                ticks
+                0x20000008                presses
+ *(COMMON)
+                0x20000010                        . = ALIGN (0x4)
+                0x20000010                        _ebss = .
+OUTPUT(interrupts.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000      0x352
+ .debug_info    0x00000000      0x352 interrupts.o
+
+.debug_abbrev   0x00000000      0x196
+ .debug_abbrev  0x00000000      0x196 interrupts.o
+
+.debug_aranges  0x00000000       0x20
+ .debug_aranges
+                0x00000000       0x20 interrupts.o
+
+.debug_line     0x00000000      0x34a
+ .debug_line    0x00000000      0x34a interrupts.o
+
+.debug_str      0x00000000      0x20f
+ .debug_str     0x00000000      0x20f interrupts.o
+                                0x251 (size before relaxing)
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 interrupts.o
+                                 0x46 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2e
+ .ARM.attributes
+                0x00000000       0x2e interrupts.o
+
+.debug_frame    0x00000000      0x1dc
+ .debug_frame   0x00000000      0x1dc interrupts.o

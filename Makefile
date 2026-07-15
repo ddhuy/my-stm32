@@ -27,8 +27,8 @@ else ifeq ($(MCU_CLASS), VVC_L0)
 endif
 
 # Toolchain definitions (ARM bare metal defaults)
-TOOLCHAIN = /data/toolchain/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
-#TOOLCHAIN = /data/toolchain/gcc-arm-none-eabi-10.3-2021.10
+TOOLCHAIN = /workspace/toolchain/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+#TOOLCHAIN = /workspace/toolchain/gcc-arm-none-eabi-10.3-2021.10
 CC = $(TOOLCHAIN)/bin/arm-none-eabi-gcc
 AS = $(TOOLCHAIN)/bin/arm-none-eabi-as
 LD = $(TOOLCHAIN)/bin/arm-none-eabi-ld

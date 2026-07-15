@@ -12,40 +12,40 @@ Linker script and memory map
 
 LOAD uart.o
                 0x20030000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
-                0x08000438                        _sidata = LOADADDR (.data)
+                0x08000430                        _sidata = LOADADDR (.data)
 
 .isr_vector     0x08000000        0x8
  *(.isr_vector)
  .isr_vector    0x08000000        0x8 uart.o
                 0x08000000                vector_table
 
-.text           0x08000008      0x42d
+.text           0x08000008      0x427
  *(.text*)
- .text          0x08000008      0x3c8 uart.o
+ .text          0x08000008      0x3bc uart.o
                 0x08000296                main
-                0x08000374                reset_handler
+                0x08000368                reset_handler
  *(.rodata*)
- .rodata        0x080003d0       0x65 uart.o
+ .rodata        0x080003c4       0x6b uart.o
 
-.glue_7         0x08000438        0x0
- .glue_7        0x08000438        0x0 linker stubs
+.glue_7         0x08000430        0x0
+ .glue_7        0x08000430        0x0 linker stubs
 
-.glue_7t        0x08000438        0x0
- .glue_7t       0x08000438        0x0 linker stubs
+.glue_7t        0x08000430        0x0
+ .glue_7t       0x08000430        0x0 linker stubs
 
-.vfp11_veneer   0x08000438        0x0
- .vfp11_veneer  0x08000438        0x0 linker stubs
+.vfp11_veneer   0x08000430        0x0
+ .vfp11_veneer  0x08000430        0x0 linker stubs
 
-.v4_bx          0x08000438        0x0
- .v4_bx         0x08000438        0x0 linker stubs
+.v4_bx          0x08000430        0x0
+ .v4_bx         0x08000430        0x0 linker stubs
 
-.iplt           0x08000438        0x0
- .iplt          0x08000438        0x0 uart.o
+.iplt           0x08000430        0x0
+ .iplt          0x08000430        0x0 uart.o
 
-.rel.dyn        0x08000438        0x0
- .rel.iplt      0x08000438        0x0 uart.o
+.rel.dyn        0x08000430        0x0
+ .rel.iplt      0x08000430        0x0 uart.o
 
-.data           0x20000000        0x4 load address 0x08000438
+.data           0x20000000        0x4 load address 0x08000430
                 0x20000000                        _sdata = .
  *(.data*)
  .data          0x20000000        0x4 uart.o
@@ -53,10 +53,10 @@ LOAD uart.o
                 0x20000004                        . = ALIGN (0x4)
                 0x20000004                        _edata = .
 
-.igot.plt       0x20000004        0x0 load address 0x0800043c
+.igot.plt       0x20000004        0x0 load address 0x08000434
  .igot.plt      0x20000004        0x0 uart.o
 
-.bss            0x20000004        0x8 load address 0x0800043c
+.bss            0x20000004        0x8 load address 0x08000434
                 0x20000004                        _sbss = .
  *(.bss*)
  .bss           0x20000004        0x8 uart.o
@@ -78,8 +78,8 @@ LOAD linker stubs
  .debug_aranges
                 0x00000000       0x20 uart.o
 
-.debug_line     0x00000000      0x31c
- .debug_line    0x00000000      0x31c uart.o
+.debug_line     0x00000000      0x319
+ .debug_line    0x00000000      0x319 uart.o
 
 .debug_str      0x00000000      0x1a7
  .debug_str     0x00000000      0x1a7 uart.o

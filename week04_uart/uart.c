@@ -131,11 +131,10 @@ int main(void)
     {
         GPIOG_ODR ^= (1 << 13);
 
-        uart_puts("Blink ");
         if (GPIOG_ODR & (1 << 13))
-            uart_puts("ON\n");
+            uart_puts("Blink ON\n");
         else
-            uart_puts("OFF\n");
+            uart_puts("Blink OFF\n");
 
         delay(blink_delay);
     }
