@@ -1,0 +1,101 @@
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00200000         xr
+RAM              0x20000000         0x00030000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD gyro.o
+                0x20030000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
+                0x08000940                        _sidata = LOADADDR (.data)
+
+.isr_vector     0x08000000       0x5c
+ *(.isr_vector)
+ .isr_vector    0x08000000       0x5c gyro.o
+                0x08000000                vector_table
+
+.text           0x0800005c      0x8e2
+ *(.text*)
+ .text          0x0800005c      0x7e4 gyro.o
+                0x0800055e                systick_handler
+                0x08000578                exti0_handler
+                0x080005d4                default_handler
+                0x080005dc                main
+                0x080007e4                reset_handler
+ *(.rodata*)
+ .rodata        0x08000840       0xfe gyro.o
+
+.glue_7         0x08000940        0x0
+ .glue_7        0x08000940        0x0 linker stubs
+
+.glue_7t        0x08000940        0x0
+ .glue_7t       0x08000940        0x0 linker stubs
+
+.vfp11_veneer   0x08000940        0x0
+ .vfp11_veneer  0x08000940        0x0 linker stubs
+
+.v4_bx          0x08000940        0x0
+ .v4_bx         0x08000940        0x0 linker stubs
+
+.iplt           0x08000940        0x0
+ .iplt          0x08000940        0x0 gyro.o
+
+.rel.dyn        0x08000940        0x0
+ .rel.iplt      0x08000940        0x0 gyro.o
+
+.data           0x20000000        0x4 load address 0x08000940
+                0x20000000                        _sdata = .
+ *(.data*)
+ .data          0x20000000        0x4 gyro.o
+                0x20000000                blink_delay
+                0x20000004                        . = ALIGN (0x4)
+                0x20000004                        _edata = .
+
+.igot.plt       0x20000004        0x0 load address 0x08000944
+ .igot.plt      0x20000004        0x0 gyro.o
+
+.bss            0x20000004        0xc load address 0x08000944
+                0x20000004                        _sbss = .
+ *(.bss*)
+ .bss           0x20000004        0xc gyro.o
+                0x20000004                ticks
+                0x20000008                presses
+ *(COMMON)
+                0x20000010                        . = ALIGN (0x4)
+                0x20000010                        _ebss = .
+OUTPUT(gyro.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000      0x59a
+ .debug_info    0x00000000      0x59a gyro.o
+
+.debug_abbrev   0x00000000      0x243
+ .debug_abbrev  0x00000000      0x243 gyro.o
+
+.debug_aranges  0x00000000       0x20
+ .debug_aranges
+                0x00000000       0x20 gyro.o
+
+.debug_line     0x00000000      0x550
+ .debug_line    0x00000000      0x550 gyro.o
+
+.debug_str      0x00000000      0x286
+ .debug_str     0x00000000      0x286 gyro.o
+                                0x2e5 (size before relaxing)
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 gyro.o
+                                 0x46 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2e
+ .ARM.attributes
+                0x00000000       0x2e gyro.o
+
+.debug_frame    0x00000000      0x318
+ .debug_frame   0x00000000      0x318 gyro.o
