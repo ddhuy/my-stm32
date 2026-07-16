@@ -105,7 +105,7 @@ static void uart_puthex(uint32_t v)
 
 static void uart_puthex8(uint8_t v)
 {
-    for (int shift = 8; shift >= 0; shift -= 4) {
+    for (int shift = 4; shift >= 0; shift -= 4) {
         uint32_t nib = (v >> shift) & 0xF;
         uart_putc(nib < 10 ? '0' + nib : 'A' + nib - 10);
     }
