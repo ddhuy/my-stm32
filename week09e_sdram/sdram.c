@@ -1020,13 +1020,13 @@ static void bench_memset(void)
     t0 = millis();
     for (uint32_t r = 0; r < reps; r++)
         for (uint32_t i = 0; i < n; i++)
-            sr[i] = 0u;
+            sr[i] = i * i;
     t_sram = millis() - t0;
  
     t0 = millis();
     for (uint32_t r = 0; r < reps; r++)
         for (uint32_t i = 0; i < n; i++)
-            sd[i] = 0u;
+            sd[i] = i * i;
     t_sdram = millis() - t0;
  
     uart_puts(" bench 1 MB write: SRAM ");

@@ -9,14 +9,14 @@ OS = $(TOOLCHAIN)/bin/arm-none-eabi-size
 
 all:
 	$(CC) -mcpu=cortex-m4 -mthumb -Wall -g -O0 -I./ -c pendsv.S -o pendsv.o
-	$(CC) -mcpu=cortex-m4 -mthumb -Wall -g -O0 -I./ -c scheduler.c -o scheduler.o
-	$(CC) -mcpu=cortex-m4 -mthumb -nostdlib -T stm32f429.ld scheduler.o pendsv.o -o scheduler.elf -Wl,-Map=scheduler.map
-	$(OC) -O binary scheduler.elf scheduler.bin
+	$(CC) -mcpu=cortex-m4 -mthumb -Wall -g -O0 -I./ -c sdram.c -o sdram.o
+	$(CC) -mcpu=cortex-m4 -mthumb -nostdlib -T stm32f429.ld sdram.o pendsv.o -o sdram.elf -Wl,-Map=sdram.map
+	$(OC) -O binary sdram.elf sdram.bin
 
 load:
-	openocd -f board/stm32f429disc1.cfg -c "program scheduler.elf verify reset exit"
+	openocd -f board/stm32f429disc1.cfg -c "program sdram.elf verify reset exit"
 
 clean:
-	rm -f scheduler.o pendsv.o scheduler.elf scheduler.bin scheduler.map
+	rm -f sdram.o pendsv.o sdram.elf sdram.bin sdram.map
 
 PHONY: all load

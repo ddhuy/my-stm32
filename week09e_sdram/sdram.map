@@ -11,64 +11,64 @@ SDRAM            0xd0000000         0x00800000         xrw
 
 Linker script and memory map
 
-LOAD scheduler.o
+LOAD sdram.o
 LOAD pendsv.o
                 0x20030000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
-                0x08001c34                        _sidata = LOADADDR (.data)
+                0x08001c3c                        _sidata = LOADADDR (.data)
 
 .isr_vector     0x08000000       0x5c
  *(.isr_vector)
- .isr_vector    0x08000000       0x5c scheduler.o
+ .isr_vector    0x08000000       0x5c sdram.o
                 0x08000000                vector_table
 
-.text           0x0800005c     0x1bd8
+.text           0x0800005c     0x1be0
  *(.text*)
- .text          0x0800005c     0x1614 scheduler.o
+ .text          0x0800005c     0x161c sdram.o
                 0x0800055e                systick_handler
                 0x08000590                exti0_handler
                 0x080005ec                default_handler
-                0x08001460                main
-                0x08001614                reset_handler
- .text          0x08001670       0x44 pendsv.o
-                0x08001670                pendsv_handler
-                0x0800169a                start_first_task
+                0x08001468                main
+                0x0800161c                reset_handler
+ .text          0x08001678       0x44 pendsv.o
+                0x08001678                pendsv_handler
+                0x080016a2                start_first_task
  *(.rodata*)
- .rodata        0x080016b4      0x580 scheduler.o
+ .rodata        0x080016bc      0x580 sdram.o
 
-.glue_7         0x08001c34        0x0
- .glue_7        0x08001c34        0x0 linker stubs
+.glue_7         0x08001c3c        0x0
+ .glue_7        0x08001c3c        0x0 linker stubs
 
-.glue_7t        0x08001c34        0x0
- .glue_7t       0x08001c34        0x0 linker stubs
+.glue_7t        0x08001c3c        0x0
+ .glue_7t       0x08001c3c        0x0 linker stubs
 
-.vfp11_veneer   0x08001c34        0x0
- .vfp11_veneer  0x08001c34        0x0 linker stubs
+.vfp11_veneer   0x08001c3c        0x0
+ .vfp11_veneer  0x08001c3c        0x0 linker stubs
 
-.v4_bx          0x08001c34        0x0
- .v4_bx         0x08001c34        0x0 linker stubs
+.v4_bx          0x08001c3c        0x0
+ .v4_bx         0x08001c3c        0x0 linker stubs
 
-.iplt           0x08001c34        0x0
- .iplt          0x08001c34        0x0 scheduler.o
+.iplt           0x08001c3c        0x0
+ .iplt          0x08001c3c        0x0 sdram.o
 
-.rel.dyn        0x08001c34        0x0
- .rel.iplt      0x08001c34        0x0 scheduler.o
+.rel.dyn        0x08001c3c        0x0
+ .rel.iplt      0x08001c3c        0x0 sdram.o
 
-.data           0x20000000        0x4 load address 0x08001c34
+.data           0x20000000        0x4 load address 0x08001c3c
                 0x20000000                        _sdata = .
  *(.data*)
- .data          0x20000000        0x4 scheduler.o
+ .data          0x20000000        0x4 sdram.o
                 0x20000000                blink_delay
  .data          0x20000004        0x0 pendsv.o
                 0x20000004                        . = ALIGN (0x4)
                 0x20000004                        _edata = .
 
-.igot.plt       0x20000004        0x0 load address 0x08001c38
- .igot.plt      0x20000004        0x0 scheduler.o
+.igot.plt       0x20000004        0x0 load address 0x08001c40
+ .igot.plt      0x20000004        0x0 sdram.o
 
-.bss            0x20000004     0x8c20 load address 0x08001c38
+.bss            0x20000004     0x8c20 load address 0x08001c40
                 0x20000004                        _sbss = .
  *(.bss*)
- .bss           0x20000004     0x8c20 scheduler.o
+ .bss           0x20000004     0x8c20 sdram.o
                 0x20000004                ticks
                 0x20000008                presses
                 0x2000000c                tcbs
@@ -82,51 +82,51 @@ LOAD pendsv.o
 .sdram          0xd0000000    0x25800
                 0xd0000000                        _ssdram = .
  *(.sdram*)
- .sdram         0xd0000000    0x25800 scheduler.o
+ .sdram         0xd0000000    0x25800 sdram.o
                 0xd0000000                frameBuffer
                 0xd0025800                        . = ALIGN (0x4)
                 0xd0025800                        _esdram = .
-OUTPUT(scheduler.elf elf32-littlearm)
+OUTPUT(sdram.elf elf32-littlearm)
 LOAD linker stubs
 
 .debug_info     0x00000000      0xe1b
- .debug_info    0x00000000      0xdf7 scheduler.o
+ .debug_info    0x00000000      0xdf7 sdram.o
  .debug_info    0x00000df7       0x24 pendsv.o
 
 .debug_abbrev   0x00000000      0x391
- .debug_abbrev  0x00000000      0x37d scheduler.o
+ .debug_abbrev  0x00000000      0x37d sdram.o
  .debug_abbrev  0x0000037d       0x14 pendsv.o
 
 .debug_aranges  0x00000000       0x40
  .debug_aranges
-                0x00000000       0x20 scheduler.o
+                0x00000000       0x20 sdram.o
  .debug_aranges
                 0x00000020       0x20 pendsv.o
 
-.debug_line     0x00000000      0xd5c
- .debug_line    0x00000000      0xcfe scheduler.o
- .debug_line    0x00000cfe       0x5e pendsv.o
+.debug_line     0x00000000      0xd5e
+ .debug_line    0x00000000      0xd00 sdram.o
+ .debug_line    0x00000d00       0x5e pendsv.o
 
-.debug_str      0x00000000      0x4af
- .debug_str     0x00000000      0x4af scheduler.o
-                                0x505 (size before relaxing)
- .debug_str     0x000004af       0x5c pendsv.o
+.debug_str      0x00000000      0x4a4
+ .debug_str     0x00000000      0x4a4 sdram.o
+                                0x4fa (size before relaxing)
+ .debug_str     0x000004a4       0x55 pendsv.o
 
 .comment        0x00000000       0x45
- .comment       0x00000000       0x45 scheduler.o
+ .comment       0x00000000       0x45 sdram.o
                                  0x46 (size before relaxing)
 
 .ARM.attributes
                 0x00000000       0x2c
  .ARM.attributes
-                0x00000000       0x2e scheduler.o
+                0x00000000       0x2e sdram.o
  .ARM.attributes
                 0x0000002e       0x21 pendsv.o
 
 .debug_frame    0x00000000      0x630
- .debug_frame   0x00000000      0x630 scheduler.o
+ .debug_frame   0x00000000      0x630 sdram.o
 
 .debug_line_str
-                0x00000000       0x4e
+                0x00000000       0x47
  .debug_line_str
-                0x00000000       0x4e pendsv.o
+                0x00000000       0x47 pendsv.o
