@@ -1,0 +1,108 @@
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00200000         xr
+RAM              0x20000000         0x00030000         xrw
+SDRAM            0xd0000000         0x00800000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD lcd.o
+                0x20030000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
+                0x080013dc                        _sidata = LOADADDR (.data)
+
+.isr_vector     0x08000000       0x40
+ *(.isr_vector)
+ .isr_vector    0x08000000       0x40 lcd.o
+                0x08000000                vector_table
+
+.text           0x08000040     0x139b
+ *(.text*)
+ .text          0x08000040      0xeb0 lcd.o
+                0x080002cc                systick_handler
+                0x080002fc                delay_ms
+                0x08000dfc                main
+                0x08000e8c                default_handler
+                0x08000e94                reset_handler
+ *(.rodata*)
+ .rodata        0x08000ef0      0x4eb lcd.o
+
+.glue_7         0x080013dc        0x0
+ .glue_7        0x080013dc        0x0 linker stubs
+
+.glue_7t        0x080013dc        0x0
+ .glue_7t       0x080013dc        0x0 linker stubs
+
+.vfp11_veneer   0x080013dc        0x0
+ .vfp11_veneer  0x080013dc        0x0 linker stubs
+
+.v4_bx          0x080013dc        0x0
+ .v4_bx         0x080013dc        0x0 linker stubs
+
+.iplt           0x080013dc        0x0
+ .iplt          0x080013dc        0x0 lcd.o
+
+.rel.dyn        0x080013dc        0x0
+ .rel.iplt      0x080013dc        0x0 lcd.o
+
+.data           0x20000000        0x0 load address 0x080013dc
+                0x20000000                        _sdata = .
+ *(.data*)
+ .data          0x20000000        0x0 lcd.o
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _edata = .
+
+.igot.plt       0x20000000        0x0 load address 0x080013dc
+ .igot.plt      0x20000000        0x0 lcd.o
+
+.bss            0x20000000        0x4 load address 0x080013dc
+                0x20000000                        _sbss = .
+ *(.bss*)
+ .bss           0x20000000        0x4 lcd.o
+                0x20000000                ticks
+ *(COMMON)
+                0x20000004                        . = ALIGN (0x4)
+                0x20000004                        _ebss = .
+
+.sdram          0xd0000000    0x25800
+                0xd0000000                        _ssdram = .
+ *(.sdram*)
+ .sdram         0xd0000000    0x25800 lcd.o
+                0xd0000000                framebuffer
+                0xd0025800                        . = ALIGN (0x4)
+                0xd0025800                        _esdram = .
+OUTPUT(lcd.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000      0x7b7
+ .debug_info    0x00000000      0x7b7 lcd.o
+
+.debug_abbrev   0x00000000      0x30f
+ .debug_abbrev  0x00000000      0x30f lcd.o
+
+.debug_aranges  0x00000000       0x20
+ .debug_aranges
+                0x00000000       0x20 lcd.o
+
+.debug_line     0x00000000      0xa11
+ .debug_line    0x00000000      0xa11 lcd.o
+
+.debug_str      0x00000000      0x333
+ .debug_str     0x00000000      0x333 lcd.o
+                                0x38c (size before relaxing)
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 lcd.o
+                                 0x46 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2e
+ .ARM.attributes
+                0x00000000       0x2e lcd.o
+
+.debug_frame    0x00000000      0x4b4
+ .debug_frame   0x00000000      0x4b4 lcd.o

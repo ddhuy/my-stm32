@@ -80,9 +80,9 @@ LOAD linker stubs
 .debug_line     0x00000000      0x18e
  .debug_line    0x00000000      0x18e blink.o
 
-.debug_str      0x00000000      0x164
- .debug_str     0x00000000      0x164 blink.o
-                                0x1a7 (size before relaxing)
+.debug_str      0x00000000      0x16b
+ .debug_str     0x00000000      0x16b blink.o
+                                0x1ae (size before relaxing)
 
 .comment        0x00000000       0x45
  .comment       0x00000000       0x45 blink.o
