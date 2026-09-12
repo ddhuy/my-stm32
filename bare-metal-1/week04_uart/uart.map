@@ -45,22 +45,22 @@ LOAD uart.o
 .rel.dyn        0x08000430        0x0
  .rel.iplt      0x08000430        0x0 uart.o
 
-.data           0x20000000        0x4 load address 0x08000430
+.data           0x20000000        0x8 load address 0x08000430
                 0x20000000                        _sdata = .
  *(.data*)
- .data          0x20000000        0x4 uart.o
+ .data          0x20000000        0x8 uart.o
                 0x20000000                blink_delay
-                0x20000004                        . = ALIGN (0x4)
-                0x20000004                        _edata = .
-
-.igot.plt       0x20000004        0x0 load address 0x08000434
- .igot.plt      0x20000004        0x0 uart.o
-
-.bss            0x20000004        0x8 load address 0x08000434
-                0x20000004                        _sbss = .
- *(.bss*)
- .bss           0x20000004        0x8 uart.o
                 0x20000004                press_count
+                0x20000008                        . = ALIGN (0x4)
+                0x20000008                        _edata = .
+
+.igot.plt       0x20000008        0x0 load address 0x08000438
+ .igot.plt      0x20000008        0x0 uart.o
+
+.bss            0x20000008        0x4 load address 0x08000438
+                0x20000008                        _sbss = .
+ *(.bss*)
+ .bss           0x20000008        0x4 uart.o
                 0x20000008                bss_check
  *(COMMON)
                 0x2000000c                        . = ALIGN (0x4)

@@ -24,8 +24,8 @@ extern uint32_t _estack, // end of stack (top of RAM)
                 _ebss;   // end of uninitialized data in RAM
 
 int blink_delay = 4000000; // .data - initialized
-int press_count = 0;      // .data - initialized
-int bss_check;            // .bss - uninitialized
+int press_count = 1;       // .data - initialized
+int bss_check;             // .bss - uninitialized
 
 
 static char itoc(uint8_t i)
