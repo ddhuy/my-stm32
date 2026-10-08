@@ -1,0 +1,191 @@
+
+Discarded input sections
+
+ .group         0x00000000        0xc startup.o
+ .group         0x00000000        0xc startup.o
+ .text          0x00000000        0x0 startup.o
+ .data          0x00000000        0x0 startup.o
+ .bss           0x00000000        0x0 startup.o
+ .group         0x00000000        0xc main.o
+ .group         0x00000000        0xc main.o
+ .group         0x00000000        0xc main.o
+ .text          0x00000000        0x0 main.o
+ .data          0x00000000        0x0 main.o
+ .bss           0x00000000        0x0 main.o
+ .debug_macro   0x00000000      0xaba main.o
+ .debug_macro   0x00000000      0x34e main.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00200000         xr
+RAM              0x20000000         0x00030000         xrw
+SDRAM            0xd0000000         0x00800000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD startup.o
+LOAD main.o
+                0x20030000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
+
+.isr_vector     0x08000000      0x1ac
+                0x08000000                        . = ALIGN (0x4)
+ *(.isr_vector)
+ .isr_vector    0x08000000      0x1ac startup.o
+                0x08000000                vectors
+                0x080001ac                        . = ALIGN (0x4)
+
+.text           0x080001b0      0x3c4
+                0x080001b0                        . = ALIGN (0x4)
+ *(.text .text.*)
+ .text.default_handler
+                0x080001b0        0x4 startup.o
+                0x080001b0                default_handler
+ .text.reset_handler
+                0x080001b4       0x64 startup.o
+                0x080001b4                reset_handler
+ .text.fmc_wait
+                0x08000218       0x10 main.o
+ .text.fault_handler
+                0x08000228       0x38 main.o
+                0x08000228                fault_handler
+ .text.main     0x08000260      0x2c0 main.o
+                0x08000260                main
+ .text.main.__stub
+                0x08000520        0x8 linker stubs
+ *(.rodata .rodata.*)
+ .rodata.pins   0x08000528       0x4c main.o
+                0x08000574                        . = ALIGN (0x4)
+
+.glue_7         0x08000574        0x0
+ .glue_7        0x08000574        0x0 linker stubs
+
+.glue_7t        0x08000574        0x0
+ .glue_7t       0x08000574        0x0 linker stubs
+
+.vfp11_veneer   0x08000574        0x0
+ .vfp11_veneer  0x08000574        0x0 linker stubs
+
+.v4_bx          0x08000574        0x0
+ .v4_bx         0x08000574        0x0 linker stubs
+
+.iplt           0x08000574        0x0
+ .iplt          0x08000574        0x0 startup.o
+
+/DISCARD/
+ *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+
+.sdram_text     0xd0000000       0x10 load address 0x08000574
+                0xd0000000                        __sdram_text_start__ = .
+ *(.sdram_text .sdram_text.*)
+ .sdram_text    0xd0000000       0x10 main.o
+                0xd0000000                sdram_add
+                0xd0000010                        . = ALIGN (0x4)
+                0xd0000010                        __sdram_text_end__ = .
+                0x08000574                        __sdram_text_load__ = LOADADDR (.sdram_text)
+
+.rel.dyn        0xd0000010        0x0 load address 0x08000584
+ .rel.iplt      0xd0000010        0x0 startup.o
+
+.data           0x20000000        0x0 load address 0x08000584
+                0x20000000                        _sdata = .
+ *(.data .data.*)
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _edata = .
+                0x08000584                        _sidata = LOADADDR (.data)
+
+.igot.plt       0x20000000        0x0 load address 0x08000584
+ .igot.plt      0x20000000        0x0 startup.o
+
+.bss            0x20000000       0x1c load address 0x08000584
+                0x20000000                        _sbss = .
+ *(.bss .bss.*)
+ .bss.fault_bfar
+                0x20000000        0x4 main.o
+                0x20000000                fault_bfar
+ .bss.fault_mmfar
+                0x20000004        0x4 main.o
+                0x20000004                fault_mmfar
+ .bss.fault_hfsr
+                0x20000008        0x4 main.o
+                0x20000008                fault_hfsr
+ .bss.fault_cfsr
+                0x2000000c        0x4 main.o
+                0x2000000c                fault_cfsr
+ .bss.lab3_calls
+                0x20000010        0x4 main.o
+                0x20000010                lab3_calls
+ .bss.lab3_pc   0x20000014        0x4 main.o
+                0x20000014                lab3_pc
+ .bss.lab3_result
+                0x20000018        0x4 main.o
+                0x20000018                lab3_result
+ *(COMMON)
+                0x2000001c                        . = ALIGN (0x4)
+                0x2000001c                        _ebss = .
+                0x20000020                        . = ALIGN (0x8)
+                0x00000001                        ASSERT ((SIZEOF (.sdram_text) > 0x0), Missing SDRAM code)
+                0x00000001                        ASSERT ((__sdram_text_end__ <= (ORIGIN (SDRAM) + LENGTH (SDRAM))), SDRAM overflow)
+OUTPUT(firmware.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000      0x86b
+ .debug_info    0x00000000      0x189 startup.o
+ .debug_info    0x00000189      0x6e2 main.o
+
+.debug_abbrev   0x00000000      0x39b
+ .debug_abbrev  0x00000000      0x11a startup.o
+ .debug_abbrev  0x0000011a      0x281 main.o
+
+.debug_loclists
+                0x00000000      0x20d
+ .debug_loclists
+                0x00000000       0x46 startup.o
+ .debug_loclists
+                0x00000046      0x1c7 main.o
+
+.debug_aranges  0x00000000       0x60
+ .debug_aranges
+                0x00000000       0x28 startup.o
+ .debug_aranges
+                0x00000028       0x38 main.o
+
+.debug_rnglists
+                0x00000000       0x57
+ .debug_rnglists
+                0x00000000       0x19 startup.o
+ .debug_rnglists
+                0x00000019       0x3e main.o
+
+.debug_macro    0x00000000     0x1091
+ .debug_macro   0x00000000       0x24 startup.o
+ .debug_macro   0x00000024      0xaba startup.o
+ .debug_macro   0x00000ade      0x34e startup.o
+ .debug_macro   0x00000e2c       0xd5 main.o
+ .debug_macro   0x00000f01      0x190 main.o
+
+.debug_line     0x00000000      0x64f
+ .debug_line    0x00000000      0x132 startup.o
+ .debug_line    0x00000132      0x51d main.o
+
+.debug_str      0x00000000     0x3f06
+ .debug_str     0x00000000     0x3f06 startup.o
+                               0x3970 (size before relaxing)
+ .debug_str     0x00003f06     0x4091 main.o
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 startup.o
+                                 0x46 (size before relaxing)
+ .comment       0x00000045       0x46 main.o
+
+.ARM.attributes
+                0x00000000       0x2e
+ .ARM.attributes
+                0x00000000       0x2e startup.o
+ .ARM.attributes
+                0x0000002e       0x2e main.o
+
+.debug_frame    0x00000000       0x94
+ .debug_frame   0x00000000       0x38 startup.o
+ .debug_frame   0x00000038       0x5c main.o
