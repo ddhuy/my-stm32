@@ -1,0 +1,195 @@
+
+Discarded input sections
+
+ .group         0x00000000        0xc /tmp/cc7Hw8B2.o
+ .group         0x00000000        0xc /tmp/cc7Hw8B2.o
+ .text          0x00000000        0x0 /tmp/cc7Hw8B2.o
+ .data          0x00000000        0x0 /tmp/cc7Hw8B2.o
+ .bss           0x00000000        0x0 /tmp/cc7Hw8B2.o
+ .text.uart_puthex8
+                0x00000000       0x52 /tmp/cc7Hw8B2.o
+ .text.uart_putsdec
+                0x00000000       0x2a /tmp/cc7Hw8B2.o
+ .text.delay_ms
+                0x00000000       0x2a /tmp/cc7Hw8B2.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00200000         xr
+RAM              0x20000000         0x00030000         xrw
+SDRAM            0xd0000000         0x00800000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD /tmp/cc7Hw8B2.o
+                0x20030000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
+
+.isr_vector     0x08000000       0x5c
+ *(.isr_vector)
+ .isr_vector    0x08000000       0x5c /tmp/cc7Hw8B2.o
+                0x08000000                vector_table
+
+.text           0x0800005c     0x1448
+ *(.text*)
+ .text.uart_init
+                0x0800005c       0x80 /tmp/cc7Hw8B2.o
+ .text.uart_putc
+                0x080000dc       0x30 /tmp/cc7Hw8B2.o
+ .text.uart_puts
+                0x0800010c       0x38 /tmp/cc7Hw8B2.o
+ .text.uart_puthex
+                0x08000144       0x50 /tmp/cc7Hw8B2.o
+ .text.uart_putdec
+                0x08000194       0x70 /tmp/cc7Hw8B2.o
+ .text.systick_init
+                0x08000204       0x30 /tmp/cc7Hw8B2.o
+ .text.millis   0x08000234       0x14 /tmp/cc7Hw8B2.o
+ .text.systick_handler
+                0x08000248       0x1c /tmp/cc7Hw8B2.o
+                0x08000248                systick_handler
+ .text.exti0_handler
+                0x08000264       0x34 /tmp/cc7Hw8B2.o
+                0x08000264                exti0_handler
+ .text.default_handler
+                0x08000298        0x8 /tmp/cc7Hw8B2.o
+                0x08000298                default_handler
+ .text.clock_init_168mhz
+                0x080002a0       0xb8 /tmp/cc7Hw8B2.o
+ .text.gpio_reg
+                0x08000358       0x24 /tmp/cc7Hw8B2.o
+ .text.sdram_pins_init
+                0x0800037c      0x10c /tmp/cc7Hw8B2.o
+ .text.dump_pin
+                0x08000488       0xe4 /tmp/cc7Hw8B2.o
+ .text.fmc_wait_busy
+                0x0800056c       0x20 /tmp/cc7Hw8B2.o
+ .text.fmc_init
+                0x0800058c       0x54 /tmp/cc7Hw8B2.o
+ .text.fmc_dump
+                0x080005e0       0x8c /tmp/cc7Hw8B2.o
+ .text.delay_us
+                0x0800066c       0x2c /tmp/cc7Hw8B2.o
+ .text.sdram_wakeup
+                0x08000698       0x58 /tmp/cc7Hw8B2.o
+ .text.sdram_smoke_test
+                0x080006f0      0x148 /tmp/cc7Hw8B2.o
+ .text.report_fail
+                0x08000838       0x78 /tmp/cc7Hw8B2.o
+ .text.test_addr_in_addr
+                0x080008b0       0xcc /tmp/cc7Hw8B2.o
+ .text.test_walking_ones
+                0x0800097c       0xe4 /tmp/cc7Hw8B2.o
+ .text.test_byte_lanes
+                0x08000a60      0x108 /tmp/cc7Hw8B2.o
+ .text.test_decay
+                0x08000b68      0x110 /tmp/cc7Hw8B2.o
+ .text.sdram_test_buffer
+                0x08000c78       0x94 /tmp/cc7Hw8B2.o
+ .text.bench_memset
+                0x08000d0c       0xe0 /tmp/cc7Hw8B2.o
+ .text.sdram_test_all
+                0x08000dec       0x80 /tmp/cc7Hw8B2.o
+ .text.main     0x08000e6c      0x124 /tmp/cc7Hw8B2.o
+                0x08000e6c                main
+ .text.reset_handler
+                0x08000f90       0x5c /tmp/cc7Hw8B2.o
+                0x08000f90                reset_handler
+ *(.rodata*)
+ .rodata.sdram_pins
+                0x08000fec       0x4c /tmp/cc7Hw8B2.o
+ .rodata        0x08001038      0x46c /tmp/cc7Hw8B2.o
+                0x080014a4                        . = ALIGN (0x4)
+
+.glue_7         0x080014a4        0x0
+ .glue_7        0x080014a4        0x0 linker stubs
+
+.glue_7t        0x080014a4        0x0
+ .glue_7t       0x080014a4        0x0 linker stubs
+
+.vfp11_veneer   0x080014a4        0x0
+ .vfp11_veneer  0x080014a4        0x0 linker stubs
+
+.v4_bx          0x080014a4        0x0
+ .v4_bx         0x080014a4        0x0 linker stubs
+
+.iplt           0x080014a4        0x0
+ .iplt          0x080014a4        0x0 /tmp/cc7Hw8B2.o
+
+.rel.dyn        0x080014a4        0x0
+ .rel.iplt      0x080014a4        0x0 /tmp/cc7Hw8B2.o
+
+.data           0x20000000        0x0 load address 0x080014a4
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _sdata = .
+ *(.data*)
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _edata = .
+                0x080014a4                        _sidata = LOADADDR (.data)
+
+.igot.plt       0x20000000        0x0 load address 0x080014a4
+ .igot.plt      0x20000000        0x0 /tmp/cc7Hw8B2.o
+
+.bss            0x20000000     0x8008 load address 0x080014a4
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _sbss = .
+ *(.bss*)
+ .bss.ticks     0x20000000        0x4 /tmp/cc7Hw8B2.o
+                0x20000000                ticks
+ .bss.last.1    0x20000004        0x4 /tmp/cc7Hw8B2.o
+ .bss.sr.0      0x20000008     0x8000 /tmp/cc7Hw8B2.o
+ *(COMMON)
+                0x20008008                        . = ALIGN (0x4)
+                0x20008008                        _ebss = .
+
+.sdram          0xd0000000    0x25800
+                0xd0000000                        . = ALIGN (0x4)
+                0xd0000000                        __sdram_start__ = .
+ *(.sdram)
+ .sdram         0xd0000000    0x25800 /tmp/cc7Hw8B2.o
+                0xd0000000                frameBuffer
+ *(.sdram.*)
+                0xd0025800                        . = ALIGN (0x4)
+                0xd0025800                        __sdram_end__ = .
+OUTPUT(firmware.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000      0xa7e
+ .debug_info    0x00000000      0xa7e /tmp/cc7Hw8B2.o
+
+.debug_abbrev   0x00000000      0x2f1
+ .debug_abbrev  0x00000000      0x2f1 /tmp/cc7Hw8B2.o
+
+.debug_aranges  0x00000000      0x120
+ .debug_aranges
+                0x00000000      0x120 /tmp/cc7Hw8B2.o
+
+.debug_rnglists
+                0x00000000       0xe1
+ .debug_rnglists
+                0x00000000       0xe1 /tmp/cc7Hw8B2.o
+
+.debug_macro    0x00000000     0x1061
+ .debug_macro   0x00000000      0x259 /tmp/cc7Hw8B2.o
+ .debug_macro   0x00000259      0xaba /tmp/cc7Hw8B2.o
+ .debug_macro   0x00000d13      0x34e /tmp/cc7Hw8B2.o
+
+.debug_line     0x00000000      0xbf9
+ .debug_line    0x00000000      0xbf9 /tmp/cc7Hw8B2.o
+
+.debug_str      0x00000000     0x45eb
+ .debug_str     0x00000000     0x45eb /tmp/cc7Hw8B2.o
+                               0x4760 (size before relaxing)
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 /tmp/cc7Hw8B2.o
+                                 0x46 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2e
+ .ARM.attributes
+                0x00000000       0x2e /tmp/cc7Hw8B2.o
+
+.debug_frame    0x00000000      0x480
+ .debug_frame   0x00000000      0x480 /tmp/cc7Hw8B2.o

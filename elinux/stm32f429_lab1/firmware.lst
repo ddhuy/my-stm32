@@ -1,0 +1,140 @@
+
+firmware.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+08000040 <Default_Handler>:
+#include <stdint.h>
+extern uint32_t _estack, _sidata, _sdata, _edata, _sbss, _ebss;
+int main(void);
+void Reset_Handler(void);
+void Default_Handler(void) { while (1) {} }
+ 8000040:	b480      	push	{r7}
+ 8000042:	af00      	add	r7, sp, #0
+ 8000044:	bf00      	nop
+ 8000046:	e7fd      	b.n	8000044 <Default_Handler+0x4>
+
+08000048 <Reset_Handler>:
+const uintptr_t vectors[16] = {
+ (uintptr_t)&_estack, (uintptr_t)Reset_Handler,
+ (uintptr_t)NMI_Handler, (uintptr_t)HardFault_Handler,
+ [4 ... 15] = (uintptr_t)Default_Handler
+};
+void Reset_Handler(void) {
+ 8000048:	b580      	push	{r7, lr}
+ 800004a:	b084      	sub	sp, #16
+ 800004c:	af00      	add	r7, sp, #0
+ uint32_t *src = &_sidata;
+ 800004e:	4b10      	ldr	r3, [pc, #64]	@ (8000090 <Reset_Handler+0x48>)
+ 8000050:	60fb      	str	r3, [r7, #12]
+ for (uint32_t *dst = &_sdata; dst < &_edata;) *dst++ = *src++;
+ 8000052:	4b10      	ldr	r3, [pc, #64]	@ (8000094 <Reset_Handler+0x4c>)
+ 8000054:	60bb      	str	r3, [r7, #8]
+ 8000056:	e007      	b.n	8000068 <Reset_Handler+0x20>
+ 8000058:	68fa      	ldr	r2, [r7, #12]
+ 800005a:	1d13      	adds	r3, r2, #4
+ 800005c:	60fb      	str	r3, [r7, #12]
+ 800005e:	68bb      	ldr	r3, [r7, #8]
+ 8000060:	1d19      	adds	r1, r3, #4
+ 8000062:	60b9      	str	r1, [r7, #8]
+ 8000064:	6812      	ldr	r2, [r2, #0]
+ 8000066:	601a      	str	r2, [r3, #0]
+ 8000068:	68bb      	ldr	r3, [r7, #8]
+ 800006a:	4a0b      	ldr	r2, [pc, #44]	@ (8000098 <Reset_Handler+0x50>)
+ 800006c:	4293      	cmp	r3, r2
+ 800006e:	d3f3      	bcc.n	8000058 <Reset_Handler+0x10>
+ for (uint32_t *dst = &_sbss; dst < &_ebss;) *dst++ = 0;
+ 8000070:	4b0a      	ldr	r3, [pc, #40]	@ (800009c <Reset_Handler+0x54>)
+ 8000072:	607b      	str	r3, [r7, #4]
+ 8000074:	e004      	b.n	8000080 <Reset_Handler+0x38>
+ 8000076:	687b      	ldr	r3, [r7, #4]
+ 8000078:	1d1a      	adds	r2, r3, #4
+ 800007a:	607a      	str	r2, [r7, #4]
+ 800007c:	2200      	movs	r2, #0
+ 800007e:	601a      	str	r2, [r3, #0]
+ 8000080:	687b      	ldr	r3, [r7, #4]
+ 8000082:	4a07      	ldr	r2, [pc, #28]	@ (80000a0 <Reset_Handler+0x58>)
+ 8000084:	4293      	cmp	r3, r2
+ 8000086:	d3f6      	bcc.n	8000076 <Reset_Handler+0x2e>
+ (void)main();
+ 8000088:	f000 f822 	bl	80000d0 <main>
+ while (1) {}
+ 800008c:	bf00      	nop
+ 800008e:	e7fd      	b.n	800008c <Reset_Handler+0x44>
+ 8000090:	0800011c 	.word	0x0800011c
+ 8000094:	20000000 	.word	0x20000000
+ 8000098:	20000000 	.word	0x20000000
+ 800009c:	20000000 	.word	0x20000000
+ 80000a0:	20000000 	.word	0x20000000
+
+080000a4 <delay>:
+#define REG32(a) (*(volatile uint32_t *)(a))
+#define RCC_AHB1ENR REG32(0x40023830UL)
+#define GPIOG_MODER REG32(0x40021800UL)
+#define GPIOG_BSRR REG32(0x40021818UL)
+#define LED (1UL << 13)
+static void delay(void) {
+ 80000a4:	b480      	push	{r7}
+ 80000a6:	b083      	sub	sp, #12
+ 80000a8:	af00      	add	r7, sp, #0
+ for (volatile uint32_t i = 0; i < 800000; ++i) __asm volatile("nop");
+ 80000aa:	2300      	movs	r3, #0
+ 80000ac:	607b      	str	r3, [r7, #4]
+ 80000ae:	e003      	b.n	80000b8 <delay+0x14>
+ 80000b0:	bf00      	nop
+ 80000b2:	687b      	ldr	r3, [r7, #4]
+ 80000b4:	3301      	adds	r3, #1
+ 80000b6:	607b      	str	r3, [r7, #4]
+ 80000b8:	687b      	ldr	r3, [r7, #4]
+ 80000ba:	4a04      	ldr	r2, [pc, #16]	@ (80000cc <delay+0x28>)
+ 80000bc:	4293      	cmp	r3, r2
+ 80000be:	d9f7      	bls.n	80000b0 <delay+0xc>
+}
+ 80000c0:	bf00      	nop
+ 80000c2:	bf00      	nop
+ 80000c4:	370c      	adds	r7, #12
+ 80000c6:	46bd      	mov	sp, r7
+ 80000c8:	bc80      	pop	{r7}
+ 80000ca:	4770      	bx	lr
+ 80000cc:	000c34ff 	.word	0x000c34ff
+
+080000d0 <main>:
+int main(void) {
+ 80000d0:	b580      	push	{r7, lr}
+ 80000d2:	af00      	add	r7, sp, #0
+ RCC_AHB1ENR |= (1UL << 6);
+ 80000d4:	4b0e      	ldr	r3, [pc, #56]	@ (8000110 <main+0x40>)
+ 80000d6:	681b      	ldr	r3, [r3, #0]
+ 80000d8:	4a0d      	ldr	r2, [pc, #52]	@ (8000110 <main+0x40>)
+ 80000da:	f043 0340 	orr.w	r3, r3, #64	@ 0x40
+ 80000de:	6013      	str	r3, [r2, #0]
+ (void)RCC_AHB1ENR;
+ 80000e0:	4b0b      	ldr	r3, [pc, #44]	@ (8000110 <main+0x40>)
+ 80000e2:	681b      	ldr	r3, [r3, #0]
+ GPIOG_MODER = (GPIOG_MODER & ~(3UL << 26)) | (1UL << 26);
+ 80000e4:	4b0b      	ldr	r3, [pc, #44]	@ (8000114 <main+0x44>)
+ 80000e6:	681b      	ldr	r3, [r3, #0]
+ 80000e8:	f023 6340 	bic.w	r3, r3, #201326592	@ 0xc000000
+ 80000ec:	4a09      	ldr	r2, [pc, #36]	@ (8000114 <main+0x44>)
+ 80000ee:	f043 6380 	orr.w	r3, r3, #67108864	@ 0x4000000
+ 80000f2:	6013      	str	r3, [r2, #0]
+ while (1) {
+   GPIOG_BSRR = LED;
+ 80000f4:	4b08      	ldr	r3, [pc, #32]	@ (8000118 <main+0x48>)
+ 80000f6:	f44f 5200 	mov.w	r2, #8192	@ 0x2000
+ 80000fa:	601a      	str	r2, [r3, #0]
+   delay();
+ 80000fc:	f7ff ffd2 	bl	80000a4 <delay>
+   GPIOG_BSRR = LED << 16;
+ 8000100:	4b05      	ldr	r3, [pc, #20]	@ (8000118 <main+0x48>)
+ 8000102:	f04f 5200 	mov.w	r2, #536870912	@ 0x20000000
+ 8000106:	601a      	str	r2, [r3, #0]
+   delay();
+ 8000108:	f7ff ffcc 	bl	80000a4 <delay>
+   GPIOG_BSRR = LED;
+ 800010c:	bf00      	nop
+ 800010e:	e7f1      	b.n	80000f4 <main+0x24>
+ 8000110:	40023830 	.word	0x40023830
+ 8000114:	40021800 	.word	0x40021800
+ 8000118:	40021818 	.word	0x40021818
