@@ -1,0 +1,3 @@
+# I want to track the binary files in this folder.
+!*.elf
+!*.bin
