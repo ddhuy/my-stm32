@@ -25,7 +25,7 @@ Memory Configuration
 
 Name             Origin             Length             Attributes
 SDRAM            0xd0000000         0x00800000         xrw
-RAM              0x20000000         0x00030000         xrw
+RAM              0x20000000         0x00020000         xrw
 *default*        0x00000000         0xffffffff
 
 Linker script and memory map
@@ -34,8 +34,8 @@ LOAD build/application/main.o
 LOAD build/application/startup.o
 LOAD build/application/vectors.o
                 0x00001000                        __stack_size = 0x1000
-                0x20030000                        __estack = (ORIGIN (RAM) + LENGTH (RAM))
-                0x2002f000                        __stack_limit = (__estack - __stack_size)
+                0x20020000                        __estack = (ORIGIN (RAM) + LENGTH (RAM))
+                0x2001f000                        __stack_limit = (__estack - __stack_size)
 
 .isr_vector     0xd0000000      0x1ac
                 0xd0000000                        __vector_table_start__ = .
