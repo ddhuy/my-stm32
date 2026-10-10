@@ -16,9 +16,10 @@ APP_SOURCE_DIR := application/src
 APP_INCLUDE_DIR:= application/include
 APP_LD_SCRIPT  := application/linker.ld
 
-APP_SOURCES    := $(wildcard $(APP_SOURCE_DIR)/*.c)
-APP_OBJECTS    := $(patsubst $(APP_SOURCE_DIR)/%.c,$(BUILD_DIR)/%.o,$(APP_SOURCES))
-APPLICATION    := $(BUILD_DIR)/application.elf
+APP_SOURCES := $(wildcard $(APP_SOURCE_DIR)/*.c)
+APP_OBJECTS := $(patsubst $(APP_SOURCE_DIR)/%.c,$(BUILD_DIR)/%.o,$(APP_SOURCES))
+APP_ELF     := $(BUILD_DIR)/application.elf
+APP_BIN     := $(BUILD_DIR)/application.bin
 
 CFLAGS := -mcpu=cortex-m4 -mthumb -O0 -g3 -Wall -Wextra \
           -ffreestanding -fno-builtin -ffunction-sections -fdata-sections \
@@ -30,8 +31,9 @@ LDFLAGS := -T $(APP_LD_SCRIPT) -nostdlib \
 
 .PHONY: all clean inspect
 
-$(BUILD_DIR)/application.elf: $(APP_OBJECTS) $(APP_LD_SCRIPT)
+$(APP_ELF): $(APP_OBJECTS) $(APP_LD_SCRIPT)
 	$(CC) $(CFLAGS) $(APP_OBJECTS) $(LDFLAGS) -o $@
+	$(OBJCOPY) -O binary $@ $(APP_BIN)
 
 $(BUILD_DIR)/%.o: $(APP_SOURCE_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -39,12 +41,12 @@ $(BUILD_DIR)/%.o: $(APP_SOURCE_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $@
 
-all: $(APPLICATION)
+all: $(APP_ELF)
 
 clean:
 	rm -rf $(BUILD_DIR)
 
 inspect: all
-	$(SIZE) $(APPLICATION)
-	$(OBJDUMP) -h $(APPLICATION)
-	$(READELF) -l $(APPLICATION)
+	$(SIZE) $(APP_ELF)
+	$(OBJDUMP) -h $(APP_ELF)
+	$(READELF) -l $(APP_ELF)
