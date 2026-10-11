@@ -9,56 +9,118 @@ SIZE    := $(CROSS_COMPILER)size
 OBJCOPY := $(CROSS_COMPILER)objcopy
 OBJDUMP := $(CROSS_COMPILER)objdump
 READELF := $(CROSS_COMPILER)readelf
+PYTHON  := python3
 
-APP_BUILD_DIR  := build/application
-BOOT_BUILD_DIR := build/bootloader
+# Layers, like U-Boot: arch (CPU core) <- soc (chip) <- board (PCB).
+# Code includes "arch/...", "soc/..." and "board.h"; these variables pick which.
+ARCH  ?= cortex-m4
+SOC   ?= stm32f429
+BOARD ?= stm32f429i-disc1
 
-BOOTLOADER_SOURCE_DIR := bootloader/src
-BOOTLOADER_INCLUDE_DIR := bootloader/include
+BUILD_DIR      := build
+APP_BUILD_DIR  := $(BUILD_DIR)/application
+BOOT_BUILD_DIR := $(BUILD_DIR)/bootloader
 
-COMMON_SOURCE_DIR  := common/src
-COMMON_INCLUDE_DIR := common/include
+# Shared by both programs: the layers, the drivers and the system contract
+LAYER_INCLUDES := -I. \
+				  -Icommon/include \
 
-APP_SOURCE_DIR := application/src
-APP_INCLUDE_DIR:= application/include
-APP_LD_SCRIPT  := application/linker.ld
+ARCH_FLAGS := -mcpu=cortex-m4 -mthumb
 
-APP_SOURCES := $(wildcard $(APP_SOURCE_DIR)/*.c)
-APP_OBJECTS := $(patsubst $(APP_SOURCE_DIR)/%.c,$(APP_BUILD_DIR)/%.o,$(APP_SOURCES))
+BASE_CFLAGS := $(ARCH_FLAGS) -O0 -g3 -Wall -Wextra \
+               -ffreestanding -fno-builtin -ffunction-sections -fdata-sections \
+               -MMD -MP
+
+# Each program sees only its own private headers, never the other's
+APP_INCLUDES  := -Iapplication/include $(LAYER_INCLUDES)
+BOOT_INCLUDES := -Ibootloader/include $(LAYER_INCLUDES)
+
+APP_CFLAGS  := $(BASE_CFLAGS) $(APP_INCLUDES)
+BOOT_CFLAGS := $(BASE_CFLAGS) $(BOOT_INCLUDES)
+
+BASE_LDFLAGS := $(ARCH_FLAGS) -nostdlib -Wl,--gc-sections
+
+# Linker scripts are written as linker.ld.S and run through the C preprocessor,
+# so they take their addresses from memory_map.h (see arch/const.h for _AC()).
+LDS_CPP := $(CC) -E -P -x assembler-with-cpp -MMD -MP
+
+# Value of a C macro from the shared headers, as a decimal number.
+cpp_value = $(shell printf '%d' $$(( $$(echo '$(1)' | \
+    $(CC) -E -P -x assembler-with-cpp $(LAYER_INCLUDES) \
+    -include memory_map.h -include image_format.h -) )))
+
+
+# ---- Application: runs from SDRAM, packaged with a header for the bootloader
+APP_SOURCES := $(wildcard application/src/*.c)
+APP_OBJECTS := $(patsubst %.c,$(APP_BUILD_DIR)/obj/%.o,$(APP_SOURCES))
+APP_LDS     := $(APP_BUILD_DIR)/linker.ld
 APP_ELF     := $(APP_BUILD_DIR)/application.elf
 APP_BIN     := $(APP_BUILD_DIR)/application.bin
+APP_IMG     := $(APP_BUILD_DIR)/application.img
 
-BOOT_SOURCES := $(wildcard $(BOOTLOADER_SOURCE_DIR)/*.c)
-BOOT_OBJECTS := $(patsubst $(BOOTLOADER_SOURCE_DIR)/%.c,$(BOOT_BUILD_DIR)/%.o,$(BOOT_SOURCES))
+# ---- Bootloader: runs from flash at 0x08000000
+BOOT_SOURCES := $(wildcard bootloader/src/*.c) \
+                $(wildcard board/$(BOARD)/*.c) \
+                $(wildcard drivers/*/*.c)
+BOOT_OBJECTS := $(patsubst %.c,$(BOOT_BUILD_DIR)/obj/%.o,$(BOOT_SOURCES))
+BOOT_LDS     := $(BOOT_BUILD_DIR)/linker.ld
 BOOT_ELF     := $(BOOT_BUILD_DIR)/bootloader.elf
 BOOT_BIN     := $(BOOT_BUILD_DIR)/bootloader.bin
 
-CFLAGS := -mcpu=cortex-m4 -mthumb -O0 -g3 -Wall -Wextra \
-          -ffreestanding -fno-builtin -ffunction-sections -fdata-sections \
-          -I$(APP_INCLUDE_DIR) -I$(COMMON_INCLUDE_DIR) -I$(BOOTLOADER_INCLUDE_DIR)
 
-LDFLAGS := -T $(APP_LD_SCRIPT) -nostdlib \
-           -Wl,--gc-sections \
-           -Wl,-Map=$(APP_BUILD_DIR)/application.map
+.PHONY: all application bootloader clean inspect
 
-.PHONY: all clean inspect
+all: application bootloader
 
-$(APP_ELF): $(APP_OBJECTS)
-	$(CC) $(CFLAGS) $(APP_OBJECTS) $(LDFLAGS) -o $@
-	$(OBJCOPY) -O binary $@ $(APP_BIN)
+application: $(APP_IMG)
 
-$(APP_BUILD_DIR)/%.o: $(APP_SOURCE_DIR)/%.c | $(APP_BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+bootloader: $(BOOT_BIN)
 
-$(APP_BUILD_DIR):
-	mkdir -p $@
 
-all: $(APP_ELF)
+$(APP_BUILD_DIR)/obj/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(APP_CFLAGS) -c $< -o $@
+
+$(APP_LDS): application/linker.ld.S
+	@mkdir -p $(dir $@)
+	$(LDS_CPP) $(APP_INCLUDES) -MT $@ $< -o $@
+
+$(APP_ELF): $(APP_OBJECTS) $(APP_LDS)
+	$(CC) $(BASE_LDFLAGS) $(APP_OBJECTS) -T $(APP_LDS) \
+	      -Wl,-Map=$(APP_BUILD_DIR)/application.map -o $@
+
+$(APP_BIN): $(APP_ELF)
+	$(OBJCOPY) -O binary $< $@
+
+$(APP_IMG): $(APP_BIN) scripts/package_image.py common/include/memory_map.h common/include/image_format.h
+	$(PYTHON) scripts/package_image.py $< $@ \
+	    --magic $(call cpp_value,APP_IMAGE_MAGIC) \
+	    --load-address $(call cpp_value,APP_SDRAM_BASE)
+
+
+$(BOOT_BUILD_DIR)/obj/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(BOOT_CFLAGS) -c $< -o $@
+
+$(BOOT_LDS): bootloader/linker.ld.S
+	@mkdir -p $(dir $@)
+	$(LDS_CPP) $(BOOT_INCLUDES) -MT $@ $< -o $@
+
+$(BOOT_ELF): $(BOOT_OBJECTS) $(BOOT_LDS)
+	$(CC) $(BASE_LDFLAGS) $(BOOT_OBJECTS) -T $(BOOT_LDS) \
+	      -Wl,-Map=$(BOOT_BUILD_DIR)/bootloader.map -o $@
+
+$(BOOT_BIN): $(BOOT_ELF)
+	$(OBJCOPY) -O binary $< $@
+
 
 clean:
-	rm -rf $(APP_BUILD_DIR)
+	rm -rf $(APP_BUILD_DIR) $(BOOT_BUILD_DIR)
 
+# Flash bootloader.bin at 0x08000000 and application.img at 0x08020000 (APP_FLASH_BASE).
 inspect: all
-	$(SIZE) $(APP_ELF)
-	$(OBJDUMP) -h $(APP_ELF)
+	$(SIZE) $(BOOT_ELF) $(APP_ELF)
+	$(OBJDUMP) -h $(BOOT_ELF) $(APP_ELF)
 	$(READELF) -l $(APP_ELF)
+
+-include $(shell find $(BUILD_DIR) -name '*.d' 2>/dev/null)

@@ -1,9 +1,9 @@
 #include <stdint.h>
+#include "soc/stm32f429/irq.h"
 #include "startup.h"
 
 #define CORE_VECTOR_COUNT 16u
-#define DEVICE_IRQ_COUNT  91u
-#define VECTOR_COUNT      (CORE_VECTOR_COUNT + DEVICE_IRQ_COUNT)
+#define VECTOR_COUNT      (CORE_VECTOR_COUNT + IRQ_COUNT)
 
 extern uint32_t __estack;
 
@@ -26,6 +26,6 @@ const uintptr_t vector_table[VECTOR_COUNT] = {
     [14] = (uintptr_t)default_handler,  /* PendSV */
     [15] = (uintptr_t)default_handler,  /* SysTick */
 
-    /* External IRQ 0-90: temporary default handlers */
+    /* External IRQ 0 .. IRQ_COUNT-1: temporary default handlers */
     [16 ... VECTOR_COUNT - 1] = (uintptr_t)default_handler
 };

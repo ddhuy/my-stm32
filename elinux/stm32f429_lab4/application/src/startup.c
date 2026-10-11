@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include "arch/cortex-m4/barrier.h"
+#include "arch/cortex-m4/scb_regs.h"
 #include "startup.h"
 
 
@@ -25,6 +27,14 @@ void default_handler(void)
 
 void reset_handler(void)
 {
+    /*
+     * The image owns its vector table: point VTOR at it before anything can
+     * fault, so the application works no matter which loader started it.
+     */
+    SCB_VTOR = (uint32_t)(uintptr_t)vector_table;
+    dsb();
+    isb();
+
     // Initialize the .data
     for (uint32_t* src = &__sidata, *dst = &__sdata; dst < &__edata; )
     {

@@ -1,25 +1,35 @@
 
 Discarded input sections
 
- .group         0x00000000        0xc build/application/main.o
- .group         0x00000000        0xc build/application/main.o
- .text          0x00000000        0x0 build/application/main.o
- .data          0x00000000        0x0 build/application/main.o
- .bss           0x00000000        0x0 build/application/main.o
- .group         0x00000000        0xc build/application/startup.o
- .group         0x00000000        0xc build/application/startup.o
- .text          0x00000000        0x0 build/application/startup.o
- .data          0x00000000        0x0 build/application/startup.o
- .bss           0x00000000        0x0 build/application/startup.o
- .debug_macro   0x00000000      0xaba build/application/startup.o
- .debug_macro   0x00000000      0x34e build/application/startup.o
- .group         0x00000000        0xc build/application/vectors.o
- .group         0x00000000        0xc build/application/vectors.o
- .text          0x00000000        0x0 build/application/vectors.o
- .data          0x00000000        0x0 build/application/vectors.o
- .bss           0x00000000        0x0 build/application/vectors.o
- .debug_macro   0x00000000      0xaba build/application/vectors.o
- .debug_macro   0x00000000      0x34e build/application/vectors.o
+ .group         0x00000000        0xc build/application/obj/application/src/main.o
+ .group         0x00000000        0xc build/application/obj/application/src/main.o
+ .text          0x00000000        0x0 build/application/obj/application/src/main.o
+ .data          0x00000000        0x0 build/application/obj/application/src/main.o
+ .bss           0x00000000        0x0 build/application/obj/application/src/main.o
+ .group         0x00000000        0xc build/application/obj/application/src/startup.o
+ .group         0x00000000        0xc build/application/obj/application/src/startup.o
+ .group         0x00000000        0xc build/application/obj/application/src/startup.o
+ .group         0x00000000        0xc build/application/obj/application/src/startup.o
+ .group         0x00000000        0xc build/application/obj/application/src/startup.o
+ .text          0x00000000        0x0 build/application/obj/application/src/startup.o
+ .data          0x00000000        0x0 build/application/obj/application/src/startup.o
+ .bss           0x00000000        0x0 build/application/obj/application/src/startup.o
+ .debug_macro   0x00000000      0xaba build/application/obj/application/src/startup.o
+ .debug_macro   0x00000000      0x34e build/application/obj/application/src/startup.o
+ .group         0x00000000        0xc build/application/obj/application/src/vectors.o
+ .group         0x00000000        0xc build/application/obj/application/src/vectors.o
+ .group         0x00000000        0xc build/application/obj/application/src/vectors.o
+ .group         0x00000000        0xc build/application/obj/application/src/vectors.o
+ .group         0x00000000        0xc build/application/obj/application/src/vectors.o
+ .group         0x00000000        0xc build/application/obj/application/src/vectors.o
+ .group         0x00000000        0xc build/application/obj/application/src/vectors.o
+ .text          0x00000000        0x0 build/application/obj/application/src/vectors.o
+ .data          0x00000000        0x0 build/application/obj/application/src/vectors.o
+ .bss           0x00000000        0x0 build/application/obj/application/src/vectors.o
+ .debug_macro   0x00000000      0xaba build/application/obj/application/src/vectors.o
+ .debug_macro   0x00000000      0x34e build/application/obj/application/src/vectors.o
+ .debug_macro   0x00000000       0x22 build/application/obj/application/src/vectors.o
+ .debug_macro   0x00000000       0x34 build/application/obj/application/src/vectors.o
 
 Memory Configuration
 
@@ -30,9 +40,9 @@ RAM              0x20000000         0x00020000         xrw
 
 Linker script and memory map
 
-LOAD build/application/main.o
-LOAD build/application/startup.o
-LOAD build/application/vectors.o
+LOAD build/application/obj/application/src/main.o
+LOAD build/application/obj/application/src/startup.o
+LOAD build/application/obj/application/src/vectors.o
                 0x00001000                        __stack_size = 0x1000
                 0x20020000                        __estack = (ORIGIN (RAM) + LENGTH (RAM))
                 0x2001f000                        __stack_limit = (__estack - __stack_size)
@@ -40,63 +50,65 @@ LOAD build/application/vectors.o
 .isr_vector     0xd0000000      0x1ac
                 0xd0000000                        __vector_table_start__ = .
  *(.isr_vector)
- .isr_vector    0xd0000000      0x1ac build/application/vectors.o
+ .isr_vector    0xd0000000      0x1ac build/application/obj/application/src/vectors.o
                 0xd0000000                vector_table
                 0xd00001ac                        . = ALIGN (0x4)
                 0xd00001ac                        __vector_table_end__ = .
 
-.text           0xd00001ac       0x88
+.text           0xd00001ac       0xc0
                 0xd00001ac                        . = ALIGN (0x4)
  *(.text*)
- .text.main     0xd00001ac       0x24 build/application/main.o
+ .text.main     0xd00001ac       0x24 build/application/obj/application/src/main.o
                 0xd00001ac                main
+ .text.dsb      0xd00001d0       0x10 build/application/obj/application/src/startup.o
+ .text.isb      0xd00001e0       0x10 build/application/obj/application/src/startup.o
  .text.default_handler
-                0xd00001d0        0x8 build/application/startup.o
-                0xd00001d0                default_handler
+                0xd00001f0        0x8 build/application/obj/application/src/startup.o
+                0xd00001f0                default_handler
  .text.reset_handler
-                0xd00001d8       0x5c build/application/startup.o
-                0xd00001d8                reset_handler
+                0xd00001f8       0x74 build/application/obj/application/src/startup.o
+                0xd00001f8                reset_handler
  *(.rodata*)
-                0xd0000234                        . = ALIGN (0x4)
+                0xd000026c                        . = ALIGN (0x4)
 
-.glue_7         0xd0000234        0x0
- .glue_7        0xd0000234        0x0 linker stubs
+.glue_7         0xd000026c        0x0
+ .glue_7        0xd000026c        0x0 linker stubs
 
-.glue_7t        0xd0000234        0x0
- .glue_7t       0xd0000234        0x0 linker stubs
+.glue_7t        0xd000026c        0x0
+ .glue_7t       0xd000026c        0x0 linker stubs
 
-.vfp11_veneer   0xd0000234        0x0
- .vfp11_veneer  0xd0000234        0x0 linker stubs
+.vfp11_veneer   0xd000026c        0x0
+ .vfp11_veneer  0xd000026c        0x0 linker stubs
 
-.v4_bx          0xd0000234        0x0
- .v4_bx         0xd0000234        0x0 linker stubs
+.v4_bx          0xd000026c        0x0
+ .v4_bx         0xd000026c        0x0 linker stubs
 
-.iplt           0xd0000234        0x0
- .iplt          0xd0000234        0x0 build/application/main.o
+.iplt           0xd000026c        0x0
+ .iplt          0xd000026c        0x0 build/application/obj/application/src/main.o
 
-.rel.dyn        0xd0000234        0x0
- .rel.iplt      0xd0000234        0x0 build/application/main.o
+.rel.dyn        0xd000026c        0x0
+ .rel.iplt      0xd000026c        0x0 build/application/obj/application/src/main.o
 
-.data           0x20000000        0x4 load address 0xd0000234
+.data           0x20000000        0x4 load address 0xd000026c
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        __sdata = .
  *(.data*)
  .data.app_counter
-                0x20000000        0x4 build/application/main.o
+                0x20000000        0x4 build/application/obj/application/src/main.o
                 0x20000000                app_counter
                 0x20000004                        . = ALIGN (0x4)
                 0x20000004                        __edata = .
-                0xd0000234                        __sidata = LOADADDR (.data)
+                0xd000026c                        __sidata = LOADADDR (.data)
 
-.igot.plt       0x20000004        0x0 load address 0xd0000238
- .igot.plt      0x20000004        0x0 build/application/main.o
+.igot.plt       0x20000004        0x0 load address 0xd0000270
+ .igot.plt      0x20000004        0x0 build/application/obj/application/src/main.o
 
-.bss            0x20000004        0x4 load address 0xd0000238
+.bss            0x20000004        0x4 load address 0xd0000270
                 0x20000004                        . = ALIGN (0x4)
                 0x20000004                        __sbss = .
  *(.bss*)
  .bss.app_status
-                0x20000004        0x4 build/application/main.o
+                0x20000004        0x4 build/application/obj/application/src/main.o
                 0x20000004                app_status
  *(COMMON)
                 0x20000008                        . = ALIGN (0x4)
@@ -106,64 +118,70 @@ LOAD build/application/vectors.o
 OUTPUT(build/application/application.elf elf32-littlearm)
 LOAD linker stubs
 
-.debug_info     0x00000000      0x2a9
- .debug_info    0x00000000       0xb8 build/application/main.o
- .debug_info    0x000000b8      0x12c build/application/startup.o
- .debug_info    0x000001e4       0xc5 build/application/vectors.o
+.debug_info     0x00000000      0x318
+ .debug_info    0x00000000       0xb8 build/application/obj/application/src/main.o
+ .debug_info    0x000000b8      0x181 build/application/obj/application/src/startup.o
+ .debug_info    0x00000239       0xdf build/application/obj/application/src/vectors.o
 
-.debug_abbrev   0x00000000      0x1c9
- .debug_abbrev  0x00000000       0x72 build/application/main.o
- .debug_abbrev  0x00000072       0xc8 build/application/startup.o
- .debug_abbrev  0x0000013a       0x8f build/application/vectors.o
+.debug_abbrev   0x00000000      0x1f6
+ .debug_abbrev  0x00000000       0x72 build/application/obj/application/src/main.o
+ .debug_abbrev  0x00000072       0xf5 build/application/obj/application/src/startup.o
+ .debug_abbrev  0x00000167       0x8f build/application/obj/application/src/vectors.o
 
-.debug_aranges  0x00000000       0x60
+.debug_aranges  0x00000000       0x70
  .debug_aranges
-                0x00000000       0x20 build/application/main.o
+                0x00000000       0x20 build/application/obj/application/src/main.o
  .debug_aranges
-                0x00000020       0x28 build/application/startup.o
+                0x00000020       0x38 build/application/obj/application/src/startup.o
  .debug_aranges
-                0x00000048       0x18 build/application/vectors.o
+                0x00000058       0x18 build/application/obj/application/src/vectors.o
 
 .debug_rnglists
-                0x00000000       0x2c
+                0x00000000       0x38
  .debug_rnglists
-                0x00000000       0x13 build/application/main.o
+                0x00000000       0x13 build/application/obj/application/src/main.o
  .debug_rnglists
-                0x00000013       0x19 build/application/startup.o
+                0x00000013       0x25 build/application/obj/application/src/startup.o
 
-.debug_macro    0x00000000      0xe9a
- .debug_macro   0x00000000       0x24 build/application/main.o
- .debug_macro   0x00000024      0xaba build/application/main.o
- .debug_macro   0x00000ade      0x34e build/application/main.o
- .debug_macro   0x00000e2c       0x2e build/application/startup.o
- .debug_macro   0x00000e5a       0x40 build/application/vectors.o
+.debug_macro    0x00000000     0x13e0
+ .debug_macro   0x00000000       0x24 build/application/obj/application/src/main.o
+ .debug_macro   0x00000024      0xaba build/application/obj/application/src/main.o
+ .debug_macro   0x00000ade      0x34e build/application/obj/application/src/main.o
+ .debug_macro   0x00000e2c       0x59 build/application/obj/application/src/startup.o
+ .debug_macro   0x00000e85       0x22 build/application/obj/application/src/startup.o
+ .debug_macro   0x00000ea7       0x34 build/application/obj/application/src/startup.o
+ .debug_macro   0x00000edb      0x238 build/application/obj/application/src/startup.o
+ .debug_macro   0x00001113       0x69 build/application/obj/application/src/vectors.o
+ .debug_macro   0x0000117c       0x10 build/application/obj/application/src/vectors.o
+ .debug_macro   0x0000118c       0x2e build/application/obj/application/src/vectors.o
+ .debug_macro   0x000011ba      0x226 build/application/obj/application/src/vectors.o
 
-.debug_line     0x00000000      0x2f8
- .debug_line    0x00000000       0xda build/application/main.o
- .debug_line    0x000000da      0x13c build/application/startup.o
- .debug_line    0x00000216       0xe2 build/application/vectors.o
+.debug_line     0x00000000      0x3cb
+ .debug_line    0x00000000       0xda build/application/obj/application/src/main.o
+ .debug_line    0x000000da      0x1bd build/application/obj/application/src/startup.o
+ .debug_line    0x00000297      0x134 build/application/obj/application/src/vectors.o
 
-.debug_str      0x00000000     0x388a
- .debug_str     0x00000000     0x388a build/application/main.o
+.debug_str      0x00000000     0x4d06
+ .debug_str     0x00000000     0x4d06 build/application/obj/application/src/main.o
                                0x38e6 (size before relaxing)
- .debug_str     0x0000388a     0x3926 build/application/startup.o
- .debug_str     0x0000388a     0x3979 build/application/vectors.o
+ .debug_str     0x00004d06     0x4659 build/application/obj/application/src/startup.o
+ .debug_str     0x00004d06     0x4250 build/application/obj/application/src/vectors.o
 
 .comment        0x00000000       0x45
- .comment       0x00000000       0x45 build/application/main.o
+ .comment       0x00000000       0x45 build/application/obj/application/src/main.o
                                  0x46 (size before relaxing)
- .comment       0x00000045       0x46 build/application/startup.o
- .comment       0x00000045       0x46 build/application/vectors.o
+ .comment       0x00000045       0x46 build/application/obj/application/src/startup.o
+ .comment       0x00000045       0x46 build/application/obj/application/src/vectors.o
 
 .ARM.attributes
                 0x00000000       0x2e
  .ARM.attributes
-                0x00000000       0x2e build/application/main.o
+                0x00000000       0x2e build/application/obj/application/src/main.o
  .ARM.attributes
-                0x0000002e       0x2e build/application/startup.o
+                0x0000002e       0x2e build/application/obj/application/src/startup.o
  .ARM.attributes
-                0x0000005c       0x2e build/application/vectors.o
+                0x0000005c       0x2e build/application/obj/application/src/vectors.o
 
-.debug_frame    0x00000000       0x70
- .debug_frame   0x00000000       0x28 build/application/main.o
- .debug_frame   0x00000028       0x48 build/application/startup.o
+.debug_frame    0x00000000       0xb0
+ .debug_frame   0x00000000       0x28 build/application/obj/application/src/main.o
+ .debug_frame   0x00000028       0x88 build/application/obj/application/src/startup.o

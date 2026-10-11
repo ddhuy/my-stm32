@@ -1,22 +1,30 @@
 #ifndef IMAGE_FORMAT_H
 #define IMAGE_FORMAT_H
 
-#include <assert.h>
+/*
+ * Packaged application image, as written by scripts/package_image.py:
+ * a 16-byte header followed by the raw application binary.
+ * Where the image lives and where it loads is in memory_map.h.
+ */
+
+#include "arch/cortex-m4/const.h"
+
+#define APP_IMAGE_MAGIC     _AC(0x00070013, u)
+
+#ifndef __ASSEMBLER__
+
 #include <stdint.h>
 
-#define APP_IMAGE_MAGIC     0x00070013u /* Magic number for application image */
-#define APP_IMAGE_LOAD_ADDR 0xD0000000u
-
-
 typedef struct {
-    uint32_t magic;        /* Magic number for the application image */
-    uint32_t image_size;   /* Size of the application image */
-    uint32_t load_address; /* Load address of the application image */
-    uint32_t crc;          /* CRC32 of the application image */
+    uint32_t magic;        /* APP_IMAGE_MAGIC */
+    uint32_t image_size;   /* Size of the payload after this header */
+    uint32_t load_address; /* Where the bootloader copies the payload */
+    uint32_t crc;          /* Reserved for a CRC32 of the payload (written as 0) */
 } app_image_header_t;
 
+_Static_assert(sizeof(app_image_header_t) == 16,
+               "Application image header must be 16 bytes");
 
-static_assert(sizeof(app_image_header_t) == 16,
-              "Application image header must be 16 bytes");
+#endif /* __ASSEMBLER__ */
 
 #endif

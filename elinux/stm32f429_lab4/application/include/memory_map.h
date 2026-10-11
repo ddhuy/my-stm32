@@ -1,7 +1,0 @@
-#ifndef MEMORY_MAP_H
-#define MEMORY_MAP_H
-
-#define APP_FLASH_BASE  0x08020000u
-#define APP_SDRAM_BASE  0xD0000000u
-
-#endif
