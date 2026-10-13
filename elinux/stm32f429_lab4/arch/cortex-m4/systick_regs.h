@@ -10,6 +10,12 @@
  * CTRL = CLKSOURCE | TICKINT | ENABLE.
  */
 
+ /* SysTick registers */
+#define SYST_CSR         MMIO32(SCS_BASE + 0x010u)
+#define SYST_RVR         MMIO32(SCS_BASE + 0x014u)
+#define SYST_CVR         MMIO32(SCS_BASE + 0x018u)
+#define SYST_CALIB       MMIO32(SCS_BASE + 0x01Cu)
+
 #define SYSTICK_CTRL     MMIO32(SYSTICK_BASE + 0x00u)
 #define SYSTICK_LOAD     MMIO32(SYSTICK_BASE + 0x04u)
 #define SYSTICK_VAL      MMIO32(SYSTICK_BASE + 0x08u)
