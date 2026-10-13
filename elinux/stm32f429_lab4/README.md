@@ -10,6 +10,7 @@ make                 # both programs
 make bootloader      # build/bootloader/bootloader.bin
 make application     # build/application/application.img
 make inspect         # sizes and section layout
+make disasm          # application and bootloader .lst files with C source
 ```
 
 | File | Flash address |
@@ -154,6 +155,13 @@ x/8wx 0xD0000000
 ```
 
 - Disassemble with C source code
+```sh
+make disasm
 ```
-arm-none-eabi-objdump -d -S build/application/application.elf
-```
+
+Generates `build/application/application.lst` and `build/bootloader/bootloader.lst`
+from their ELF files using `objdump -d -S`. Listings are regenerated when their
+ELF changes, ignored by Git, and removed by `make clean`.
+For later debugging, preserve the exact ELF and map files matching the flashed
+binaries along with their source revision; listings are readable snapshots,
+while GDB uses the ELF's symbols and debug information.

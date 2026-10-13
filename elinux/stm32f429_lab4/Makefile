@@ -57,6 +57,7 @@ APP_SOURCES := $(wildcard application/src/*.c) \
 APP_OBJECTS := $(patsubst %.c,$(APP_BUILD_DIR)/obj/%.o,$(APP_SOURCES))
 APP_LDS     := $(APP_BUILD_DIR)/linker.ld
 APP_ELF     := $(APP_BUILD_DIR)/application.elf
+APP_LST     := $(APP_BUILD_DIR)/application.lst
 APP_BIN     := $(APP_BUILD_DIR)/application.bin
 APP_IMG     := $(APP_BUILD_DIR)/application.img
 
@@ -67,16 +68,25 @@ BOOT_SOURCES := $(wildcard bootloader/src/*.c) \
 BOOT_OBJECTS := $(patsubst %.c,$(BOOT_BUILD_DIR)/obj/%.o,$(BOOT_SOURCES))
 BOOT_LDS     := $(BOOT_BUILD_DIR)/linker.ld
 BOOT_ELF     := $(BOOT_BUILD_DIR)/bootloader.elf
+BOOT_LST     := $(BOOT_BUILD_DIR)/bootloader.lst
 BOOT_BIN     := $(BOOT_BUILD_DIR)/bootloader.bin
 
 
-.PHONY: all application bootloader clean inspect
+.PHONY: all application bootloader clean inspect disasm
 
-all: application bootloader
+all: application bootloader disasm
 
 application: $(APP_IMG)
 
 bootloader: $(BOOT_BIN)
+
+disasm: $(APP_LST) $(BOOT_LST)
+
+$(APP_LST): $(APP_ELF)
+	$(OBJDUMP) -d -S $< > $@
+
+$(BOOT_LST): $(BOOT_ELF)
+	$(OBJDUMP) -d -S $< > $@
 
 
 $(APP_BUILD_DIR)/obj/%.o: %.c

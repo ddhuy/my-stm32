@@ -1,0 +1,486 @@
+
+build/application/application.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+d00001ac <main>:
+volatile uint32_t app_counter = 100;
+volatile uint32_t app_status;
+
+
+int main(void)
+{
+d00001ac:	b580      	push	{r7, lr}
+d00001ae:	af00      	add	r7, sp, #0
+    app_status = app_counter + 50;
+d00001b0:	4b07      	ldr	r3, [pc, #28]	@ (d00001d0 <main+0x24>)
+d00001b2:	681b      	ldr	r3, [r3, #0]
+d00001b4:	3332      	adds	r3, #50	@ 0x32
+d00001b6:	4a07      	ldr	r2, [pc, #28]	@ (d00001d4 <main+0x28>)
+d00001b8:	6013      	str	r3, [r2, #0]
+
+    stm32_led_init();
+d00001ba:	f000 f885 	bl	d00002c8 <stm32_led_init>
+    stm32_tim2_init();
+d00001be:	f000 f905 	bl	d00003cc <stm32_tim2_init>
+
+    /*
+     * The bootloader disables interrupts before handing off control.
+     * Re-enable them only after the application is configured.
+     */
+    __asm volatile ("cpsie i" ::: "memory");
+d00001c2:	b662      	cpsie	i
+
+    while (1)
+    {
+        app_counter++;
+d00001c4:	4b02      	ldr	r3, [pc, #8]	@ (d00001d0 <main+0x24>)
+d00001c6:	681b      	ldr	r3, [r3, #0]
+d00001c8:	3301      	adds	r3, #1
+d00001ca:	4a01      	ldr	r2, [pc, #4]	@ (d00001d0 <main+0x24>)
+d00001cc:	6013      	str	r3, [r2, #0]
+d00001ce:	e7f9      	b.n	d00001c4 <main+0x18>
+d00001d0:	20000000 	.word	0x20000000
+d00001d4:	20000004 	.word	0x20000004
+
+d00001d8 <dsb>:
+#ifndef CORTEX_M4_BARRIER_H
+#define CORTEX_M4_BARRIER_H
+
+/* Data synchronization barrier: all earlier memory accesses have completed. */
+static inline void dsb(void)
+{
+d00001d8:	b480      	push	{r7}
+d00001da:	af00      	add	r7, sp, #0
+    __asm volatile("dsb 0xF" ::: "memory");
+d00001dc:	f3bf 8f4f 	dsb	sy
+}
+d00001e0:	bf00      	nop
+d00001e2:	46bd      	mov	sp, r7
+d00001e4:	bc80      	pop	{r7}
+d00001e6:	4770      	bx	lr
+
+d00001e8 <isb>:
+
+/* Instruction synchronization barrier: refetch, so new settings take effect. */
+static inline void isb(void)
+{
+d00001e8:	b480      	push	{r7}
+d00001ea:	af00      	add	r7, sp, #0
+    __asm volatile("isb 0xF" ::: "memory");
+d00001ec:	f3bf 8f6f 	isb	sy
+}
+d00001f0:	bf00      	nop
+d00001f2:	46bd      	mov	sp, r7
+d00001f4:	bc80      	pop	{r7}
+d00001f6:	4770      	bx	lr
+
+d00001f8 <default_handler>:
+
+extern int main(void);
+
+
+void default_handler(void)
+{
+d00001f8:	b480      	push	{r7}
+d00001fa:	af00      	add	r7, sp, #0
+    while (1)
+d00001fc:	bf00      	nop
+d00001fe:	e7fd      	b.n	d00001fc <default_handler+0x4>
+
+d0000200 <reset_handler>:
+    }
+}
+
+
+void reset_handler(void)
+{
+d0000200:	b580      	push	{r7, lr}
+d0000202:	b084      	sub	sp, #16
+d0000204:	af00      	add	r7, sp, #0
+    /*
+     * The image owns its vector table: point VTOR at it before anything can
+     * fault, so the application works no matter which loader started it.
+     */
+    SCB_VTOR = (uint32_t)(uintptr_t)vector_table;
+d0000206:	4b14      	ldr	r3, [pc, #80]	@ (d0000258 <reset_handler+0x58>)
+d0000208:	4a14      	ldr	r2, [pc, #80]	@ (d000025c <reset_handler+0x5c>)
+d000020a:	601a      	str	r2, [r3, #0]
+    dsb();
+d000020c:	f7ff ffe4 	bl	d00001d8 <dsb>
+    isb();
+d0000210:	f7ff ffea 	bl	d00001e8 <isb>
+
+    // Initialize the .data
+    for (uint32_t* src = &__sidata, *dst = &__sdata; dst < &__edata; )
+d0000214:	4b12      	ldr	r3, [pc, #72]	@ (d0000260 <reset_handler+0x60>)
+d0000216:	60fb      	str	r3, [r7, #12]
+d0000218:	4b12      	ldr	r3, [pc, #72]	@ (d0000264 <reset_handler+0x64>)
+d000021a:	60bb      	str	r3, [r7, #8]
+d000021c:	e007      	b.n	d000022e <reset_handler+0x2e>
+    {
+        *dst++ = *src++;
+d000021e:	68fa      	ldr	r2, [r7, #12]
+d0000220:	1d13      	adds	r3, r2, #4
+d0000222:	60fb      	str	r3, [r7, #12]
+d0000224:	68bb      	ldr	r3, [r7, #8]
+d0000226:	1d19      	adds	r1, r3, #4
+d0000228:	60b9      	str	r1, [r7, #8]
+d000022a:	6812      	ldr	r2, [r2, #0]
+d000022c:	601a      	str	r2, [r3, #0]
+    for (uint32_t* src = &__sidata, *dst = &__sdata; dst < &__edata; )
+d000022e:	68bb      	ldr	r3, [r7, #8]
+d0000230:	4a0d      	ldr	r2, [pc, #52]	@ (d0000268 <reset_handler+0x68>)
+d0000232:	4293      	cmp	r3, r2
+d0000234:	d3f3      	bcc.n	d000021e <reset_handler+0x1e>
+    }
+
+    // Zero initialize the .bss section
+    for (uint32_t* dst = &__sbss; dst < &__ebss; )
+d0000236:	4b0d      	ldr	r3, [pc, #52]	@ (d000026c <reset_handler+0x6c>)
+d0000238:	607b      	str	r3, [r7, #4]
+d000023a:	e004      	b.n	d0000246 <reset_handler+0x46>
+    {
+        *dst++ = 0;
+d000023c:	687b      	ldr	r3, [r7, #4]
+d000023e:	1d1a      	adds	r2, r3, #4
+d0000240:	607a      	str	r2, [r7, #4]
+d0000242:	2200      	movs	r2, #0
+d0000244:	601a      	str	r2, [r3, #0]
+    for (uint32_t* dst = &__sbss; dst < &__ebss; )
+d0000246:	687b      	ldr	r3, [r7, #4]
+d0000248:	4a09      	ldr	r2, [pc, #36]	@ (d0000270 <reset_handler+0x70>)
+d000024a:	4293      	cmp	r3, r2
+d000024c:	d3f6      	bcc.n	d000023c <reset_handler+0x3c>
+    }
+
+    // Call the main function after initializing the C runtime
+    (void) main();
+d000024e:	f7ff ffad 	bl	d00001ac <main>
+
+    // Trap if main ever returns
+    while (1);
+d0000252:	bf00      	nop
+d0000254:	e7fd      	b.n	d0000252 <reset_handler+0x52>
+d0000256:	bf00      	nop
+d0000258:	e000ed08 	.word	0xe000ed08
+d000025c:	d0000000 	.word	0xd0000000
+d0000260:	d0000454 	.word	0xd0000454
+d0000264:	20000000 	.word	0x20000000
+d0000268:	20000004 	.word	0x20000004
+d000026c:	20000004 	.word	0x20000004
+d0000270:	2000000c 	.word	0x2000000c
+
+d0000274 <tim2_irq_handler>:
+
+volatile uint32_t tim2_irq_count = 0;
+
+
+void tim2_irq_handler(void)
+{
+d0000274:	b580      	push	{r7, lr}
+d0000276:	af00      	add	r7, sp, #0
+    if (TIM2_SR & TIM_SR_UIF)
+d0000278:	4b10      	ldr	r3, [pc, #64]	@ (d00002bc <tim2_irq_handler+0x48>)
+d000027a:	681b      	ldr	r3, [r3, #0]
+d000027c:	f003 0301 	and.w	r3, r3, #1
+d0000280:	2b00      	cmp	r3, #0
+d0000282:	d018      	beq.n	d00002b6 <tim2_irq_handler+0x42>
+    {
+        TIM2_SR &= ~TIM_SR_UIF;
+d0000284:	4b0d      	ldr	r3, [pc, #52]	@ (d00002bc <tim2_irq_handler+0x48>)
+d0000286:	681b      	ldr	r3, [r3, #0]
+d0000288:	4a0c      	ldr	r2, [pc, #48]	@ (d00002bc <tim2_irq_handler+0x48>)
+d000028a:	f023 0301 	bic.w	r3, r3, #1
+d000028e:	6013      	str	r3, [r2, #0]
+    
+        tim2_irq_count++;
+d0000290:	4b0b      	ldr	r3, [pc, #44]	@ (d00002c0 <tim2_irq_handler+0x4c>)
+d0000292:	681b      	ldr	r3, [r3, #0]
+d0000294:	3301      	adds	r3, #1
+d0000296:	4a0a      	ldr	r2, [pc, #40]	@ (d00002c0 <tim2_irq_handler+0x4c>)
+d0000298:	6013      	str	r3, [r2, #0]
+
+        if ((tim2_irq_count % 5u) == 0)
+d000029a:	4b09      	ldr	r3, [pc, #36]	@ (d00002c0 <tim2_irq_handler+0x4c>)
+d000029c:	6819      	ldr	r1, [r3, #0]
+d000029e:	4b09      	ldr	r3, [pc, #36]	@ (d00002c4 <tim2_irq_handler+0x50>)
+d00002a0:	fba3 2301 	umull	r2, r3, r3, r1
+d00002a4:	089a      	lsrs	r2, r3, #2
+d00002a6:	4613      	mov	r3, r2
+d00002a8:	009b      	lsls	r3, r3, #2
+d00002aa:	4413      	add	r3, r2
+d00002ac:	1aca      	subs	r2, r1, r3
+d00002ae:	2a00      	cmp	r2, #0
+d00002b0:	d101      	bne.n	d00002b6 <tim2_irq_handler+0x42>
+        {
+            stm32_led_toggle();
+d00002b2:	f000 f83d 	bl	d0000330 <stm32_led_toggle>
+        }
+    }
+}
+d00002b6:	bf00      	nop
+d00002b8:	bd80      	pop	{r7, pc}
+d00002ba:	bf00      	nop
+d00002bc:	40000010 	.word	0x40000010
+d00002c0:	20000008 	.word	0x20000008
+d00002c4:	cccccccd 	.word	0xcccccccd
+
+d00002c8 <stm32_led_init>:
+#include "soc/stm32f429/gpio_regs.h"
+#include "soc/stm32f429/rcc_regs.h"
+
+
+void stm32_led_init(void)
+{
+d00002c8:	b480      	push	{r7}
+d00002ca:	af00      	add	r7, sp, #0
+    /* Enable the GPIO clock for the LED pin. */
+    RCC_AHB1ENR |= RCC_AHB1ENR_GPIOGEN;
+d00002cc:	4b13      	ldr	r3, [pc, #76]	@ (d000031c <stm32_led_init+0x54>)
+d00002ce:	681b      	ldr	r3, [r3, #0]
+d00002d0:	4a12      	ldr	r2, [pc, #72]	@ (d000031c <stm32_led_init+0x54>)
+d00002d2:	f043 0340 	orr.w	r3, r3, #64	@ 0x40
+d00002d6:	6013      	str	r3, [r2, #0]
+    (void)RCC_AHB1ENR;
+d00002d8:	4b10      	ldr	r3, [pc, #64]	@ (d000031c <stm32_led_init+0x54>)
+d00002da:	681b      	ldr	r3, [r3, #0]
+    /* Reset the pin to ensure it's low */
+    GPIO_BSRR(LED_GREEN_PORT) = GPIO_BSRR_RESET(LED_GREEN_PIN);
+d00002dc:	4b10      	ldr	r3, [pc, #64]	@ (d0000320 <stm32_led_init+0x58>)
+d00002de:	f04f 5200 	mov.w	r2, #536870912	@ 0x20000000
+d00002e2:	601a      	str	r2, [r3, #0]
+    /* Configure output type: push-pull */
+    GPIO_OTYPER(LED_GREEN_PORT) &= ~(1u << LED_GREEN_PIN);
+d00002e4:	4b0f      	ldr	r3, [pc, #60]	@ (d0000324 <stm32_led_init+0x5c>)
+d00002e6:	681b      	ldr	r3, [r3, #0]
+d00002e8:	4a0e      	ldr	r2, [pc, #56]	@ (d0000324 <stm32_led_init+0x5c>)
+d00002ea:	f423 5300 	bic.w	r3, r3, #8192	@ 0x2000
+d00002ee:	6013      	str	r3, [r2, #0]
+    /* No internal pull-up or pull-down */
+    GPIO_PUPDR(LED_GREEN_PORT) &= ~GPIO_2BIT_MASK(LED_GREEN_PIN);
+d00002f0:	4b0d      	ldr	r3, [pc, #52]	@ (d0000328 <stm32_led_init+0x60>)
+d00002f2:	681b      	ldr	r3, [r3, #0]
+d00002f4:	4a0c      	ldr	r2, [pc, #48]	@ (d0000328 <stm32_led_init+0x60>)
+d00002f6:	f023 6340 	bic.w	r3, r3, #201326592	@ 0xc000000
+d00002fa:	6013      	str	r3, [r2, #0]
+    /* Configure PG13 as a general-purpose output pin */
+    GPIO_MODER(LED_GREEN_PORT) &= ~GPIO_2BIT_MASK(LED_GREEN_PIN);
+d00002fc:	4b0b      	ldr	r3, [pc, #44]	@ (d000032c <stm32_led_init+0x64>)
+d00002fe:	681b      	ldr	r3, [r3, #0]
+d0000300:	4a0a      	ldr	r2, [pc, #40]	@ (d000032c <stm32_led_init+0x64>)
+d0000302:	f023 6340 	bic.w	r3, r3, #201326592	@ 0xc000000
+d0000306:	6013      	str	r3, [r2, #0]
+    GPIO_MODER(LED_GREEN_PORT) |= GPIO_MODER_VAL(LED_GREEN_PIN, GPIO_MODE_OUTPUT);
+d0000308:	4b08      	ldr	r3, [pc, #32]	@ (d000032c <stm32_led_init+0x64>)
+d000030a:	681b      	ldr	r3, [r3, #0]
+d000030c:	4a07      	ldr	r2, [pc, #28]	@ (d000032c <stm32_led_init+0x64>)
+d000030e:	f043 6380 	orr.w	r3, r3, #67108864	@ 0x4000000
+d0000312:	6013      	str	r3, [r2, #0]
+}
+d0000314:	bf00      	nop
+d0000316:	46bd      	mov	sp, r7
+d0000318:	bc80      	pop	{r7}
+d000031a:	4770      	bx	lr
+d000031c:	40023830 	.word	0x40023830
+d0000320:	40021818 	.word	0x40021818
+d0000324:	40021804 	.word	0x40021804
+d0000328:	4002180c 	.word	0x4002180c
+d000032c:	40021800 	.word	0x40021800
+
+d0000330 <stm32_led_toggle>:
+{
+    GPIO_BSRR(LED_GREEN_PORT) = GPIO_BSRR_RESET(LED_GREEN_PIN); // Set PG13 low
+}
+
+void stm32_led_toggle(void)
+{
+d0000330:	b480      	push	{r7}
+d0000332:	af00      	add	r7, sp, #0
+    GPIO_ODR(LED_GREEN_PORT) ^= (1u << LED_GREEN_PIN); // Toggle PG13
+d0000334:	4b04      	ldr	r3, [pc, #16]	@ (d0000348 <stm32_led_toggle+0x18>)
+d0000336:	681b      	ldr	r3, [r3, #0]
+d0000338:	4a03      	ldr	r2, [pc, #12]	@ (d0000348 <stm32_led_toggle+0x18>)
+d000033a:	f483 5300 	eor.w	r3, r3, #8192	@ 0x2000
+d000033e:	6013      	str	r3, [r2, #0]
+d0000340:	bf00      	nop
+d0000342:	46bd      	mov	sp, r7
+d0000344:	bc80      	pop	{r7}
+d0000346:	4770      	bx	lr
+d0000348:	40021814 	.word	0x40021814
+
+d000034c <nvic_enable_irq>:
+#define NVIC_IABR(n)   MMIO32(NVIC_BASE + 0x200u + ((n) * 4u))   /* active        */
+#define NVIC_IPR(irq)  MMIO8(NVIC_BASE + 0x300u + (irq))          /* priority byte */
+#define NVIC_STIR      MMIO32(SCS_BASE + 0xF00u)                  /* software trigger */
+
+static inline void nvic_enable_irq(uint32_t irq)
+{
+d000034c:	b480      	push	{r7}
+d000034e:	b083      	sub	sp, #12
+d0000350:	af00      	add	r7, sp, #0
+d0000352:	6078      	str	r0, [r7, #4]
+    NVIC_ISER(irq >> 5) = 1u << (irq & 31u);
+d0000354:	687b      	ldr	r3, [r7, #4]
+d0000356:	f003 021f 	and.w	r2, r3, #31
+d000035a:	687b      	ldr	r3, [r7, #4]
+d000035c:	095b      	lsrs	r3, r3, #5
+d000035e:	f103 2338 	add.w	r3, r3, #939538432	@ 0x38003800
+d0000362:	3340      	adds	r3, #64	@ 0x40
+d0000364:	009b      	lsls	r3, r3, #2
+d0000366:	4619      	mov	r1, r3
+d0000368:	2301      	movs	r3, #1
+d000036a:	4093      	lsls	r3, r2
+d000036c:	600b      	str	r3, [r1, #0]
+}
+d000036e:	bf00      	nop
+d0000370:	370c      	adds	r7, #12
+d0000372:	46bd      	mov	sp, r7
+d0000374:	bc80      	pop	{r7}
+d0000376:	4770      	bx	lr
+
+d0000378 <nvic_clear_pending>:
+{
+    NVIC_ICER(irq >> 5) = 1u << (irq & 31u);
+}
+
+static inline void nvic_clear_pending(uint32_t irq)
+{
+d0000378:	b480      	push	{r7}
+d000037a:	b083      	sub	sp, #12
+d000037c:	af00      	add	r7, sp, #0
+d000037e:	6078      	str	r0, [r7, #4]
+    NVIC_ICPR(irq >> 5) = 1u << (irq & 31u);
+d0000380:	687b      	ldr	r3, [r7, #4]
+d0000382:	f003 021f 	and.w	r2, r3, #31
+d0000386:	687b      	ldr	r3, [r7, #4]
+d0000388:	095b      	lsrs	r3, r3, #5
+d000038a:	f103 2338 	add.w	r3, r3, #939538432	@ 0x38003800
+d000038e:	33a0      	adds	r3, #160	@ 0xa0
+d0000390:	009b      	lsls	r3, r3, #2
+d0000392:	4619      	mov	r1, r3
+d0000394:	2301      	movs	r3, #1
+d0000396:	4093      	lsls	r3, r2
+d0000398:	600b      	str	r3, [r1, #0]
+}
+d000039a:	bf00      	nop
+d000039c:	370c      	adds	r7, #12
+d000039e:	46bd      	mov	sp, r7
+d00003a0:	bc80      	pop	{r7}
+d00003a2:	4770      	bx	lr
+
+d00003a4 <nvic_set_priority>:
+
+static inline void nvic_set_priority(uint32_t irq, uint32_t prio)
+{
+d00003a4:	b480      	push	{r7}
+d00003a6:	b083      	sub	sp, #12
+d00003a8:	af00      	add	r7, sp, #0
+d00003aa:	6078      	str	r0, [r7, #4]
+d00003ac:	6039      	str	r1, [r7, #0]
+    NVIC_IPR(irq) = (uint8_t)(prio << (8u - NVIC_PRIO_BITS));
+d00003ae:	683b      	ldr	r3, [r7, #0]
+d00003b0:	b2da      	uxtb	r2, r3
+d00003b2:	687b      	ldr	r3, [r7, #4]
+d00003b4:	f103 4360 	add.w	r3, r3, #3758096384	@ 0xe0000000
+d00003b8:	f503 4364 	add.w	r3, r3, #58368	@ 0xe400
+d00003bc:	0112      	lsls	r2, r2, #4
+d00003be:	b2d2      	uxtb	r2, r2
+d00003c0:	701a      	strb	r2, [r3, #0]
+}
+d00003c2:	bf00      	nop
+d00003c4:	370c      	adds	r7, #12
+d00003c6:	46bd      	mov	sp, r7
+d00003c8:	bc80      	pop	{r7}
+d00003ca:	4770      	bx	lr
+
+d00003cc <stm32_tim2_init>:
+#include "soc/stm32f429/rcc_regs.h"
+#include "soc/stm32f429/tim_regs.h"
+
+
+void stm32_tim2_init(void)
+{
+d00003cc:	b580      	push	{r7, lr}
+d00003ce:	af00      	add	r7, sp, #0
+    /* 1. Enable the TIM2 peripheral clock. */
+    RCC_APB1ENR |= RCC_APB1ENR_TIM2EN;
+d00003d0:	4b19      	ldr	r3, [pc, #100]	@ (d0000438 <stm32_tim2_init+0x6c>)
+d00003d2:	681b      	ldr	r3, [r3, #0]
+d00003d4:	4a18      	ldr	r2, [pc, #96]	@ (d0000438 <stm32_tim2_init+0x6c>)
+d00003d6:	f043 0301 	orr.w	r3, r3, #1
+d00003da:	6013      	str	r3, [r2, #0]
+    (void)RCC_APB1ENR;
+d00003dc:	4b16      	ldr	r3, [pc, #88]	@ (d0000438 <stm32_tim2_init+0x6c>)
+d00003de:	681b      	ldr	r3, [r3, #0]
+
+    /* 2. Stop TIM2 while configuring it. */
+    TIM2_CR1 = 0u;
+d00003e0:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+d00003e4:	2200      	movs	r2, #0
+d00003e6:	601a      	str	r2, [r3, #0]
+    TIM2_DIER = 0u;
+d00003e8:	4b14      	ldr	r3, [pc, #80]	@ (d000043c <stm32_tim2_init+0x70>)
+d00003ea:	2200      	movs	r2, #0
+d00003ec:	601a      	str	r2, [r3, #0]
+
+    /* 3. Configure the timer frequency. */
+    TIM2_PSC = 8399u;
+d00003ee:	4b14      	ldr	r3, [pc, #80]	@ (d0000440 <stm32_tim2_init+0x74>)
+d00003f0:	f242 02cf 	movw	r2, #8399	@ 0x20cf
+d00003f4:	601a      	str	r2, [r3, #0]
+    TIM2_ARR = 999u;
+d00003f6:	4b13      	ldr	r3, [pc, #76]	@ (d0000444 <stm32_tim2_init+0x78>)
+d00003f8:	f240 32e7 	movw	r2, #999	@ 0x3e7
+d00003fc:	601a      	str	r2, [r3, #0]
+    TIM2_CNT = 0u;
+d00003fe:	4b12      	ldr	r3, [pc, #72]	@ (d0000448 <stm32_tim2_init+0x7c>)
+d0000400:	2200      	movs	r2, #0
+d0000402:	601a      	str	r2, [r3, #0]
+
+    /* 4. Generate an update event to load the prescaler. */
+    TIM2_EGR = TIM_EGR_UG;
+d0000404:	4b11      	ldr	r3, [pc, #68]	@ (d000044c <stm32_tim2_init+0x80>)
+d0000406:	2201      	movs	r2, #1
+d0000408:	601a      	str	r2, [r3, #0]
+
+    /* Clear the update flag generated by the event. */
+    TIM2_SR = ~TIM_SR_UIF;
+d000040a:	4b11      	ldr	r3, [pc, #68]	@ (d0000450 <stm32_tim2_init+0x84>)
+d000040c:	f06f 0201 	mvn.w	r2, #1
+d0000410:	601a      	str	r2, [r3, #0]
+
+    /* 5. Configure the NVIC interrupt. */
+    nvic_set_priority(IRQ_TIM2, 5u);
+d0000412:	2105      	movs	r1, #5
+d0000414:	201c      	movs	r0, #28
+d0000416:	f7ff ffc5 	bl	d00003a4 <nvic_set_priority>
+    nvic_clear_pending(IRQ_TIM2);
+d000041a:	201c      	movs	r0, #28
+d000041c:	f7ff ffac 	bl	d0000378 <nvic_clear_pending>
+    nvic_enable_irq(IRQ_TIM2);
+d0000420:	201c      	movs	r0, #28
+d0000422:	f7ff ff93 	bl	d000034c <nvic_enable_irq>
+
+    /* 6. Enable TIM2's update interrupt. */
+    TIM2_DIER = TIM_DIER_UIE;
+d0000426:	4b05      	ldr	r3, [pc, #20]	@ (d000043c <stm32_tim2_init+0x70>)
+d0000428:	2201      	movs	r2, #1
+d000042a:	601a      	str	r2, [r3, #0]
+
+    /* 7. Start the timer. */
+    TIM2_CR1 = TIM_CR1_CEN;
+d000042c:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+d0000430:	2201      	movs	r2, #1
+d0000432:	601a      	str	r2, [r3, #0]
+}
+d0000434:	bf00      	nop
+d0000436:	bd80      	pop	{r7, pc}
+d0000438:	40023840 	.word	0x40023840
+d000043c:	4000000c 	.word	0x4000000c
+d0000440:	40000028 	.word	0x40000028
+d0000444:	4000002c 	.word	0x4000002c
+d0000448:	40000024 	.word	0x40000024
+d000044c:	40000014 	.word	0x40000014
+d0000450:	40000010 	.word	0x40000010
