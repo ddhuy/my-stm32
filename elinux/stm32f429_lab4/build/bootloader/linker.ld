@@ -1,8 +1,8 @@
 ENTRY(reset_handler)
 MEMORY
 {
-    FLASH (rx) : ORIGIN = 0x08000000, LENGTH = (0x08020000 - 0x08000000)
-    RAM (rwx) : ORIGIN = 0x20000000, LENGTH = (192 * 1024)
+    FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 128K
+    RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 128K
 }
 __stack_size = 4K;
 __estack = ORIGIN(RAM) + LENGTH(RAM);
@@ -11,8 +11,8 @@ SECTIONS
 {
     .isr_vector :
     {
+        . = ALIGN(512);
         KEEP(*(.isr_vector))
-        . = ALIGN(4);
     } > FLASH
     .text :
     {
@@ -39,8 +39,8 @@ SECTIONS
         . = ALIGN(4);
         __ebss = .;
     } > RAM
+    ASSERT(ADDR(.isr_vector) == ORIGIN(FLASH),
+        "ERROR: Bootloader vector table must start at the flash base")
+    ASSERT(__ebss <= __stack_limit,
+        "ERROR: Bootloader SRAM data overlaps reserved stack")
 }
-ASSERT(ADDR(.isr_vector) == ORIGIN(FLASH),
-       "ERROR: Bootloader vector table must start at the flash base")
-ASSERT(__ebss <= __stack_limit,
-       "ERROR: Bootloader SRAM data overlaps reserved stack")

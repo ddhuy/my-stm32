@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include "arch/cortex-m4/scb_regs.h"
 #include "soc/stm32f429/irq.h"
 #include "startup.h"
 
@@ -20,7 +21,7 @@ extern int main(void);
 
 
 /* Flash is aliased at 0x00000000 after reset, so VTOR = 0 already finds this. */
-__attribute__((used, section(".isr_vector")))
+__attribute__((used, section(".isr_vector"), aligned(512)))
 const uintptr_t vector_table[VECTOR_COUNT] = {
     [0] = (uintptr_t)&__estack,
     [1] = (uintptr_t)reset_handler,
@@ -39,6 +40,9 @@ void default_handler(void)
 
 void reset_handler(void)
 {
+    // Set the vector table base address
+    SCB_VTOR = (uint32_t)(uintptr_t)vector_table;
+    
     // Initialize the .data
     for (uint32_t *src = &__sidata, *dst = &__sdata; dst < &__edata; )
     {
@@ -54,5 +58,7 @@ void reset_handler(void)
     (void)main();
 
     // Trap if main ever returns
-    while (1);
+    for (;;) {
+        __asm volatile("nop");
+    }
 }

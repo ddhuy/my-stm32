@@ -19,11 +19,8 @@
 /* MPU region used for the application's SDRAM; it stays set after the handoff */
 #define MPU_REGION_APP  0u
 
-/*
- * Test the whole SDRAM on every boot (destructive, so it runs before the
- * image is copied). Set to 0 to skip it and boot faster.
- */
-#define BOOT_SDRAM_MEMTEST  1
+
+volatile uint32_t boot_status;
 
 
 static void console_puts(const char *s)
@@ -48,6 +45,7 @@ static __attribute__((noreturn)) void halt(const char *why)
     console_puts(why);
     while (1)
     {
+        __asm volatile("nop");
     }
 }
 
@@ -102,12 +100,17 @@ static bool sdram_memtest(void)
 
 int main(void)
 {
+    boot_status = 1u;
+
     if (!board_clock_init())
     {
+        boot_status = 0xE1u;
         while (1)   /* no console without clocks */
         {
         }
     }
+
+    boot_status = 2u;
 
     board_console_init(CLOCK_PCLK2_HZ, CONSOLE_BAUD);
     console_puts("\nbootloader: clocks ok\n");
@@ -115,17 +118,35 @@ int main(void)
     if (!board_sdram_init())
         halt("bootloader: SDRAM init failed\n");
 
+    boot_status = 3u;
+
     /* Destroys SDRAM contents, so it must run before image_load() */
-    if (BOOT_SDRAM_MEMTEST && !sdram_memtest())
+    if (!sdram_memtest()) {
+        boot_status = 0xE2u;
         halt("bootloader: halted\n");
+    }
 
-    // mpu_map_app_region();
+    boot_status = 4u;
 
-    // if (!image_load())
-    //     halt("bootloader: no valid application image\n");
+    if (!image_load()) {
+        boot_status = 0xE3u;
+        halt("bootloader: no valid application image\n");
+    }
 
-    // console_puts("bootloader: starting application\n");
-    // stm32_usart_flush(CONSOLE_USART);
+    boot_status = 5u;
 
-    // app_handoff(APP_SDRAM_BASE);
+    mpu_map_app_region();
+
+    boot_status = 6u;
+
+    console_puts("bootloader: starting application\n");
+    stm32_usart_flush(CONSOLE_USART);
+
+    app_handoff(APP_SDRAM_BASE);
+
+    // The bootloader has nothing else to do, so we enter an infinite loop.
+    while (1)
+    {
+        __asm volatile("nop");
+    }
 }

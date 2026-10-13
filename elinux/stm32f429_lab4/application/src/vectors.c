@@ -5,6 +5,7 @@
 #define CORE_VECTOR_COUNT 16u
 #define VECTOR_COUNT      (CORE_VECTOR_COUNT + IRQ_COUNT)
 
+
 extern uint32_t __estack;
 
 __attribute__((used, section(".isr_vector"), aligned(512)))
@@ -26,6 +27,11 @@ const uintptr_t vector_table[VECTOR_COUNT] = {
     [14] = (uintptr_t)default_handler,  /* PendSV */
     [15] = (uintptr_t)default_handler,  /* SysTick */
 
+    [16 ... (16 + IRQ_TIM2 - 1)] = (uintptr_t)default_handler,
+
+    /* TIM2 IRQ handler */
+    [16 + IRQ_TIM2] = (uintptr_t)tim2_irq_handler,
+
     /* External IRQ 0 .. IRQ_COUNT-1: temporary default handlers */
-    [16 ... VECTOR_COUNT - 1] = (uintptr_t)default_handler
+    [16 + IRQ_TIM2 + 1 ... VECTOR_COUNT - 1] = (uintptr_t)default_handler,
 };

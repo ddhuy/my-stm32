@@ -155,4 +155,13 @@
 #define TIM_BDTR_AOE       (1u << 14)
 #define TIM_BDTR_MOE       (1u << 15)
 
+/* TIM2 register definitions */
+#define TIM2_CR1   TIM_CR1(TIM2_BASE)
+#define TIM2_DIER  TIM_DIER(TIM2_BASE)
+#define TIM2_SR    TIM_SR(TIM2_BASE)
+#define TIM2_EGR   TIM_EGR(TIM2_BASE)
+#define TIM2_CNT   TIM_CNT(TIM2_BASE)
+#define TIM2_PSC   TIM_PSC(TIM2_BASE)
+#define TIM2_ARR   TIM_ARR(TIM2_BASE)
+
 #endif
