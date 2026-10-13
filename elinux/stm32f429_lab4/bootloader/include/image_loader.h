@@ -5,6 +5,7 @@
 #include "image_format.h"
 
 bool image_header_validate(const app_image_header_t *header);
+/* Validate bounds, copy to SDRAM, then verify the payload CRC before handoff. */
 bool image_load(void);
 
 #endif

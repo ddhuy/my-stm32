@@ -25,9 +25,33 @@ Console: ST-LINK virtual COM port, 115200 8N1.
 2. `board_console_init()`: USART1 on PA9/PA10
 3. `board_sdram_init()`: FMC + IS42S16400J on bank 2 (needs the clock first)
 4. `mpu_map_app_region()`: SDRAM is execute-never by default, so map it as Normal memory
-5. `sdram_memtest()`: data bus, address bus, byte lanes, every word (destructive; `BOOT_SDRAM_MEMTEST` in `main.c`)
-6. `image_load()`: check the header at `APP_FLASH_BASE`, copy the payload to `APP_SDRAM_BASE`
+5. `sdram_memtest()`: data bus, address bus, byte lanes, every word
+6. `image_load()`: check the header at `APP_FLASH_BASE`, copy the payload to `APP_SDRAM_BASE`, verify its CRC32
 7. `app_handoff()`: MSP = vector[0], jump to vector[1]; the application sets its own `VTOR`
+
+## Application CRC32
+
+The packager writes CRC-32/ISO-HDLC (`zlib.crc32`) into the fourth 32-bit,
+little-endian header field. It covers exactly the raw application payload,
+excluding the 16-byte header and any flash padding. The reflected polynomial
+is `0xEDB88320`, with initial value and final XOR both `0xFFFFFFFF`.
+The check value for `123456789` is `0xCBF43926`.
+
+After validating the header bounds and copying the payload, the bootloader
+calculates CRC32 over the SDRAM copy. A mismatch makes `image_load()` return
+false, so the bootloader halts with `boot_status = 0xE3` and prints
+`bootloader: no valid application image`. CRC zero is not a validation bypass.
+Rebuild and flash both programs; older images with the reserved zero CRC will
+normally be rejected. CRC detects accidental corruption, not authenticity.
+
+Run the host tests on Linux with a native C compiler:
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+These check a known CRC vector, packaging and loading different payload lengths,
+corrupted payloads and CRC fields, excluded padding, and invalid lengths.
 
 ## Source layout
 
@@ -69,3 +93,67 @@ else derives from it:
   grows past 128 KB fails to link.
 - `scripts/package_image.py` gets the magic number and load address from the
   Makefile, which reads them from the headers.
+
+## Useful commands:
+- Start OpenOCD
+```
+openocd -f board/stm32f429disc1.cfg
+```
+
+- Start GDB
+```
+arm-none-eabi-gdb build/bootloader/bootloader.elf
+```
+
+- Connect to OpenOCD
+```
+target extended-remote :3333
+```
+
+- Flash the bootloader
+```
+load build/bootloader/bootloader.elf
+```
+
+- Flash the application
+```
+monitor flash write_image erase build/application/application.img 0x08020000 bin
+```
+
+- Reset the MCU
+```
+monitor reset halt
+```
+
+- Load application debug symbols
+```
+add-symbol-file build/application/application.elf
+```
+
+- Set breakpoint
+```
+break main
+```
+
+- Disable breakpoint #1
+```
+disable 1
+```
+
+- Delete all breakpoints
+```
+delete
+```
+
+- Some printing commands
+```
+info registers
+p/x $pc
+p tim2_irq_count
+x/8wx 0xD0000000
+```
+
+- Disassemble with C source code
+```
+arm-none-eabi-objdump -d -S build/application/application.elf
+```

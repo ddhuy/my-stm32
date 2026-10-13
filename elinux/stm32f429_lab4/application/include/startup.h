@@ -7,7 +7,6 @@ extern const uintptr_t vector_table[];
 
 void reset_handler(void);
 void default_handler(void);
-void tim2_irq_handler(void);
 
 
 #endif

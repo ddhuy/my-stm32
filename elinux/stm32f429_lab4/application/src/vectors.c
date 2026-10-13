@@ -8,6 +8,9 @@
 
 extern uint32_t __estack;
 
+extern void tim2_irq_handler(void);
+
+
 __attribute__((used, section(".isr_vector"), aligned(512)))
 const uintptr_t vector_table[VECTOR_COUNT] = {
     [0] = (uintptr_t)&__estack,

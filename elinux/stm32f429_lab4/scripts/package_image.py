@@ -8,6 +8,7 @@ so the bootloader and this script cannot disagree.
 
 import argparse
 import struct
+import zlib
 
 from pathlib import Path
 
@@ -22,12 +23,13 @@ def package_image(input_path: Path, output_path: Path, magic: int, load_address:
     if not application:
         raise ValueError("Application file is empty")
 
+    crc = zlib.crc32(application)
     header = struct.pack(
         HEADER_FORMAT,
         magic,
         len(application),
         load_address,
-        0, # Reserved for a CRC32 of the payload
+        crc,
     )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -37,6 +39,7 @@ def package_image(input_path: Path, output_path: Path, magic: int, load_address:
     print(f"Header size      : {len(header)} bytes")
     print(f"Package size     : {len(header) + len(application)} bytes")
     print(f"Load address     : 0x{load_address:08X}")
+    print(f"Payload CRC32    : 0x{crc:08X}")
 
 
 def main() -> None:

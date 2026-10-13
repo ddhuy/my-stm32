@@ -9,6 +9,11 @@
 __attribute__((naked, noreturn))
 static void jump_to_app(uint32_t vector_base, uint32_t sp, uint32_t reset_vector)
 {
+    /* Relax compiler unused-parameter warnings */
+    (void) vector_base;
+    (void) sp;
+    (void) reset_vector;
+
     __asm volatile(
         "cpsid i            \n"
         "movs r3, #0        \n"

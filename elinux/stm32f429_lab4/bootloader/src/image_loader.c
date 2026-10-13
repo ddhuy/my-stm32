@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "image_loader.h"
+#include "crc32.h"
 #include "memory_map.h"
 
 
@@ -47,5 +48,6 @@ bool image_load(void) {
     for (uint32_t i = 0; i < header->image_size; ++i)
         dst[i] = src[i];
 
-    return true;
+    /* Check the bytes that will execute, catching flash and copy corruption. */
+    return crc32_compute(dst, header->image_size) == header->crc;
 }

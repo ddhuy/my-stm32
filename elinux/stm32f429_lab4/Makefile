@@ -51,7 +51,9 @@ cpp_value = $(shell printf '%d' $$(( $$(echo '$(1)' | \
 
 
 # ---- Application: runs from SDRAM, packaged with a header for the bootloader
-APP_SOURCES := $(wildcard application/src/*.c)
+APP_SOURCES := $(wildcard application/src/*.c) \
+			   $(wildcard board/$(BOARD)/*.c) \
+			   $(wildcard drivers/*/*.c)
 APP_OBJECTS := $(patsubst %.c,$(APP_BUILD_DIR)/obj/%.o,$(APP_SOURCES))
 APP_LDS     := $(APP_BUILD_DIR)/linker.ld
 APP_ELF     := $(APP_BUILD_DIR)/application.elf
