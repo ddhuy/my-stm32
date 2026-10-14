@@ -4,41 +4,39 @@
 #include "memory_map.h"
 
 
-bool image_header_validate(const app_image_header_t *header) {
-    if (!header) {
-        return false;
-    }
+image_status_t image_header_validate(const app_image_header_t *header) {
+    if (!header)
+        return IMAGE_ERR_HEADER;
 
-    if (header->magic != APP_IMAGE_MAGIC) {
-        return false;
-    }
+    if (header->magic != APP_IMAGE_MAGIC)
+        return IMAGE_ERR_MAGIC;
 
-    if (header->load_address != APP_SDRAM_BASE) {
-        return false;
-    }
+    if (header->load_address != APP_SDRAM_BASE)
+        return IMAGE_ERR_LOAD_ADDRESS;
 
-    if (header->image_size == 0 || header->image_size > APP_SDRAM_SIZE) {
-        return false;
-    }
+    if (header->image_size == 0 ||
+        header->image_size > APP_SDRAM_SIZE)
+        return IMAGE_ERR_SIZE;
 
     const uint32_t flash_payload_start =
         APP_FLASH_BASE + sizeof(app_image_header_t);
 
     const uint32_t flash_available = APP_FLASH_END - flash_payload_start;
 
-    if (header->image_size > flash_available) {
-        return false;
-    }
+    if (header->image_size > flash_available)
+        return IMAGE_ERR_FLASH_BOUNDS;
 
-    return true;
+    return IMAGE_OK;
 }
 
-bool image_load(void) {
+
+image_status_t image_load(void) {
     const app_image_header_t *header =
         (const app_image_header_t *)APP_FLASH_BASE;
 
-    if (!image_header_validate(header))
-        return false;
+    const image_status_t status = image_header_validate(header);
+    if (status != IMAGE_OK)
+        return status;
 
     const uint8_t *src =
         (const uint8_t *)(APP_FLASH_BASE + sizeof(app_image_header_t));
@@ -49,5 +47,8 @@ bool image_load(void) {
         dst[i] = src[i];
 
     /* Check the bytes that will execute, catching flash and copy corruption. */
-    return crc32_compute(dst, header->image_size) == header->crc;
+    if (crc32_compute(dst, header->image_size) != header->crc)
+        return IMAGE_ERR_CRC;
+
+    return IMAGE_OK;
 }

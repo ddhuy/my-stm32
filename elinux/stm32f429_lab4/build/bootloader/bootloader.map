@@ -310,7 +310,7 @@ LOAD build/bootloader/obj/drivers/tim2/stm32_tim2.o
  .isr_vector    0x08000000      0x1ac build/bootloader/obj/bootloader/src/startup.o
                 0x08000000                vector_table
 
-.text           0x080001ac     0x159c
+.text           0x080001ac     0x16e8
                 0x080001ac                        . = ALIGN (0x4)
  *(.text*)
  .text.dsb      0x080001ac       0x10 build/bootloader/obj/bootloader/src/app_handoff.o
@@ -320,144 +320,147 @@ LOAD build/bootloader/obj/drivers/tim2/stm32_tim2.o
  .text.jump_to_app
                 0x08000238       0x1a build/bootloader/obj/bootloader/src/app_handoff.o
  *fill*         0x08000252        0x2 
+ .text.app_handoff_validate
+                0x08000254       0x7c build/bootloader/obj/bootloader/src/app_handoff.o
+                0x08000254                app_handoff_validate
  .text.app_handoff
-                0x08000254       0x98 build/bootloader/obj/bootloader/src/app_handoff.o
-                0x08000254                app_handoff
+                0x080002d0       0x3c build/bootloader/obj/bootloader/src/app_handoff.o
+                0x080002d0                app_handoff
  .text.crc32_compute
-                0x080002ec       0x78 build/bootloader/obj/bootloader/src/crc32.o
-                0x080002ec                crc32_compute
+                0x0800030c       0x78 build/bootloader/obj/bootloader/src/crc32.o
+                0x0800030c                crc32_compute
  .text.image_header_validate
-                0x08000364       0x74 build/bootloader/obj/bootloader/src/image_loader.o
-                0x08000364                image_header_validate
+                0x08000384       0x74 build/bootloader/obj/bootloader/src/image_loader.o
+                0x08000384                image_header_validate
  .text.image_load
-                0x080003d8       0x7c build/bootloader/obj/bootloader/src/image_loader.o
-                0x080003d8                image_load
- .text.dsb      0x08000454       0x10 build/bootloader/obj/bootloader/src/main.o
- .text.isb      0x08000464       0x10 build/bootloader/obj/bootloader/src/main.o
+                0x080003f8       0x7c build/bootloader/obj/bootloader/src/image_loader.o
+                0x080003f8                image_load
+ .text.dsb      0x08000474       0x10 build/bootloader/obj/bootloader/src/main.o
+ .text.isb      0x08000484       0x10 build/bootloader/obj/bootloader/src/main.o
  .text.mpu_disable
-                0x08000474       0x1c build/bootloader/obj/bootloader/src/main.o
+                0x08000494       0x1c build/bootloader/obj/bootloader/src/main.o
  .text.mpu_set_region
-                0x08000490       0x34 build/bootloader/obj/bootloader/src/main.o
+                0x080004b0       0x34 build/bootloader/obj/bootloader/src/main.o
  .text.mpu_enable
-                0x080004c4       0x28 build/bootloader/obj/bootloader/src/main.o
+                0x080004e4       0x28 build/bootloader/obj/bootloader/src/main.o
  .text.console_puts
-                0x080004ec       0x1c build/bootloader/obj/bootloader/src/main.o
+                0x0800050c       0x1c build/bootloader/obj/bootloader/src/main.o
  .text.console_puthex
-                0x08000508       0x68 build/bootloader/obj/bootloader/src/main.o
- .text.halt     0x08000570       0x12 build/bootloader/obj/bootloader/src/main.o
- *fill*         0x08000582        0x2 
+                0x08000528       0x68 build/bootloader/obj/bootloader/src/main.o
+ .text.halt     0x08000590       0x12 build/bootloader/obj/bootloader/src/main.o
+ *fill*         0x080005a2        0x2 
  .text.mpu_map_app_region
-                0x08000584       0x24 build/bootloader/obj/bootloader/src/main.o
+                0x080005a4       0x24 build/bootloader/obj/bootloader/src/main.o
  .text.sdram_memtest
-                0x080005a8       0xcc build/bootloader/obj/bootloader/src/main.o
- .text.main     0x08000674       0xd8 build/bootloader/obj/bootloader/src/main.o
-                0x08000674                main
- .text.wr32     0x0800074c       0x1a build/bootloader/obj/bootloader/src/memtest.o
- .text.wr16     0x08000766       0x1c build/bootloader/obj/bootloader/src/memtest.o
- .text.wr8      0x08000782       0x1c build/bootloader/obj/bootloader/src/memtest.o
- .text.rd32     0x0800079e       0x16 build/bootloader/obj/bootloader/src/memtest.o
- .text.fail     0x080007b4       0x32 build/bootloader/obj/bootloader/src/memtest.o
- .text.check    0x080007e6       0x3c build/bootloader/obj/bootloader/src/memtest.o
- *fill*         0x08000822        0x2 
+                0x080005c8       0xcc build/bootloader/obj/bootloader/src/main.o
+ .text.main     0x08000694      0x140 build/bootloader/obj/bootloader/src/main.o
+                0x08000694                main
+ .text.wr32     0x080007d4       0x1a build/bootloader/obj/bootloader/src/memtest.o
+ .text.wr16     0x080007ee       0x1c build/bootloader/obj/bootloader/src/memtest.o
+ .text.wr8      0x0800080a       0x1c build/bootloader/obj/bootloader/src/memtest.o
+ .text.rd32     0x08000826       0x16 build/bootloader/obj/bootloader/src/memtest.o
+ .text.fail     0x0800083c       0x32 build/bootloader/obj/bootloader/src/memtest.o
+ .text.check    0x0800086e       0x3c build/bootloader/obj/bootloader/src/memtest.o
+ *fill*         0x080008aa        0x2 
  .text.test_data_bus
-                0x08000824       0x98 build/bootloader/obj/bootloader/src/memtest.o
+                0x080008ac       0x98 build/bootloader/obj/bootloader/src/memtest.o
  .text.test_address_bus
-                0x080008bc      0x134 build/bootloader/obj/bootloader/src/memtest.o
+                0x08000944      0x134 build/bootloader/obj/bootloader/src/memtest.o
  .text.test_byte_lanes
-                0x080009f0       0xb0 build/bootloader/obj/bootloader/src/memtest.o
+                0x08000a78       0xb0 build/bootloader/obj/bootloader/src/memtest.o
  .text.test_device
-                0x08000aa0       0xd8 build/bootloader/obj/bootloader/src/memtest.o
+                0x08000b28       0xd8 build/bootloader/obj/bootloader/src/memtest.o
  .text.memtest_run
-                0x08000b78       0xa8 build/bootloader/obj/bootloader/src/memtest.o
-                0x08000b78                memtest_run
+                0x08000c00       0xa8 build/bootloader/obj/bootloader/src/memtest.o
+                0x08000c00                memtest_run
  .text.default_handler
-                0x08000c20        0x8 build/bootloader/obj/bootloader/src/startup.o
-                0x08000c20                default_handler
+                0x08000ca8        0x8 build/bootloader/obj/bootloader/src/startup.o
+                0x08000ca8                default_handler
  .text.reset_handler
-                0x08000c28       0x6c build/bootloader/obj/bootloader/src/startup.o
-                0x08000c28                reset_handler
+                0x08000cb0       0x6c build/bootloader/obj/bootloader/src/startup.o
+                0x08000cb0                reset_handler
  .text.board_pin_af
-                0x08000c94       0xe8 build/bootloader/obj/board/stm32f429i-disc1/board.o
-                0x08000c94                board_pin_af
+                0x08000d1c       0xe8 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x08000d1c                board_pin_af
  .text.board_clock_init
-                0x08000d7c       0x14 build/bootloader/obj/board/stm32f429i-disc1/board.o
-                0x08000d7c                board_clock_init
+                0x08000e04       0x14 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x08000e04                board_clock_init
  .text.board_console_init
-                0x08000d90       0x68 build/bootloader/obj/board/stm32f429i-disc1/board.o
-                0x08000d90                board_console_init
+                0x08000e18       0x68 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x08000e18                board_console_init
  .text.sdram_pins_init
-                0x08000df8       0x64 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x08000e80       0x64 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
  .text.board_sdram_init
-                0x08000e5c       0x2c build/bootloader/obj/board/stm32f429i-disc1/sdram.o
-                0x08000e5c                board_sdram_init
+                0x08000ee4       0x2c build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x08000ee4                board_sdram_init
  .text.stm32f4_clk_init
-                0x08000e88      0x284 build/bootloader/obj/drivers/clk/stm32f4_clk.o
-                0x08000e88                stm32f4_clk_init
- .text.spin     0x0800110c       0x22 build/bootloader/obj/drivers/ram/stm32_sdram.o
- *fill*         0x0800112e        0x2 
+                0x08000f10      0x284 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+                0x08000f10                stm32f4_clk_init
+ .text.spin     0x08001194       0x22 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ *fill*         0x080011b6        0x2 
  .text.fmc_wait
-                0x08001130       0x3c build/bootloader/obj/drivers/ram/stm32_sdram.o
- .text.fmc_cmd  0x0800116c       0x4c build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x080011b8       0x3c build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .text.fmc_cmd  0x080011f4       0x4c build/bootloader/obj/drivers/ram/stm32_sdram.o
  .text.stm32_sdram_init
-                0x080011b8      0x1c8 build/bootloader/obj/drivers/ram/stm32_sdram.o
-                0x080011b8                stm32_sdram_init
+                0x08001240      0x1c8 build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x08001240                stm32_sdram_init
  .text.stm32_usart_init
-                0x08001380       0x56 build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x08001380                stm32_usart_init
+                0x08001408       0x56 build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x08001408                stm32_usart_init
  .text.stm32_usart_putc
-                0x080013d6       0x2e build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x080013d6                stm32_usart_putc
+                0x0800145e       0x2e build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x0800145e                stm32_usart_putc
  .text.stm32_usart_puts
-                0x08001404       0x3e build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x08001404                stm32_usart_puts
+                0x0800148c       0x3e build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x0800148c                stm32_usart_puts
  .text.stm32_usart_flush
-                0x08001442       0x22 build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x08001442                stm32_usart_flush
+                0x080014ca       0x22 build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x080014ca                stm32_usart_flush
  *(.rodata*)
- .rodata        0x08001464      0x142 build/bootloader/obj/bootloader/src/main.o
- *fill*         0x080015a6        0x2 
+ .rodata        0x080014ec      0x207 build/bootloader/obj/bootloader/src/main.o
+ *fill*         0x080016f3        0x1 
  .rodata.digits.0
-                0x080015a8       0x11 build/bootloader/obj/bootloader/src/main.o
- *fill*         0x080015b9        0x3 
- .rodata        0x080015bc       0xd6 build/bootloader/obj/bootloader/src/memtest.o
- *fill*         0x08001692        0x2 
+                0x080016f4       0x11 build/bootloader/obj/bootloader/src/main.o
+ *fill*         0x08001705        0x3 
+ .rodata        0x08001708       0xd6 build/bootloader/obj/bootloader/src/memtest.o
+ *fill*         0x080017de        0x2 
  .rodata.clk_config
-                0x08001694       0x20 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x080017e0       0x20 build/bootloader/obj/board/stm32f429i-disc1/board.o
  .rodata.sdram_config
-                0x080016b4       0x48 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .rodata.pins   0x080016fc       0x4c build/bootloader/obj/board/stm32f429i-disc1/sdram.o
-                0x08001748                        . = ALIGN (0x4)
+                0x08001800       0x48 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .rodata.pins   0x08001848       0x4c build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x08001894                        . = ALIGN (0x4)
 
-.glue_7         0x08001748        0x0
- .glue_7        0x08001748        0x0 linker stubs
+.glue_7         0x08001894        0x0
+ .glue_7        0x08001894        0x0 linker stubs
 
-.glue_7t        0x08001748        0x0
- .glue_7t       0x08001748        0x0 linker stubs
+.glue_7t        0x08001894        0x0
+ .glue_7t       0x08001894        0x0 linker stubs
 
-.vfp11_veneer   0x08001748        0x0
- .vfp11_veneer  0x08001748        0x0 linker stubs
+.vfp11_veneer   0x08001894        0x0
+ .vfp11_veneer  0x08001894        0x0 linker stubs
 
-.v4_bx          0x08001748        0x0
- .v4_bx         0x08001748        0x0 linker stubs
+.v4_bx          0x08001894        0x0
+ .v4_bx         0x08001894        0x0 linker stubs
 
-.iplt           0x08001748        0x0
- .iplt          0x08001748        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
+.iplt           0x08001894        0x0
+ .iplt          0x08001894        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
 
-.rel.dyn        0x08001748        0x0
- .rel.iplt      0x08001748        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
+.rel.dyn        0x08001894        0x0
+ .rel.iplt      0x08001894        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
 
-.data           0x20000000        0x0 load address 0x08001748
+.data           0x20000000        0x0 load address 0x08001894
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        __sdata = .
  *(.data*)
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        __edata = .
-                0x08001748                        __sidata = LOADADDR (.data)
+                0x08001894                        __sidata = LOADADDR (.data)
 
-.igot.plt       0x20000000        0x0 load address 0x08001748
+.igot.plt       0x20000000        0x0 load address 0x08001894
  .igot.plt      0x20000000        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
 
-.bss            0x20000000        0x4 load address 0x08001748
+.bss            0x20000000        0x4 load address 0x08001894
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        __sbss = .
  *(.bss*)
@@ -472,80 +475,80 @@ LOAD build/bootloader/obj/drivers/tim2/stm32_tim2.o
 OUTPUT(build/bootloader/bootloader.elf elf32-littlearm)
 LOAD linker stubs
 
-.debug_info     0x00000000     0x175b
- .debug_info    0x00000000      0x168 build/bootloader/obj/bootloader/src/app_handoff.o
- .debug_info    0x00000168      0x12c build/bootloader/obj/bootloader/src/crc32.o
- .debug_info    0x00000294      0x1cf build/bootloader/obj/bootloader/src/image_loader.o
- .debug_info    0x00000463      0x348 build/bootloader/obj/bootloader/src/main.o
- .debug_info    0x000007ab      0x419 build/bootloader/obj/bootloader/src/memtest.o
- .debug_info    0x00000bc4      0x16e build/bootloader/obj/bootloader/src/startup.o
- .debug_info    0x00000d32      0x1ee build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_info    0x00000f20      0x291 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_info    0x000011b1      0x1d9 build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_info    0x0000138a      0x26d build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_info    0x000015f7      0x164 build/bootloader/obj/drivers/serial/stm32_usart.o
+.debug_info     0x00000000     0x18df
+ .debug_info    0x00000000      0x1ef build/bootloader/obj/bootloader/src/app_handoff.o
+ .debug_info    0x000001ef      0x12c build/bootloader/obj/bootloader/src/crc32.o
+ .debug_info    0x0000031b      0x220 build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_info    0x0000053b      0x3f4 build/bootloader/obj/bootloader/src/main.o
+ .debug_info    0x0000092f      0x419 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_info    0x00000d48      0x16e build/bootloader/obj/bootloader/src/startup.o
+ .debug_info    0x00000eb6      0x1ee build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_info    0x000010a4      0x291 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_info    0x00001335      0x1d9 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_info    0x0000150e      0x26d build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_info    0x0000177b      0x164 build/bootloader/obj/drivers/serial/stm32_usart.o
 
-.debug_abbrev   0x00000000      0xc36
- .debug_abbrev  0x00000000      0x105 build/bootloader/obj/bootloader/src/app_handoff.o
- .debug_abbrev  0x00000105       0xad build/bootloader/obj/bootloader/src/crc32.o
- .debug_abbrev  0x000001b2      0x118 build/bootloader/obj/bootloader/src/image_loader.o
- .debug_abbrev  0x000002ca      0x1ff build/bootloader/obj/bootloader/src/main.o
- .debug_abbrev  0x000004c9      0x15c build/bootloader/obj/bootloader/src/memtest.o
- .debug_abbrev  0x00000625       0xf8 build/bootloader/obj/bootloader/src/startup.o
- .debug_abbrev  0x0000071d      0x136 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_abbrev  0x00000853      0x130 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_abbrev  0x00000983       0xd2 build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_abbrev  0x00000a55      0x120 build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_abbrev  0x00000b75       0xc1 build/bootloader/obj/drivers/serial/stm32_usart.o
+.debug_abbrev   0x00000000      0xcab
+ .debug_abbrev  0x00000000      0x13e build/bootloader/obj/bootloader/src/app_handoff.o
+ .debug_abbrev  0x0000013e       0xad build/bootloader/obj/bootloader/src/crc32.o
+ .debug_abbrev  0x000001eb      0x134 build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_abbrev  0x0000031f      0x21f build/bootloader/obj/bootloader/src/main.o
+ .debug_abbrev  0x0000053e      0x15c build/bootloader/obj/bootloader/src/memtest.o
+ .debug_abbrev  0x0000069a       0xf8 build/bootloader/obj/bootloader/src/startup.o
+ .debug_abbrev  0x00000792      0x136 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_abbrev  0x000008c8      0x130 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_abbrev  0x000009f8       0xd2 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_abbrev  0x00000aca      0x120 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_abbrev  0x00000bea       0xc1 build/bootloader/obj/drivers/serial/stm32_usart.o
 
-.debug_aranges  0x00000000      0x278
+.debug_aranges  0x00000000      0x280
  .debug_aranges
-                0x00000000       0x40 build/bootloader/obj/bootloader/src/app_handoff.o
+                0x00000000       0x48 build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_aranges
-                0x00000040       0x20 build/bootloader/obj/bootloader/src/crc32.o
+                0x00000048       0x20 build/bootloader/obj/bootloader/src/crc32.o
  .debug_aranges
-                0x00000060       0x28 build/bootloader/obj/bootloader/src/image_loader.o
+                0x00000068       0x28 build/bootloader/obj/bootloader/src/image_loader.o
  .debug_aranges
-                0x00000088       0x70 build/bootloader/obj/bootloader/src/main.o
+                0x00000090       0x70 build/bootloader/obj/bootloader/src/main.o
  .debug_aranges
-                0x000000f8       0x70 build/bootloader/obj/bootloader/src/memtest.o
+                0x00000100       0x70 build/bootloader/obj/bootloader/src/memtest.o
  .debug_aranges
-                0x00000168       0x28 build/bootloader/obj/bootloader/src/startup.o
+                0x00000170       0x28 build/bootloader/obj/bootloader/src/startup.o
  .debug_aranges
-                0x00000190       0x30 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x00000198       0x30 build/bootloader/obj/board/stm32f429i-disc1/board.o
  .debug_aranges
-                0x000001c0       0x28 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x000001c8       0x28 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
  .debug_aranges
-                0x000001e8       0x20 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+                0x000001f0       0x20 build/bootloader/obj/drivers/clk/stm32f4_clk.o
  .debug_aranges
-                0x00000208       0x38 build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x00000210       0x38 build/bootloader/obj/drivers/ram/stm32_sdram.o
  .debug_aranges
-                0x00000240       0x38 build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x00000248       0x38 build/bootloader/obj/drivers/serial/stm32_usart.o
 
 .debug_rnglists
-                0x00000000      0x1ae
+                0x00000000      0x1b3
  .debug_rnglists
-                0x00000000       0x2c build/bootloader/obj/bootloader/src/app_handoff.o
+                0x00000000       0x31 build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_rnglists
-                0x0000002c       0x13 build/bootloader/obj/bootloader/src/crc32.o
+                0x00000031       0x13 build/bootloader/obj/bootloader/src/crc32.o
  .debug_rnglists
-                0x0000003f       0x19 build/bootloader/obj/bootloader/src/image_loader.o
+                0x00000044       0x19 build/bootloader/obj/bootloader/src/image_loader.o
  .debug_rnglists
-                0x00000058       0x51 build/bootloader/obj/bootloader/src/main.o
+                0x0000005d       0x51 build/bootloader/obj/bootloader/src/main.o
  .debug_rnglists
-                0x000000a9       0x54 build/bootloader/obj/bootloader/src/memtest.o
+                0x000000ae       0x54 build/bootloader/obj/bootloader/src/memtest.o
  .debug_rnglists
-                0x000000fd       0x19 build/bootloader/obj/bootloader/src/startup.o
+                0x00000102       0x19 build/bootloader/obj/bootloader/src/startup.o
  .debug_rnglists
-                0x00000116       0x20 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x0000011b       0x20 build/bootloader/obj/board/stm32f429i-disc1/board.o
  .debug_rnglists
-                0x00000136       0x19 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x0000013b       0x19 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
  .debug_rnglists
-                0x0000014f       0x14 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+                0x00000154       0x14 build/bootloader/obj/drivers/clk/stm32f4_clk.o
  .debug_rnglists
-                0x00000163       0x26 build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x00000168       0x26 build/bootloader/obj/drivers/ram/stm32_sdram.o
  .debug_rnglists
-                0x00000189       0x25 build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x0000018e       0x25 build/bootloader/obj/drivers/serial/stm32_usart.o
 
 .debug_macro    0x00000000     0x2fb4
  .debug_macro   0x00000000       0xb8 build/bootloader/obj/bootloader/src/app_handoff.o
@@ -588,32 +591,32 @@ LOAD linker stubs
  .debug_macro   0x00002df6       0x5e build/bootloader/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00002e54      0x160 build/bootloader/obj/drivers/serial/stm32_usart.o
 
-.debug_line     0x00000000     0x1cea
- .debug_line    0x00000000      0x2d3 build/bootloader/obj/bootloader/src/app_handoff.o
- .debug_line    0x000002d3      0x140 build/bootloader/obj/bootloader/src/crc32.o
- .debug_line    0x00000413      0x260 build/bootloader/obj/bootloader/src/image_loader.o
- .debug_line    0x00000673      0x417 build/bootloader/obj/bootloader/src/main.o
- .debug_line    0x00000a8a      0x437 build/bootloader/obj/bootloader/src/memtest.o
- .debug_line    0x00000ec1      0x1a6 build/bootloader/obj/bootloader/src/startup.o
- .debug_line    0x00001067      0x28f build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_line    0x000012f6      0x1fc build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_line    0x000014f2      0x2fa build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_line    0x000017ec      0x301 build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_line    0x00001aed      0x1fd build/bootloader/obj/drivers/serial/stm32_usart.o
+.debug_line     0x00000000     0x1cfe
+ .debug_line    0x00000000      0x2e5 build/bootloader/obj/bootloader/src/app_handoff.o
+ .debug_line    0x000002e5      0x140 build/bootloader/obj/bootloader/src/crc32.o
+ .debug_line    0x00000425      0x257 build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_line    0x0000067c      0x422 build/bootloader/obj/bootloader/src/main.o
+ .debug_line    0x00000a9e      0x437 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_line    0x00000ed5      0x1a6 build/bootloader/obj/bootloader/src/startup.o
+ .debug_line    0x0000107b      0x28f build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_line    0x0000130a      0x1fc build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_line    0x00001506      0x2fa build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_line    0x00001800      0x301 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_line    0x00001b01      0x1fd build/bootloader/obj/drivers/serial/stm32_usart.o
 
-.debug_str      0x00000000     0xa8d7
- .debug_str     0x00000000     0xa8d7 build/bootloader/obj/bootloader/src/app_handoff.o
-                               0x61dd (size before relaxing)
- .debug_str     0x0000a8d7     0x3c5b build/bootloader/obj/bootloader/src/crc32.o
- .debug_str     0x0000a8d7     0x4eaf build/bootloader/obj/bootloader/src/image_loader.o
- .debug_str     0x0000a8d7     0x52cc build/bootloader/obj/bootloader/src/main.o
- .debug_str     0x0000a8d7     0x3a09 build/bootloader/obj/bootloader/src/memtest.o
- .debug_str     0x0000a8d7     0x4e0c build/bootloader/obj/bootloader/src/startup.o
- .debug_str     0x0000a8d7     0x75ec build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_str     0x0000a8d7     0x7238 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_str     0x0000a8d7     0x6ac7 build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_str     0x0000a8d7     0x4e6a build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_str     0x0000a8d7     0x4c1d build/bootloader/obj/drivers/serial/stm32_usart.o
+.debug_str      0x00000000     0xa9ff
+ .debug_str     0x00000000     0xa9ff build/bootloader/obj/bootloader/src/app_handoff.o
+                               0x6265 (size before relaxing)
+ .debug_str     0x0000a9ff     0x3c5b build/bootloader/obj/bootloader/src/crc32.o
+ .debug_str     0x0000a9ff     0x4f34 build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_str     0x0000a9ff     0x53f4 build/bootloader/obj/bootloader/src/main.o
+ .debug_str     0x0000a9ff     0x3a09 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_str     0x0000a9ff     0x4e0c build/bootloader/obj/bootloader/src/startup.o
+ .debug_str     0x0000a9ff     0x75ec build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_str     0x0000a9ff     0x7238 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_str     0x0000a9ff     0x6ac7 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_str     0x0000a9ff     0x4e6a build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_str     0x0000a9ff     0x4c1d build/bootloader/obj/drivers/serial/stm32_usart.o
 
 .comment        0x00000000       0x45
  .comment       0x00000000       0x45 build/bootloader/obj/bootloader/src/app_handoff.o
@@ -654,15 +657,15 @@ LOAD linker stubs
  .ARM.attributes
                 0x000001cc       0x2e build/bootloader/obj/drivers/serial/stm32_usart.o
 
-.debug_frame    0x00000000      0x704
- .debug_frame   0x00000000       0xa4 build/bootloader/obj/bootloader/src/app_handoff.o
- .debug_frame   0x000000a4       0x38 build/bootloader/obj/bootloader/src/crc32.o
- .debug_frame   0x000000dc       0x5c build/bootloader/obj/bootloader/src/image_loader.o
- .debug_frame   0x00000138      0x17c build/bootloader/obj/bootloader/src/main.o
- .debug_frame   0x000002b4      0x1b4 build/bootloader/obj/bootloader/src/memtest.o
- .debug_frame   0x00000468       0x48 build/bootloader/obj/bootloader/src/startup.o
- .debug_frame   0x000004b0       0x78 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_frame   0x00000528       0x50 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_frame   0x00000578       0x38 build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_frame   0x000005b0       0xa8 build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_frame   0x00000658       0xac build/bootloader/obj/drivers/serial/stm32_usart.o
+.debug_frame    0x00000000      0x730
+ .debug_frame   0x00000000       0xcc build/bootloader/obj/bootloader/src/app_handoff.o
+ .debug_frame   0x000000cc       0x38 build/bootloader/obj/bootloader/src/crc32.o
+ .debug_frame   0x00000104       0x5c build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_frame   0x00000160      0x180 build/bootloader/obj/bootloader/src/main.o
+ .debug_frame   0x000002e0      0x1b4 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_frame   0x00000494       0x48 build/bootloader/obj/bootloader/src/startup.o
+ .debug_frame   0x000004dc       0x78 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_frame   0x00000554       0x50 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_frame   0x000005a4       0x38 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_frame   0x000005dc       0xa8 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_frame   0x00000684       0xac build/bootloader/obj/drivers/serial/stm32_usart.o

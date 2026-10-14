@@ -128,9 +128,16 @@ int main(void)
 
     boot_status = 4u;
 
-    if (!image_load()) {
+    image_status_t image_status = image_load();
+    if (image_status != IMAGE_OK) {
         boot_status = 0xE3u;
-        halt("bootloader: no valid application image\n");
+
+        console_puts("[ERR] bootloader: failed to load application image\n");
+        console_puts("[ERR] bootloader: image_load() returned ");
+        console_puthex(image_status);
+        console_puts("\n");
+
+        halt("[ERR] bootloader: halted\n");
     }
 
     boot_status = 5u;
@@ -141,6 +148,18 @@ int main(void)
 
     console_puts("bootloader: starting application\n");
     stm32_usart_flush(CONSOLE_USART);
+
+    app_handoff_status_t handoff_status = app_handoff_validate(APP_SDRAM_BASE);
+    if (handoff_status != APP_HANDOFF_OK) {
+        boot_status = 0xE4u;
+
+        console_puts("[ERR] bootloader: failed to handoff to application image\n");
+        console_puts("[ERR] bootloader: app_handoff_validate() returned ");
+        console_puthex(handoff_status);
+        console_puts("\n");
+
+        halt("bootloader: halted\n");
+    }
 
     app_handoff(APP_SDRAM_BASE);
 

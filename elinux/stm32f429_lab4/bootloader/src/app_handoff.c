@@ -54,17 +54,10 @@ static void jump_to_app(uint32_t, uint32_t)
 }
 
 
-void app_handoff(uint32_t vector_table)
+app_handoff_status_t app_handoff_validate(uint32_t vector_table)
 {
-    /* Mask the configurable interrupts */
-    __asm volatile ("cpsid i" ::: "memory");
-
     if (vector_table != SDRAM_BASE)
-    {
-        for (;;) {
-            __asm volatile ("nop");
-        }
-    }
+        return APP_HANDOFF_ERR_VECTOR_BASE;
 
     const volatile uint32_t *vectors = (const volatile uint32_t *)(uintptr_t)vector_table;
     uint32_t initial_sp = vectors[0];
@@ -75,7 +68,7 @@ void app_handoff(uint32_t vector_table)
         || (initial_sp > SRAM_BASE + SRAM_SIZE)
         || ((initial_sp & 7u) != 0u))
     {
-        for (;;) { __asm volatile("nop"); }
+        return APP_HANDOFF_ERR_STACK;
     }
 
     /* Validate that the reset handler points into SDRAM. */
@@ -84,8 +77,22 @@ void app_handoff(uint32_t vector_table)
     if (((reset_vector & 1u) == 0u) ||
         (reset_address < SDRAM_BASE) ||
         (reset_address >= SDRAM_BASE + SDRAM_SIZE)) {
-        for (;;) { __asm volatile("nop"); }
+        
+        return APP_HANDOFF_ERR_RESET_VECTOR;
     }
+
+    return APP_HANDOFF_OK;
+}
+
+
+void app_handoff(uint32_t vector_table)
+{
+    /* Mask the configurable interrupts */
+    __asm volatile ("cpsid i" ::: "memory");
+
+    const volatile uint32_t *vectors = (const volatile uint32_t *)(uintptr_t)vector_table;
+    uint32_t initial_sp = vectors[0];
+    uint32_t reset_vector = vectors[1];   /* Thumb address: bit 0 is set */
 
     /* Prepare for handoff to the application */
     bootloader_prepare_handoff();
