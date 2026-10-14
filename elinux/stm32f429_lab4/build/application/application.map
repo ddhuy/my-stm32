@@ -88,6 +88,48 @@ Discarded input sections
  .debug_frame   0x00000000       0x78 build/application/obj/board/stm32f429i-disc1/board.o
  .ARM.attributes
                 0x00000000       0x2e build/application/obj/board/stm32f429i-disc1/board.o
+ .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/console.o
+ .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/console.o
+ .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/console.o
+ .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/console.o
+ .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/console.o
+ .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/console.o
+ .text          0x00000000        0x0 build/application/obj/board/stm32f429i-disc1/console.o
+ .data          0x00000000        0x0 build/application/obj/board/stm32f429i-disc1/console.o
+ .bss           0x00000000        0x0 build/application/obj/board/stm32f429i-disc1/console.o
+ .text.console_putc
+                0x00000000       0x20 build/application/obj/board/stm32f429i-disc1/console.o
+ .text.console_puts
+                0x00000000       0x1c build/application/obj/board/stm32f429i-disc1/console.o
+ .text.console_puthex
+                0x00000000       0x70 build/application/obj/board/stm32f429i-disc1/console.o
+ .text.console_getc
+                0x00000000       0x14 build/application/obj/board/stm32f429i-disc1/console.o
+ .text.console_gets
+                0x00000000       0x24 build/application/obj/board/stm32f429i-disc1/console.o
+ .text.console_flush
+                0x00000000       0x14 build/application/obj/board/stm32f429i-disc1/console.o
+ .rodata.digits.0
+                0x00000000       0x11 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_info    0x00000000      0x223 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_abbrev  0x00000000      0x168 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_aranges
+                0x00000000       0x48 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_rnglists
+                0x00000000       0x31 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_macro   0x00000000       0x62 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_macro   0x00000000      0xaba build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_macro   0x00000000       0x16 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_macro   0x00000000      0x24a build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_macro   0x00000000      0x12a build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_macro   0x00000000       0x22 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_macro   0x00000000      0x34e build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_line    0x00000000      0x219 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_str     0x00000000     0x49fc build/application/obj/board/stm32f429i-disc1/console.o
+ .comment       0x00000000       0x46 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_frame   0x00000000       0xd8 build/application/obj/board/stm32f429i-disc1/console.o
+ .ARM.attributes
+                0x00000000       0x2e build/application/obj/board/stm32f429i-disc1/console.o
  .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/sdram.o
  .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/sdram.o
  .group         0x00000000        0xc build/application/obj/board/stm32f429i-disc1/sdram.o
@@ -186,6 +228,8 @@ Discarded input sections
  .text.led_off  0x00000000       0x18 build/application/obj/drivers/led/stm32_led.o
  .debug_macro   0x00000000      0xaba build/application/obj/drivers/led/stm32_led.o
  .debug_macro   0x00000000       0x16 build/application/obj/drivers/led/stm32_led.o
+ .debug_macro   0x00000000      0x24a build/application/obj/drivers/led/stm32_led.o
+ .debug_macro   0x00000000      0x12a build/application/obj/drivers/led/stm32_led.o
  .debug_macro   0x00000000       0x22 build/application/obj/drivers/led/stm32_led.o
  .debug_macro   0x00000000      0x34e build/application/obj/drivers/led/stm32_led.o
  .debug_macro   0x00000000       0x22 build/application/obj/drivers/led/stm32_led.o
@@ -233,6 +277,8 @@ Discarded input sections
  .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
  .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
  .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
+ .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
+ .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
  .text          0x00000000        0x0 build/application/obj/drivers/serial/stm32_usart.o
  .data          0x00000000        0x0 build/application/obj/drivers/serial/stm32_usart.o
  .bss           0x00000000        0x0 build/application/obj/drivers/serial/stm32_usart.o
@@ -244,23 +290,30 @@ Discarded input sections
                 0x00000000       0x3e build/application/obj/drivers/serial/stm32_usart.o
  .text.stm32_usart_flush
                 0x00000000       0x22 build/application/obj/drivers/serial/stm32_usart.o
- .debug_info    0x00000000      0x164 build/application/obj/drivers/serial/stm32_usart.o
- .debug_abbrev  0x00000000       0xc1 build/application/obj/drivers/serial/stm32_usart.o
+ .text.stm32_usart_getc
+                0x00000000       0x40 build/application/obj/drivers/serial/stm32_usart.o
+ .rodata        0x00000000        0x8 build/application/obj/drivers/serial/stm32_usart.o
+ .text.stm32_usart_gets
+                0x00000000       0xd4 build/application/obj/drivers/serial/stm32_usart.o
+ .debug_info    0x00000000      0x227 build/application/obj/drivers/serial/stm32_usart.o
+ .debug_abbrev  0x00000000      0x128 build/application/obj/drivers/serial/stm32_usart.o
  .debug_aranges
-                0x00000000       0x38 build/application/obj/drivers/serial/stm32_usart.o
+                0x00000000       0x48 build/application/obj/drivers/serial/stm32_usart.o
  .debug_rnglists
-                0x00000000       0x25 build/application/obj/drivers/serial/stm32_usart.o
- .debug_macro   0x00000000       0x5e build/application/obj/drivers/serial/stm32_usart.o
+                0x00000000       0x32 build/application/obj/drivers/serial/stm32_usart.o
+ .debug_macro   0x00000000       0x70 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000      0xaba build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000      0x34e build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000       0x22 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000       0x16 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000      0x244 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000      0x160 build/application/obj/drivers/serial/stm32_usart.o
- .debug_line    0x00000000      0x1fd build/application/obj/drivers/serial/stm32_usart.o
- .debug_str     0x00000000     0x4c1d build/application/obj/drivers/serial/stm32_usart.o
+ .debug_macro   0x00000000      0x130 build/application/obj/drivers/serial/stm32_usart.o
+ .debug_macro   0x00000000       0x22 build/application/obj/drivers/serial/stm32_usart.o
+ .debug_line    0x00000000      0x2dd build/application/obj/drivers/serial/stm32_usart.o
+ .debug_str     0x00000000     0x50f6 build/application/obj/drivers/serial/stm32_usart.o
  .comment       0x00000000       0x46 build/application/obj/drivers/serial/stm32_usart.o
- .debug_frame   0x00000000       0xac build/application/obj/drivers/serial/stm32_usart.o
+ .debug_frame   0x00000000       0xf8 build/application/obj/drivers/serial/stm32_usart.o
  .ARM.attributes
                 0x00000000       0x2e build/application/obj/drivers/serial/stm32_usart.o
  .group         0x00000000        0xc build/application/obj/drivers/tim2/stm32_tim2.o
@@ -302,6 +355,7 @@ LOAD build/application/obj/application/src/startup.o
 LOAD build/application/obj/application/src/tim2_irq.o
 LOAD build/application/obj/application/src/vectors.o
 LOAD build/application/obj/board/stm32f429i-disc1/board.o
+LOAD build/application/obj/board/stm32f429i-disc1/console.o
 LOAD build/application/obj/board/stm32f429i-disc1/sdram.o
 LOAD build/application/obj/drivers/clk/stm32f4_clk.o
 LOAD build/application/obj/drivers/led/stm32_led.o
@@ -447,7 +501,7 @@ LOAD linker stubs
  .debug_rnglists
                 0x00000070       0x26 build/application/obj/drivers/tim2/stm32_tim2.o
 
-.debug_macro    0x00000000     0x278a
+.debug_macro    0x00000000     0x2416
  .debug_macro   0x00000000       0x38 build/application/obj/application/src/main.o
  .debug_macro   0x00000038      0xaba build/application/obj/application/src/main.o
  .debug_macro   0x00000af2      0x34e build/application/obj/application/src/main.o
@@ -464,12 +518,10 @@ LOAD linker stubs
  .debug_macro   0x0000173d       0x2e build/application/obj/application/src/vectors.o
  .debug_macro   0x0000176b      0x226 build/application/obj/application/src/vectors.o
  .debug_macro   0x00001991       0x79 build/application/obj/drivers/led/stm32_led.o
- .debug_macro   0x00001a0a      0x24a build/application/obj/drivers/led/stm32_led.o
- .debug_macro   0x00001c54      0x12a build/application/obj/drivers/led/stm32_led.o
- .debug_macro   0x00001d7e      0x178 build/application/obj/drivers/led/stm32_led.o
- .debug_macro   0x00001ef6      0x518 build/application/obj/drivers/led/stm32_led.o
- .debug_macro   0x0000240e       0x91 build/application/obj/drivers/tim2/stm32_tim2.o
- .debug_macro   0x0000249f      0x2eb build/application/obj/drivers/tim2/stm32_tim2.o
+ .debug_macro   0x00001a0a      0x178 build/application/obj/drivers/led/stm32_led.o
+ .debug_macro   0x00001b82      0x518 build/application/obj/drivers/led/stm32_led.o
+ .debug_macro   0x0000209a       0x91 build/application/obj/drivers/tim2/stm32_tim2.o
+ .debug_macro   0x0000212b      0x2eb build/application/obj/drivers/tim2/stm32_tim2.o
 
 .debug_line     0x00000000      0x96c
  .debug_line    0x00000000      0x11d build/application/obj/application/src/main.o

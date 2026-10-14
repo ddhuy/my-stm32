@@ -1,8 +1,9 @@
 #include <stdint.h>
 
 #include "soc/stm32f429/usart_regs.h"
+#include "board/stm32f429i-disc1/board.h"
 
-#include "drivers/serial/stm32_usart.h"
+#include "stm32_usart.h"
 
 
 void stm32_usart_init(uint32_t base, uint32_t pclk_hz, uint32_t baud)
@@ -38,5 +39,65 @@ void stm32_usart_flush(uint32_t base)
 {
     while (!(USART_SR(base) & USART_SR_TC))
     {
+    }
+}
+
+
+char stm32_usart_getc(uint32_t base)
+{
+    for(;;)
+    {
+        uint32_t sr = USART_SR(base);
+        if (sr & (USART_SR_ORE | USART_SR_FE | USART_SR_NF | USART_SR_PE))
+        {
+            /* Clear the error flags by reading SR and DR */
+            (void)USART_DR(base);
+            continue;
+        }
+
+        if (sr & USART_SR_RXNE)
+            return (char)(uint8_t)(USART_DR(base) & 0xFFu);
+    }
+}
+
+bool stm32_usart_gets(uint32_t base, char *buf, uint32_t buf_size)
+{
+    uint32_t len = 0u;
+    bool overflow = false;
+
+    for (;;)
+    {
+        char c = stm32_usart_getc(base);
+
+        if (c == '\r' || c == '\n')
+        {
+            stm32_usart_puts(base, "\n");
+            buf[len] = '\0';
+            return !overflow;
+        }
+
+        /* Handle terminal Backspace and Delete. */
+        if (c == '\b' || c == 0x7Fu)
+        {
+            if (len > 0u)
+            {
+                --len;
+                stm32_usart_puts(base, "\b \b");
+            }
+            continue;
+        }
+
+        if (c < 0x20u || c > 0x7Eu)
+            continue;   /* ignore non-printable characters */
+
+        if (!overflow && (len + 1u < buf_size))
+        {
+            buf[len++] = c;
+            stm32_usart_putc(base, c);
+        }
+        else
+        {
+            overflow = true;
+        }
     }
 }

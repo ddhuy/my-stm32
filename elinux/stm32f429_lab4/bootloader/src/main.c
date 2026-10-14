@@ -3,15 +3,15 @@
 
 #include "arch/cortex-m4/mpu.h"
 #include "board/stm32f429i-disc1/board.h"
-
-#include "drivers/serial/stm32_usart.h"
+#include "board/stm32f429i-disc1/console.h"
 
 #include "common/include/memory_map.h"
 #include "common/include/image_format.h"
 
+#include "app_handoff.h"
+#include "boot_console.h"
 #include "image_loader.h"
 #include "memtest.h"
-#include "app_handoff.h"
 
 
 #define CONSOLE_BAUD    115200u
@@ -22,23 +22,6 @@
 
 volatile uint32_t boot_status;
 
-
-static void console_puts(const char *s)
-{
-    stm32_usart_puts(CONSOLE_USART, s);
-}
-
-static void console_puthex(uint32_t value)
-{
-    static const char digits[] = "0123456789ABCDEF";
-    char buf[11] = "0x";
-
-    for (unsigned i = 0; i < 8u; ++i)
-        buf[2u + i] = digits[(value >> (28u - 4u * i)) & 0xFu];
-    buf[10] = '\0';
-
-    console_puts(buf);
-}
 
 static __attribute__((noreturn)) void halt(const char *why)
 {
@@ -121,51 +104,55 @@ int main(void)
     boot_status = 3u;
 
     /* Destroys SDRAM contents, so it must run before image_load() */
-    if (!sdram_memtest()) {
+    if (!sdram_memtest())
+    {
         boot_status = 0xE2u;
         halt("bootloader: halted\n");
     }
 
-    boot_status = 4u;
-
-    image_status_t image_status = image_load();
-    if (image_status != IMAGE_OK) {
-        boot_status = 0xE3u;
-
-        console_puts("[ERR] bootloader: failed to load application image\n");
-        console_puts("[ERR] bootloader: image_load() returned ");
-        console_puthex(image_status);
-        console_puts("\n");
-
-        halt("[ERR] bootloader: halted\n");
-    }
-
-    boot_status = 5u;
-
-    mpu_map_app_region();
-
-    boot_status = 6u;
-
-    console_puts("bootloader: starting application\n");
-    stm32_usart_flush(CONSOLE_USART);
-
-    app_handoff_status_t handoff_status = app_handoff_validate(APP_SDRAM_BASE);
-    if (handoff_status != APP_HANDOFF_OK) {
-        boot_status = 0xE4u;
-
-        console_puts("[ERR] bootloader: failed to handoff to application image\n");
-        console_puts("[ERR] bootloader: app_handoff_validate() returned ");
-        console_puthex(handoff_status);
-        console_puts("\n");
-
-        halt("bootloader: halted\n");
-    }
-
-    app_handoff(APP_SDRAM_BASE);
-
-    // The bootloader has nothing else to do, so we enter an infinite loop.
-    while (1)
+    /* Enter the command interface. */
+    for (;;)
     {
-        __asm volatile("nop");
+        boot_console_action_t action = boot_console_run();
+
+        if (action == BOOT_CONSOLE_BOOT)
+        {
+            /*
+            * Validate the image and copy it from
+            * Flash into SDRAM.
+            *
+            * Adapt this check to your current
+            * image_status_t API.
+            */
+            image_status_t image_status = image_load();
+            if (image_status != IMAGE_OK)
+            {
+                console_puts("Invalid application vectors\n");
+                console_puts("Image Loader: ");
+                console_puthex(image_status);
+                console_puts("\n");
+
+                continue;
+            }
+
+            /* Configure SDRAM as executable memory. */
+            mpu_map_app_region();
+
+            /* Validate application vectors before handoff. */
+            app_handoff_status_t handoff_status = app_handoff_validate(APP_SDRAM_BASE);
+            if (handoff_status != APP_HANDOFF_OK)
+            {
+                console_puts("Failed to handoff to application image. \n");
+                console_puthex(handoff_status);
+                console_puts("\n");
+
+                continue;
+            }
+
+            console_puts("Starting application...\n");
+            console_flush();
+
+            app_handoff(APP_SDRAM_BASE);
+        }
     }
 }
