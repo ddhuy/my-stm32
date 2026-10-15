@@ -9,6 +9,7 @@ void console_putc(char c);
 void console_puts(const char *s);
 void console_puthex(uint32_t value);
 char console_getc();
+bool console_try_getc(char *out);
 bool console_gets(char *buf, uint32_t buf_size);
 void console_flush();
 

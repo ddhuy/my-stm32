@@ -36,6 +36,11 @@ bool console_gets(char *buf, uint32_t buf_size)
     return stm32_usart_gets(CONSOLE_USART, buf, buf_size);
 }
 
+bool console_try_getc(char *out)
+{
+    return stm32_usart_try_getc(CONSOLE_USART, out);
+}
+
 void console_flush()
 {
     stm32_usart_flush(CONSOLE_USART);

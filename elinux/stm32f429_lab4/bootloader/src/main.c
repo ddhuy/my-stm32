@@ -9,18 +9,17 @@
 #include "common/include/image_format.h"
 
 #include "app_handoff.h"
+#include "boot_autoboot.h"
 #include "boot_console.h"
-#include "image_loader.h"
+#include "boot_time.h"
 #include "memtest.h"
+#include "image_loader.h"
 
 
 #define CONSOLE_BAUD    115200u
 
 /* MPU region used for the application's SDRAM; it stays set after the handoff */
 #define MPU_REGION_APP  0u
-
-
-volatile uint32_t boot_status;
 
 
 static __attribute__((noreturn)) void halt(const char *why)
@@ -81,33 +80,79 @@ static bool sdram_memtest(void)
     return false;
 }
 
+static bool boot_application(void)
+{
+    /*
+    * Validate the image and copy it from
+    * Flash into SDRAM.
+    *
+    * Adapt this check to your current
+    * image_status_t API.
+    */
+    image_status_t image_status = image_load();
+    if (image_status != IMAGE_OK)
+    {
+        console_puts("Invalid application vectors\n");
+        console_puts("Image Loader: ");
+        console_puthex(image_status);
+        console_puts("\n");
+
+        return false;
+    }
+
+    /* Configure SDRAM as executable memory. */
+    mpu_map_app_region();
+
+    /* Validate application vectors before handoff. */
+    app_handoff_status_t handoff_status = app_handoff_validate(APP_SDRAM_BASE);
+    if (handoff_status != APP_HANDOFF_OK)
+    {
+        console_puts("Failed to handoff to application image. \n");
+        console_puthex(handoff_status);
+        console_puts("\n");
+
+        return false;
+    }
+
+    console_puts("Starting application...\n");
+    console_flush();
+
+    app_handoff(APP_SDRAM_BASE);
+
+    __builtin_unreachable();
+}
+
 int main(void)
 {
-    boot_status = 1u;
-
     if (!board_clock_init())
     {
-        boot_status = 0xE1u;
         while (1)   /* no console without clocks */
         {
         }
     }
 
-    boot_status = 2u;
-
     board_console_init(CLOCK_PCLK2_HZ, CONSOLE_BAUD);
     console_puts("\nbootloader: clocks ok\n");
+
+    if (!boot_time_init(CLOCK_HCLK_HZ))
+        halt("bootloader: SysTick initialization failed\n");
 
     if (!board_sdram_init())
         halt("bootloader: SDRAM init failed\n");
 
-    boot_status = 3u;
-
     /* Destroys SDRAM contents, so it must run before image_load() */
     if (!sdram_memtest())
     {
-        boot_status = 0xE2u;
         halt("bootloader: halted\n");
+    }
+
+    /* Autoboot */
+    if (boot_autoboot_wait())
+    {
+        if (!boot_application())
+        {
+            console_puts("Autoboot failed. Entering console.\n");
+        }
     }
 
     /* Enter the command interface. */
@@ -117,42 +162,10 @@ int main(void)
 
         if (action == BOOT_CONSOLE_BOOT)
         {
-            /*
-            * Validate the image and copy it from
-            * Flash into SDRAM.
-            *
-            * Adapt this check to your current
-            * image_status_t API.
-            */
-            image_status_t image_status = image_load();
-            if (image_status != IMAGE_OK)
+            if (!boot_application())
             {
-                console_puts("Invalid application vectors\n");
-                console_puts("Image Loader: ");
-                console_puthex(image_status);
-                console_puts("\n");
-
-                continue;
+                halt("bootloader: failed to boot application\n");
             }
-
-            /* Configure SDRAM as executable memory. */
-            mpu_map_app_region();
-
-            /* Validate application vectors before handoff. */
-            app_handoff_status_t handoff_status = app_handoff_validate(APP_SDRAM_BASE);
-            if (handoff_status != APP_HANDOFF_OK)
-            {
-                console_puts("Failed to handoff to application image. \n");
-                console_puthex(handoff_status);
-                console_puts("\n");
-
-                continue;
-            }
-
-            console_puts("Starting application...\n");
-            console_flush();
-
-            app_handoff(APP_SDRAM_BASE);
         }
     }
 }

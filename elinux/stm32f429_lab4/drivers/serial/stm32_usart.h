@@ -33,4 +33,11 @@ char stm32_usart_getc(uint32_t base);
  */
 bool stm32_usart_gets(uint32_t base, char *buf, uint32_t buf_size);
 
+/* Return immediately.
+ * true:  a byte was received and written to *out.
+ * false: no valid byte is available.
+ * out must point to writable memory.
+ */
+bool stm32_usart_try_getc(uint32_t base, char *out);
+
 #endif // STM32_USART_H
