@@ -16,22 +16,11 @@ void stm32_usart_init(uint32_t base, uint32_t pclk_hz, uint32_t baud);
 /* Sends a single character. */
 void stm32_usart_putc(uint32_t base, char c);
 
-/* Sends a NUL-terminated string; "\n" is sent as "\r\n" for terminals. */
-void stm32_usart_puts(uint32_t base, const char *s);
-
 /* Waits until the last byte has left the pin (call before reset or jumping to the app). */
 void stm32_usart_flush(uint32_t base);
 
 /* Block until a valid character is received. */
 char stm32_usart_getc(uint32_t base);
-
-/*
- * Read one line of input.
- *
- * Returns false if the line was too long to fit in the buffer.
- * Excess input is discarded until a newline is received.
- */
-bool stm32_usart_gets(uint32_t base, char *buf, uint32_t buf_size);
 
 /* Return immediately.
  * true:  a byte was received and written to *out.

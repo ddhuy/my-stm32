@@ -20,6 +20,16 @@ make disasm          # application and bootloader .lst files with C source
 
 Console: ST-LINK virtual COM port, 115200 8N1.
 
+The USART driver provides raw byte input/output and transmit flushing. Terminal
+behavior lives in `board/stm32f429i-disc1/console.c`: LF-to-CRLF output,
+hex formatting, input echo, Backspace/Delete, and bounded ASCII line input.
+Line input accepts CR, LF, or CRLF; an overlong line is rejected and drained
+before the next command. `console_getc()` and `console_try_getc()` remain raw,
+without echo. Command interpretation belongs to `boot_console.c`.
+
+Run the console tests with a fake USART transport using
+`python3 -B -m unittest discover -s tests -p test_console.py -v`.
+
 ## Boot flow
 
 1. `board_clock_init()`: 168 MHz from HSI via the PLL
