@@ -20,6 +20,7 @@ BOARD ?= stm32f429i-disc1
 BUILD_DIR      := build
 APP_BUILD_DIR  := $(BUILD_DIR)/application
 BOOT_BUILD_DIR := $(BUILD_DIR)/bootloader
+TEST_BUILD_DIR := $(BUILD_DIR)/tests
 
 # Shared by both programs: the layers, the drivers and the system contract
 LAYER_INCLUDES := -I. \
@@ -34,9 +35,11 @@ BASE_CFLAGS := $(ARCH_FLAGS) -O0 -g3 -Wall -Wextra \
 # Each program sees only its own private headers, never the other's
 APP_INCLUDES  := -Iapplication/include $(LAYER_INCLUDES)
 BOOT_INCLUDES := -Ibootloader/include $(LAYER_INCLUDES)
+TEST_INCLUDES := $(LAYER_INCLUDES)
 
 APP_CFLAGS  := $(BASE_CFLAGS) $(APP_INCLUDES)
 BOOT_CFLAGS := $(BASE_CFLAGS) $(BOOT_INCLUDES)
+TEST_CFLAGS := -std=c11 -O2 -Wall -Wextra -Werror
 
 BASE_LDFLAGS := $(ARCH_FLAGS) -nostdlib -Wl,--gc-sections
 
@@ -53,7 +56,8 @@ cpp_value = $(shell printf '%d' $$(( $$(echo '$(1)' | \
 # ---- Application: runs from SDRAM, packaged with a header for the bootloader
 APP_SOURCES := $(wildcard application/src/*.c) \
 			   $(wildcard board/$(BOARD)/*.c) \
-			   $(wildcard drivers/*/*.c)
+			   $(wildcard drivers/*/*.c) \
+			   $(shell find lib/ -name "*.c")
 APP_OBJECTS := $(patsubst %.c,$(APP_BUILD_DIR)/obj/%.o,$(APP_SOURCES))
 APP_LDS     := $(APP_BUILD_DIR)/linker.ld
 APP_ELF     := $(APP_BUILD_DIR)/application.elf
@@ -64,15 +68,21 @@ APP_IMG     := $(APP_BUILD_DIR)/application.img
 # ---- Bootloader: runs from flash at 0x08000000
 BOOT_SOURCES := $(wildcard bootloader/src/*.c) \
                 $(wildcard board/$(BOARD)/*.c) \
-                $(wildcard drivers/*/*.c)
+                $(wildcard drivers/*/*.c) \
+				$(shell find lib/ -name "*.c")
 BOOT_OBJECTS := $(patsubst %.c,$(BOOT_BUILD_DIR)/obj/%.o,$(BOOT_SOURCES))
 BOOT_LDS     := $(BOOT_BUILD_DIR)/linker.ld
 BOOT_ELF     := $(BOOT_BUILD_DIR)/bootloader.elf
 BOOT_LST     := $(BOOT_BUILD_DIR)/bootloader.lst
 BOOT_BIN     := $(BOOT_BUILD_DIR)/bootloader.bin
 
+# ---- Tests
+TEST_SOURCES  := $(wildcard tests/test_*.c)
+TEST_BINARIES := $(patsubst tests/%.c,build/tests/%,$(TEST_SOURCES))
+TEST_RUNNERS  := $(patsubst tests/%.c,run-%,$(TEST_SOURCES))
 
-.PHONY: all application bootloader clean inspect disasm
+
+.PHONY: all application bootloader clean inspect disasm test run-tets $(TEST_RUNNERS)
 
 all: application bootloader disasm
 
@@ -125,9 +135,25 @@ $(BOOT_ELF): $(BOOT_OBJECTS) $(BOOT_LDS)
 $(BOOT_BIN): $(BOOT_ELF)
 	$(OBJCOPY) -O binary $< $@
 
+build/tests/test_crc16:          SRC_DEPS := lib/crc/crc16.c
+build/tests/test_xmodem:         SRC_DEPS := lib/crc/crc16.c lib/protocol/xmodem/xmodem.c
+build/tests/test_xmodem_receive: SRC_DEPS := lib/crc/crc16.c lib/protocol/xmodem/xmodem.c
+
+test: $(TEST_BINARIES)
+
+run-tests: $(TEST_RUNNERS)
+
+$(TEST_RUNNERS): run-%: build/tests/%
+	@echo "\n----"
+	@echo "Running $*..."
+	@./$<
+
+build/tests/%: tests/%.c
+	@mkdir -p $(@D)
+	gcc $(TEST_CFLAGS) $(TEST_INCLUDES) $< $(SRC_DEPS) -o $@
 
 clean:
-	rm -rf $(APP_BUILD_DIR) $(BOOT_BUILD_DIR)
+	rm -rf $(APP_BUILD_DIR) $(BOOT_BUILD_DIR) $(TEST_BUILD_DIR)
 
 # Flash bootloader.bin at 0x08000000 and application.img at 0x08020000 (APP_FLASH_BASE).
 inspect: all

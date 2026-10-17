@@ -175,3 +175,29 @@ ELF changes, ignored by Git, and removed by `make clean`.
 For later debugging, preserve the exact ELF and map files matching the flashed
 binaries along with their source revision; listings are readable snapshots,
 while GDB uses the ELF's symbols and debug information.
+
+## CRC16 and XMODEM host tests
+
+Run the three standalone C suites using the native compiler (no board needed):
+
+```sh
+python3 -B -m unittest discover -s tests -p test_xmodem_host.py -v
+# Optional memory and undefined-behavior checks:
+HOST_TEST_CFLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' \
+  python3 -B -m unittest discover -s tests -p test_xmodem_host.py -v
+```
+
+- `test_crc16.c`: independent fixed vectors, empty input, binary data, and CRC residue.
+- `test_xmodem.c`: packet format, block complement, payload corruption, CRC byte order.
+- `test_xmodem_receive.c`: scripted byte transport and timeouts, control replies,
+  retransmissions, duplicate blocks, sequence wrap, cancellation, retry limits,
+  padding preservation, and destination bounds.
+
+The runner builds temporary executables with assertions enabled. Set `HOST_CC`
+if needed. Receive tests reflect the current API: `received_size` is set on
+success and remains zero on transfer failure, even if earlier blocks were copied.
+Timeouts between packets are retried up to the retry limit. A timeout after SOH
+while reading a packet body immediately sends `CAN CAN` and returns
+`XMODEM_ERR_TIMEOUT`. Tests cover every body-byte timeout and verify late bytes
+remain unread after abort. The caller must discard/resynchronize residual input
+before reusing the transport. Hardware UART electrical errors are not simulated.

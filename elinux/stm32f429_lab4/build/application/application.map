@@ -98,27 +98,30 @@ Discarded input sections
  .data          0x00000000        0x0 build/application/obj/board/stm32f429i-disc1/console.o
  .bss           0x00000000        0x0 build/application/obj/board/stm32f429i-disc1/console.o
  .text.console_putc
-                0x00000000       0x20 build/application/obj/board/stm32f429i-disc1/console.o
+                0x00000000       0x30 build/application/obj/board/stm32f429i-disc1/console.o
  .text.console_puts
-                0x00000000       0x1c build/application/obj/board/stm32f429i-disc1/console.o
+                0x00000000       0x2a build/application/obj/board/stm32f429i-disc1/console.o
  .text.console_puthex
-                0x00000000       0x70 build/application/obj/board/stm32f429i-disc1/console.o
+                0x00000000       0x68 build/application/obj/board/stm32f429i-disc1/console.o
  .text.console_getc
                 0x00000000       0x14 build/application/obj/board/stm32f429i-disc1/console.o
+ .rodata        0x00000000        0x4 build/application/obj/board/stm32f429i-disc1/console.o
  .text.console_gets
-                0x00000000       0x24 build/application/obj/board/stm32f429i-disc1/console.o
+                0x00000000      0x100 build/application/obj/board/stm32f429i-disc1/console.o
  .text.console_try_getc
                 0x00000000       0x20 build/application/obj/board/stm32f429i-disc1/console.o
  .text.console_flush
                 0x00000000       0x14 build/application/obj/board/stm32f429i-disc1/console.o
- .rodata.digits.0
+ .rodata.digits.1
                 0x00000000       0x11 build/application/obj/board/stm32f429i-disc1/console.o
- .debug_info    0x00000000      0x261 build/application/obj/board/stm32f429i-disc1/console.o
- .debug_abbrev  0x00000000      0x16a build/application/obj/board/stm32f429i-disc1/console.o
+ .bss.skip_lf.0
+                0x00000000        0x1 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_info    0x00000000      0x270 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_abbrev  0x00000000      0x16f build/application/obj/board/stm32f429i-disc1/console.o
  .debug_aranges
                 0x00000000       0x50 build/application/obj/board/stm32f429i-disc1/console.o
  .debug_rnglists
-                0x00000000       0x37 build/application/obj/board/stm32f429i-disc1/console.o
+                0x00000000       0x38 build/application/obj/board/stm32f429i-disc1/console.o
  .debug_macro   0x00000000       0x62 build/application/obj/board/stm32f429i-disc1/console.o
  .debug_macro   0x00000000      0xaba build/application/obj/board/stm32f429i-disc1/console.o
  .debug_macro   0x00000000       0x16 build/application/obj/board/stm32f429i-disc1/console.o
@@ -126,8 +129,8 @@ Discarded input sections
  .debug_macro   0x00000000      0x12a build/application/obj/board/stm32f429i-disc1/console.o
  .debug_macro   0x00000000       0x22 build/application/obj/board/stm32f429i-disc1/console.o
  .debug_macro   0x00000000      0x34e build/application/obj/board/stm32f429i-disc1/console.o
- .debug_line    0x00000000      0x230 build/application/obj/board/stm32f429i-disc1/console.o
- .debug_str     0x00000000     0x4a22 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_line    0x00000000      0x2c8 build/application/obj/board/stm32f429i-disc1/console.o
+ .debug_str     0x00000000     0x4a11 build/application/obj/board/stm32f429i-disc1/console.o
  .comment       0x00000000       0x46 build/application/obj/board/stm32f429i-disc1/console.o
  .debug_frame   0x00000000       0xfc build/application/obj/board/stm32f429i-disc1/console.o
  .ARM.attributes
@@ -280,8 +283,6 @@ Discarded input sections
  .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
  .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
  .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
- .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
- .group         0x00000000        0xc build/application/obj/drivers/serial/stm32_usart.o
  .text          0x00000000        0x0 build/application/obj/drivers/serial/stm32_usart.o
  .data          0x00000000        0x0 build/application/obj/drivers/serial/stm32_usart.o
  .bss           0x00000000        0x0 build/application/obj/drivers/serial/stm32_usart.o
@@ -289,37 +290,30 @@ Discarded input sections
                 0x00000000       0x56 build/application/obj/drivers/serial/stm32_usart.o
  .text.stm32_usart_putc
                 0x00000000       0x2e build/application/obj/drivers/serial/stm32_usart.o
- .text.stm32_usart_puts
-                0x00000000       0x3e build/application/obj/drivers/serial/stm32_usart.o
  .text.stm32_usart_flush
                 0x00000000       0x22 build/application/obj/drivers/serial/stm32_usart.o
  .text.stm32_usart_getc
                 0x00000000       0x2c build/application/obj/drivers/serial/stm32_usart.o
  .text.stm32_usart_try_getc
                 0x00000000       0x54 build/application/obj/drivers/serial/stm32_usart.o
- .rodata        0x00000000        0x8 build/application/obj/drivers/serial/stm32_usart.o
- .text.stm32_usart_gets
-                0x00000000       0xe4 build/application/obj/drivers/serial/stm32_usart.o
- .debug_info    0x00000000      0x263 build/application/obj/drivers/serial/stm32_usart.o
- .debug_abbrev  0x00000000      0x12a build/application/obj/drivers/serial/stm32_usart.o
+ .debug_info    0x00000000      0x1ae build/application/obj/drivers/serial/stm32_usart.o
+ .debug_abbrev  0x00000000       0xeb build/application/obj/drivers/serial/stm32_usart.o
  .debug_aranges
-                0x00000000       0x50 build/application/obj/drivers/serial/stm32_usart.o
+                0x00000000       0x40 build/application/obj/drivers/serial/stm32_usart.o
  .debug_rnglists
-                0x00000000       0x38 build/application/obj/drivers/serial/stm32_usart.o
- .debug_macro   0x00000000       0x79 build/application/obj/drivers/serial/stm32_usart.o
+                0x00000000       0x2b build/application/obj/drivers/serial/stm32_usart.o
+ .debug_macro   0x00000000       0x67 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000      0xaba build/application/obj/drivers/serial/stm32_usart.o
- .debug_macro   0x00000000      0x190 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000      0x34e build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000       0x22 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000       0x16 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000      0x244 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000      0x160 build/application/obj/drivers/serial/stm32_usart.o
- .debug_macro   0x00000000      0x130 build/application/obj/drivers/serial/stm32_usart.o
  .debug_macro   0x00000000       0x22 build/application/obj/drivers/serial/stm32_usart.o
- .debug_line    0x00000000      0x327 build/application/obj/drivers/serial/stm32_usart.o
- .debug_str     0x00000000     0x5466 build/application/obj/drivers/serial/stm32_usart.o
+ .debug_line    0x00000000      0x23a build/application/obj/drivers/serial/stm32_usart.o
+ .debug_str     0x00000000     0x4c7e build/application/obj/drivers/serial/stm32_usart.o
  .comment       0x00000000       0x46 build/application/obj/drivers/serial/stm32_usart.o
- .debug_frame   0x00000000      0x11c build/application/obj/drivers/serial/stm32_usart.o
+ .debug_frame   0x00000000       0xd4 build/application/obj/drivers/serial/stm32_usart.o
  .ARM.attributes
                 0x00000000       0x2e build/application/obj/drivers/serial/stm32_usart.o
  .group         0x00000000        0xc build/application/obj/drivers/tim2/stm32_tim2.o
@@ -346,6 +340,113 @@ Discarded input sections
  .debug_macro   0x00000000       0x16 build/application/obj/drivers/tim2/stm32_tim2.o
  .debug_macro   0x00000000      0x244 build/application/obj/drivers/tim2/stm32_tim2.o
  .debug_macro   0x00000000      0x512 build/application/obj/drivers/tim2/stm32_tim2.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/protocol/xmodem/xmodem.o
+ .text          0x00000000        0x0 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .data          0x00000000        0x0 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .bss           0x00000000        0x0 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .text.xmodem_send
+                0x00000000       0x22 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .text.xmodem_cancel
+                0x00000000       0x20 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .text.xmodem_read_packet
+                0x00000000       0xde build/application/obj/lib/protocol/xmodem/xmodem.o
+ .text.xmodem_packet_validate
+                0x00000000       0x6e build/application/obj/lib/protocol/xmodem/xmodem.o
+ .text.xmodem_receive
+                0x00000000      0x23e build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_info    0x00000000      0x469 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_abbrev  0x00000000      0x1ca build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_aranges
+                0x00000000       0x40 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_rnglists
+                0x00000000       0x39 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000      0x132 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000      0xaba build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x22 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000      0x190 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000      0x34e build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x22 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x75 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x24 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x94 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x3c build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x34 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x57 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000      0x370 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x16 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x4a build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x34 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x10 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x58 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000      0x1e5 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x10 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x3c build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x00000000       0x46 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_line    0x00000000      0x597 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_str     0x00000000     0x6f00 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .comment       0x00000000       0x46 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .debug_frame   0x00000000       0xc8 build/application/obj/lib/protocol/xmodem/xmodem.o
+ .ARM.attributes
+                0x00000000       0x2e build/application/obj/lib/protocol/xmodem/xmodem.o
+ .group         0x00000000        0xc build/application/obj/lib/crc/crc16.o
+ .group         0x00000000        0xc build/application/obj/lib/crc/crc16.o
+ .group         0x00000000        0xc build/application/obj/lib/crc/crc16.o
+ .text          0x00000000        0x0 build/application/obj/lib/crc/crc16.o
+ .data          0x00000000        0x0 build/application/obj/lib/crc/crc16.o
+ .bss           0x00000000        0x0 build/application/obj/lib/crc/crc16.o
+ .text.crc16_xmodem
+                0x00000000       0x78 build/application/obj/lib/crc/crc16.o
+ .debug_info    0x00000000      0x118 build/application/obj/lib/crc/crc16.o
+ .debug_abbrev  0x00000000       0x96 build/application/obj/lib/crc/crc16.o
+ .debug_aranges
+                0x00000000       0x20 build/application/obj/lib/crc/crc16.o
+ .debug_rnglists
+                0x00000000       0x13 build/application/obj/lib/crc/crc16.o
+ .debug_macro   0x00000000       0x37 build/application/obj/lib/crc/crc16.o
+ .debug_macro   0x00000000      0xaba build/application/obj/lib/crc/crc16.o
+ .debug_macro   0x00000000      0x190 build/application/obj/lib/crc/crc16.o
+ .debug_macro   0x00000000      0x34e build/application/obj/lib/crc/crc16.o
+ .debug_line    0x00000000      0x123 build/application/obj/lib/crc/crc16.o
+ .debug_str     0x00000000     0x3c53 build/application/obj/lib/crc/crc16.o
+ .comment       0x00000000       0x46 build/application/obj/lib/crc/crc16.o
+ .debug_frame   0x00000000       0x38 build/application/obj/lib/crc/crc16.o
+ .ARM.attributes
+                0x00000000       0x2e build/application/obj/lib/crc/crc16.o
+ .group         0x00000000        0xc build/application/obj/lib/crc/crc32.o
+ .text          0x00000000        0x0 build/application/obj/lib/crc/crc32.o
+ .data          0x00000000        0x0 build/application/obj/lib/crc/crc32.o
+ .bss           0x00000000        0x0 build/application/obj/lib/crc/crc32.o
+ .debug_info    0x00000000       0x22 build/application/obj/lib/crc/crc32.o
+ .debug_abbrev  0x00000000       0x12 build/application/obj/lib/crc/crc32.o
+ .debug_aranges
+                0x00000000       0x18 build/application/obj/lib/crc/crc32.o
+ .debug_macro   0x00000000       0x11 build/application/obj/lib/crc/crc32.o
+ .debug_macro   0x00000000      0xaba build/application/obj/lib/crc/crc32.o
+ .debug_line    0x00000000       0x30 build/application/obj/lib/crc/crc32.o
+ .debug_str     0x00000000     0x2e03 build/application/obj/lib/crc/crc32.o
+ .comment       0x00000000       0x46 build/application/obj/lib/crc/crc32.o
+ .ARM.attributes
+                0x00000000       0x2e build/application/obj/lib/crc/crc32.o
 
 Memory Configuration
 
@@ -368,6 +469,9 @@ LOAD build/application/obj/drivers/led/stm32_led.o
 LOAD build/application/obj/drivers/ram/stm32_sdram.o
 LOAD build/application/obj/drivers/serial/stm32_usart.o
 LOAD build/application/obj/drivers/tim2/stm32_tim2.o
+LOAD build/application/obj/lib/protocol/xmodem/xmodem.o
+LOAD build/application/obj/lib/crc/crc16.o
+LOAD build/application/obj/lib/crc/crc32.o
                 0x00001000                        __stack_size = 0x1000
                 0x20020000                        __estack = (ORIGIN (RAM) + LENGTH (RAM))
                 0x2001f000                        __stack_limit = (__estack - __stack_size)
