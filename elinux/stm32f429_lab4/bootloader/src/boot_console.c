@@ -4,6 +4,7 @@
 #include "board/stm32f429i-disc1/console.h"
 
 #include "boot_console.h"
+#include "boot_update.h"
 
 
 #define CONSOLE_LINE_SIZE  32u
@@ -40,9 +41,10 @@ boot_console_action_t boot_console_run(void)
         if (str_equals(line, "help"))
         {
             console_puts("STM32F429 Bootloader Usage:\n");
-            console_puts("  help - show this help\n");
-            console_puts("  info - show application information\n");
-            console_puts("  boot - boot the application image\n");
+            console_puts("  help   - Show available commands\n");
+            console_puts("  info   - Show firmware information\n");
+            console_puts("  boot   - Boot application\n");
+            console_puts("  update - Receive application via XMODEM\n");
             continue;
         }
         else if (str_equals(line, "info"))
@@ -55,6 +57,14 @@ boot_console_action_t boot_console_run(void)
         {
             console_puts("Boot requested\n");
             return BOOT_CONSOLE_BOOT;
+        }
+        else if (str_equals(line, "update"))
+        {
+            (void)boot_update_receive();
+        }
+        else if (str_equals(line, ""))
+        {
+            console_puts("\n");
         }
         else
         {

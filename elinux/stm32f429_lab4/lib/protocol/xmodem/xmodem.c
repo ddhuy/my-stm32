@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "lib/crc/crc16.h"
 #include "lib/protocol/xmodem/xmodem.h"
@@ -252,10 +251,8 @@ xmodem_status_t xmodem_receive(
                             return XMODEM_ERR_OVERFLOW;
                         }
 
-                        memcpy(
-                            buffer + offset,
-                            packet.data,
-                            XMODEM_BLOCK_SIZE);
+                        for (size_t i = 0u; i < XMODEM_BLOCK_SIZE; ++i)
+                            buffer[offset + i] = packet.data[i];
 
                         offset += XMODEM_BLOCK_SIZE;
 

@@ -30,6 +30,36 @@ image_status_t image_header_validate(const app_image_header_t *header) {
 }
 
 
+image_status_t image_validate_buffer(const uint8_t *buffer, size_t received_size)
+{
+    if (buffer == NULL)
+        return IMAGE_ERR_HEADER;
+
+    if (received_size < sizeof(app_image_header_t))
+        return IMAGE_ERR_TRUNCATED;
+
+    /* Copy into aligned storage; the image and STM32 header are little-endian. */
+    app_image_header_t header;
+    uint8_t *header_bytes = (uint8_t *)&header;
+    for (size_t i = 0; i < sizeof(header); ++i)
+        header_bytes[i] = buffer[i];
+
+    image_status_t status = image_header_validate(&header);
+    if (status != IMAGE_OK)
+        return status;
+
+    /* Subtract only after checking the header fits, avoiding size overflow. */
+    if (header.image_size > received_size - sizeof(header))
+        return IMAGE_ERR_TRUNCATED;
+
+    const uint8_t *payload = buffer + sizeof(header);
+    if (crc32_compute(payload, header.image_size) != header.crc)
+        return IMAGE_ERR_CRC;
+
+    return IMAGE_OK;
+}
+
+
 image_status_t image_load(void) {
     const app_image_header_t *header =
         (const app_image_header_t *)APP_FLASH_BASE;
