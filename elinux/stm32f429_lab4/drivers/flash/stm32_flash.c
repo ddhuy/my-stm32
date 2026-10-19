@@ -21,6 +21,45 @@ static uint32_t stm32_flash_sector_erase_config(
 }
 
 /*
+ * Validate the complete word-addressed destination, including any
+ * 0xFF padding required by an incomplete final word.
+ */
+static bool stm32_flash_program_range_valid(uint32_t address, size_t length)
+{
+    const uint32_t flash_end = FLASH_BASE + FLASH_SIZE;
+
+    if (address < FLASH_BASE || address >= flash_end ||
+        (address & 3u) != 0u || length == 0u)
+    {
+        return false;
+    }
+
+    size_t available = (size_t)(flash_end - address);
+    if (length > available)
+    {
+        return false;
+    }
+
+    /* The last 32-bit Flash write must fit even after padding. */
+    return (length / 4u + ((length % 4u) != 0u)) <= (available / 4u);
+}
+
+/* Prefer the operation failure to a secondary cleanup failure. */
+static stm32_flash_status_t stm32_flash_finish_program(
+    stm32_flash_status_t status)
+{
+    if (FLASH_SR & FLASH_SR_BSY)
+    {
+        /* Caller must reset or explicitly recover after hardware is idle. */
+        return STM32_FLASH_ERR_TIMEOUT;
+    }
+
+    FLASH_CR &= ~FLASH_CR_PG;
+    stm32_flash_status_t lock_status = stm32_flash_lock();
+    return status == STM32_FLASH_OK ? lock_status : status;
+}
+
+/*
  * Unlock the Flash control interface.
  *
  * RM0090: Two unlock keys must be written to FLASH_KEYR
@@ -216,100 +255,119 @@ stm32_flash_status_t stm32_flash_program_word(
     uint32_t address,
     uint32_t value)
 {
-    stm32_flash_status_t status;
-
-    /* Physical Flash range and alignment. */
-    if (address < FLASH_BASE ||
-        address >= FLASH_BASE + FLASH_SIZE ||
-        (address & 3u) != 0u ||
-        (FLASH_BASE + FLASH_SIZE - address) < 4u)
+    if (!stm32_flash_program_range_valid(address, 4u))
     {
         return STM32_FLASH_ERR_INVALID_ADDRESS;
     }
 
-    status = stm32_flash_wait_ready(FLASH_PROGRAM_MAX_POLLS);
+    stm32_flash_status_t status = stm32_flash_unlock();
     if (status != STM32_FLASH_OK)
     {
         return status;
     }
 
-    /*
-     * This initial API requires an erased word.
-     * Avoid attempting to reprogram an occupied word.
-     */
-    if (*(volatile const uint32_t *)(uintptr_t)address
-        != 0xFFFFFFFFu)
+    status = stm32_flash_program_word_unlocked(address, value);
+    return stm32_flash_finish_program(status);
+}
+
+/*
+ * Program one word while Flash is already unlocked.
+ * Leaves Flash unlocked, but clears PG once the controller is idle.
+ * Does not modify controller configuration if still busy on timeout.
+ */
+stm32_flash_status_t stm32_flash_program_word_unlocked(
+    uint32_t address, uint32_t value)
+{
+    if (!stm32_flash_program_range_valid(address, 4u))
+    {
+        return STM32_FLASH_ERR_INVALID_ADDRESS;
+    }
+
+    if (FLASH_CR & FLASH_CR_LOCK)
+    {
+        return STM32_FLASH_ERR_LOCKED;
+    }
+
+    stm32_flash_status_t status =
+        stm32_flash_wait_ready(FLASH_PROGRAM_MAX_POLLS);
+    if (status != STM32_FLASH_OK)
+    {
+        return status;
+    }
+
+    if (*(volatile const uint32_t *)(uintptr_t)address != 0xFFFFFFFFu)
     {
         return STM32_FLASH_ERR_OPERATION;
-    }
-
-    status = stm32_flash_unlock();
-    if (status != STM32_FLASH_OK)
-    {
-        return status;
     }
 
     status = stm32_flash_clear_status();
     if (status != STM32_FLASH_OK)
     {
-        goto cleanup;
+        return status;
+    }
+
+    /* No programming pulse is required to retain erased 0xFFFFFFFF. */
+    if (value == 0xFFFFFFFFu)
+    {
+        return STM32_FLASH_OK;
     }
 
     uint32_t cr = FLASH_CR;
+    cr &= ~(FLASH_CR_PG | FLASH_CR_SER | FLASH_CR_MER |
+            FLASH_CR_SNB_MASK | FLASH_CR_PSIZE_MASK);
+    FLASH_CR = cr | FLASH_CR_PSIZE_X32 | FLASH_CR_PG;
 
-    /* Remove settings from previous Flash operations. */
-    cr &= ~(FLASH_CR_PG |
-            FLASH_CR_SER |
-            FLASH_CR_MER |
-            FLASH_CR_SNB_MASK |
-            FLASH_CR_PSIZE_MASK);
-
-    cr |= FLASH_CR_PSIZE_X32 | FLASH_CR_PG;
-
-    FLASH_CR = cr;
-
-    /*
-     * Writing the destination word starts programming.
-     */
     *(volatile uint32_t *)(uintptr_t)address = value;
 
     status = stm32_flash_wait_ready(FLASH_PROGRAM_MAX_POLLS);
 
-    /*
-     * If hardware is still busy, do not change
-     * FLASH_CR or attempt to lock the controller.
-     */
+    /* After a timeout, the hardware may still be busy. Do not touch CR. */
     if (FLASH_SR & FLASH_SR_BSY)
     {
         return STM32_FLASH_ERR_TIMEOUT;
     }
 
-    /* Programming must be disabled before verification. */
     FLASH_CR &= ~FLASH_CR_PG;
 
-    if (status == STM32_FLASH_OK)
+    if (status == STM32_FLASH_OK &&
+        *(volatile const uint32_t *)(uintptr_t)address != value)
     {
-        uint32_t actual =
-            *(volatile const uint32_t *)(uintptr_t)address;
-
-        if (actual != value)
-        {
-            status = STM32_FLASH_ERR_VERIFY;
-        }
-    }
-
-cleanup:
-    /*
-     * Only reached when the controller is idle.
-     */
-    FLASH_CR &= ~FLASH_CR_PG;
-
-    stm32_flash_status_t lock_status = stm32_flash_lock();
-
-    if (status == STM32_FLASH_OK)
-    {
-        status = lock_status;
+        status = STM32_FLASH_ERR_VERIFY;
     }
 
     return status;
+}
+
+stm32_flash_status_t stm32_flash_program(
+    uint32_t address, const uint8_t *data, size_t length)
+{
+    if (data == NULL || !stm32_flash_program_range_valid(address, length))
+    {
+        return STM32_FLASH_ERR_INVALID_ADDRESS;
+    }
+
+    stm32_flash_status_t status = stm32_flash_unlock();
+    if (status != STM32_FLASH_OK)
+    {
+        return status;
+    }
+
+    for (size_t offset = 0u; offset < length; offset += 4u)
+    {
+        uint32_t word = 0xFFFFFFFFu;
+        for (size_t i = 0u; i < 4u && i < length - offset; ++i)
+        {
+            uint32_t mask = 0xFFu << (8u * i);
+            word = (word & ~mask) | ((uint32_t)data[offset + i] << (8u * i));
+        }
+
+        status = stm32_flash_program_word_unlocked(
+            address + (uint32_t)offset, word);
+        if (status != STM32_FLASH_OK)
+        {
+            break;
+        }
+    }
+
+    return stm32_flash_finish_program(status);
 }

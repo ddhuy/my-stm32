@@ -24,32 +24,6 @@ static int boot_install_range_valid(size_t image_length)
 }
 
 /*
- * Construct a 32-bit little-endian word from
- * up to four image bytes.
- *
- * Unused bytes are filled with 0xFF, matching
- * the erased Flash state.
- */
-static uint32_t boot_install_make_word(
-    const uint8_t *data,
-    size_t remaining)
-{
-    uint32_t word = 0xFFFFFFFFu;
-
-    for (size_t i = 0u;
-         i < FLASH_WORD_SIZE && i < remaining;
-         ++i)
-    {
-        uint32_t mask = 0xFFu << (8u * i);
-
-        word &= ~mask;
-        word |= (uint32_t)data[i] << (8u * i);
-    }
-
-    return word;
-}
-
-/*
  * Compare programmed Flash against the staged
  * image, byte by byte.
  */
@@ -101,24 +75,14 @@ boot_install_status_t boot_install_image(
      * Program the complete packaged image:
      *   [16-byte header][application payload]
      */
-    for (size_t offset = 0u;
-         offset < image_length;
-         offset += FLASH_WORD_SIZE)
+    flash_status = stm32_flash_program(
+        APP_FLASH_BASE,
+        staged_image,
+        image_length);
+
+    if (flash_status != STM32_FLASH_OK)
     {
-        uint32_t address =
-            APP_FLASH_BASE + (uint32_t)offset;
-
-        uint32_t word = boot_install_make_word(
-            staged_image + offset,
-            image_length - offset);
-
-        flash_status =
-            stm32_flash_program_word(address, word);
-
-        if (flash_status != STM32_FLASH_OK)
-        {
-            return BOOT_INSTALL_ERR_PROGRAM;
-        }
+        return BOOT_INSTALL_ERR_PROGRAM;
     }
 
     /*

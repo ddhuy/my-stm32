@@ -1,6 +1,10 @@
 #ifndef STM32_FLASH_H
 #define STM32_FLASH_H
 
+#include <stddef.h>
+#include <stdint.h>
+
+
 typedef enum
 {
     STM32_FLASH_OK = 0,
@@ -65,4 +69,18 @@ stm32_flash_status_t stm32_flash_erase_sector(uint32_t sector);
 stm32_flash_status_t stm32_flash_program_word(
     uint32_t address,
     uint32_t value);
+
+/* Caller must unlock beforehand; this does not lock after programming. */
+stm32_flash_status_t stm32_flash_program_word_unlocked(
+    uint32_t address,
+    uint32_t value);
+
+/* One unlock/lock session. Last word is padded with erased bytes (0xFF).
+ * Source must remain readable and must not overlap the Flash destination.
+ * Requires VDD suitable for PSIZE_X32, and an erased destination.
+ */
+stm32_flash_status_t stm32_flash_program(
+    uint32_t address,
+    const uint8_t *data,
+    size_t length);
 #endif

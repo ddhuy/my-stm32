@@ -223,6 +223,7 @@ Discarded input sections
  .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
  .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
  .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
+ .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
  .text          0x00000000        0x0 build/application/obj/drivers/flash/stm32_flash.o
  .data          0x00000000        0x0 build/application/obj/drivers/flash/stm32_flash.o
  .bss           0x00000000        0x0 build/application/obj/drivers/flash/stm32_flash.o
@@ -230,6 +231,10 @@ Discarded input sections
                 0x00000000       0x1e build/application/obj/drivers/flash/stm32_flash.o
  .text.stm32_flash_sector_erase_config
                 0x00000000       0x1e build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_program_range_valid
+                0x00000000       0x76 build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_finish_program
+                0x00000000       0x4c build/application/obj/drivers/flash/stm32_flash.o
  .text.stm32_flash_unlock
                 0x00000000       0x58 build/application/obj/drivers/flash/stm32_flash.o
  .text.stm32_flash_lock
@@ -241,14 +246,18 @@ Discarded input sections
  .text.stm32_flash_erase_sector
                 0x00000000       0xdc build/application/obj/drivers/flash/stm32_flash.o
  .text.stm32_flash_program_word
-                0x00000000      0x118 build/application/obj/drivers/flash/stm32_flash.o
- .debug_info    0x00000000      0x29d build/application/obj/drivers/flash/stm32_flash.o
- .debug_abbrev  0x00000000      0x14d build/application/obj/drivers/flash/stm32_flash.o
+                0x00000000       0x52 build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_program_word_unlocked
+                0x00000000       0xe4 build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_program
+                0x00000000       0xdc build/application/obj/drivers/flash/stm32_flash.o
+ .debug_info    0x00000000      0x41c build/application/obj/drivers/flash/stm32_flash.o
+ .debug_abbrev  0x00000000      0x1ba build/application/obj/drivers/flash/stm32_flash.o
  .debug_aranges
-                0x00000000       0x58 build/application/obj/drivers/flash/stm32_flash.o
+                0x00000000       0x78 build/application/obj/drivers/flash/stm32_flash.o
  .debug_rnglists
-                0x00000000       0x3f build/application/obj/drivers/flash/stm32_flash.o
- .debug_macro   0x00000000       0x79 build/application/obj/drivers/flash/stm32_flash.o
+                0x00000000       0x65 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000       0x82 build/application/obj/drivers/flash/stm32_flash.o
  .debug_macro   0x00000000      0xaba build/application/obj/drivers/flash/stm32_flash.o
  .debug_macro   0x00000000       0x22 build/application/obj/drivers/flash/stm32_flash.o
  .debug_macro   0x00000000      0x34e build/application/obj/drivers/flash/stm32_flash.o
@@ -256,10 +265,11 @@ Discarded input sections
  .debug_macro   0x00000000       0x16 build/application/obj/drivers/flash/stm32_flash.o
  .debug_macro   0x00000000      0x244 build/application/obj/drivers/flash/stm32_flash.o
  .debug_macro   0x00000000      0x190 build/application/obj/drivers/flash/stm32_flash.o
- .debug_line    0x00000000      0x38b build/application/obj/drivers/flash/stm32_flash.o
- .debug_str     0x00000000     0x50fa build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000      0x190 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_line    0x00000000      0x4e7 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_str     0x00000000     0x54ff build/application/obj/drivers/flash/stm32_flash.o
  .comment       0x00000000       0x46 build/application/obj/drivers/flash/stm32_flash.o
- .debug_frame   0x00000000      0x130 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_frame   0x00000000      0x1c4 build/application/obj/drivers/flash/stm32_flash.o
  .ARM.attributes
                 0x00000000       0x2e build/application/obj/drivers/flash/stm32_flash.o
  .group         0x00000000        0xc build/application/obj/drivers/led/stm32_led.o
