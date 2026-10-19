@@ -83,4 +83,11 @@ stm32_flash_status_t stm32_flash_program(
     uint32_t address,
     const uint8_t *data,
     size_t length);
+
+/*
+ * Return the raw FLASH_SR register value.
+ * Does not clear any status flags.
+ */
+uint32_t stm32_flash_status_register(void);
+
 #endif

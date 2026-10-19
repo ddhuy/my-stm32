@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "drivers/flash/stm32_flash.h"
+
 typedef enum
 {
     BOOT_INSTALL_OK = 0,
@@ -14,20 +16,54 @@ typedef enum
     BOOT_INSTALL_ERR_VERIFY
 } boot_install_status_t;
 
+typedef enum
+{
+    BOOT_INSTALL_STAGE_NONE = 0,
+    BOOT_INSTALL_STAGE_VALIDATE,
+    BOOT_INSTALL_STAGE_ERASE,
+    BOOT_INSTALL_STAGE_PROGRAM,
+    BOOT_INSTALL_STAGE_VERIFY
+} boot_install_stage_t;
+
+typedef struct
+{
+    boot_install_status_t status;
+    boot_install_stage_t stage;
+
+    stm32_flash_status_t flash_status;
+
+    uint32_t flash_sr;
+    uint32_t address;
+} boot_install_result_t;
+
 /*
  * Install an already-validated packaged image.
  *
- * Preconditions:
- * - The caller has validated the image header and CRC32.
- * - staged_image points to readable memory outside
- *   the target Flash sector.
- * - image_length is the actual packaged-image length,
- *   excluding XMODEM padding.
+ * result must be a valid pointer.
  *
- * Installs the image at APP_FLASH_BASE.
+ * On success:
+ *   result->status == BOOT_INSTALL_OK
+ *
+ * On failure:
+ *   result contains the operation stage,
+ *   Flash driver status and diagnostic information.
+ */
+boot_install_status_t boot_install_image_detailed(
+    const uint8_t *staged_image,
+    size_t image_length,
+    boot_install_result_t *result);
+
+/*
+ * Compatibility API.
  */
 boot_install_status_t boot_install_image(
     const uint8_t *staged_image,
     size_t image_length);
+
+/**
+ * Print the detail of Install Stage.
+ */
+void boot_install_print_error(
+    const boot_install_result_t *result);
 
 #endif

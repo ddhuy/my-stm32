@@ -91,13 +91,17 @@ bool boot_update_receive(void)
             "Firmware image exceeds the supported update region.\n");
         return false;
     }
+    
+    boot_install_result_t install_result;
 
-    boot_install_status_t install_status =
-        boot_install_image(buffer, actual_image_length);
+    boot_install_status_t install_status = boot_install_image_detailed(
+        buffer,
+        actual_image_length,
+        &install_result);
 
     if (install_status != BOOT_INSTALL_OK)
     {
-        console_puts("Flash installation failed.\n");
+        boot_install_print_error(&install_result);
         return false;
     }
 

@@ -371,3 +371,8 @@ stm32_flash_status_t stm32_flash_program(
 
     return stm32_flash_finish_program(status);
 }
+
+uint32_t stm32_flash_status_register(void)
+{
+    return FLASH_SR;
+}
