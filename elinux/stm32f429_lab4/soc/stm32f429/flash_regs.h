@@ -59,13 +59,15 @@
 #define FLASH_CR_PG            (1u << 0)
 #define FLASH_CR_SER           (1u << 1)
 #define FLASH_CR_MER           (1u << 2)    /* mass erase bank 1 */
-#define FLASH_CR_SNB_MASK      (0x1Fu << 3)
-#define FLASH_CR_SNB(snb)      (((snb) & 0x1Fu) << 3)
-#define FLASH_CR_PSIZE_MASK    (3u << 8)
-#define FLASH_CR_PSIZE_X8      (0u << 8)
-#define FLASH_CR_PSIZE_X16     (1u << 8)
-#define FLASH_CR_PSIZE_X32     (2u << 8)    /* use at 2.7..3.6 V */
-#define FLASH_CR_PSIZE_X64     (3u << 8)
+#define FLASH_CR_SNB_SHIFT     3u
+#define FLASH_CR_SNB_MASK      (0x1Fu << FLASH_CR_SNB_SHIFT)
+#define FLASH_CR_SNB(snb)      (((snb) & 0x1Fu) << FLASH_CR_SNB_SHIFT)
+#define FLASH_CR_PSIZE_SHIFT   8u
+#define FLASH_CR_PSIZE_MASK    (3u << FLASH_CR_PSIZE_SHIFT)
+#define FLASH_CR_PSIZE_X8      (0u << FLASH_CR_PSIZE_SHIFT)
+#define FLASH_CR_PSIZE_X16     (1u << FLASH_CR_PSIZE_SHIFT)
+#define FLASH_CR_PSIZE_X32     (2u << FLASH_CR_PSIZE_SHIFT)    /* use at 2.7..3.6 V */
+#define FLASH_CR_PSIZE_X64     (3u << FLASH_CR_PSIZE_SHIFT)
 #define FLASH_CR_MER1          (1u << 15)   /* mass erase bank 2 (RM0090 name;
                                                ST's CMSIS calls it MER2) */
 #define FLASH_CR_STRT          (1u << 16)
@@ -92,5 +94,14 @@
 #define FLASH_OPTCR_nWRP_MASK  (0xFFFu << 16)
 #define FLASH_OPTCR_DB1M       (1u << 30)
 #define FLASH_OPTCR_SPRMOD     (1u << 31)
+
+
+#define FLASH_SR_ERROR_MASK \
+    (FLASH_SR_OPERR  | FLASH_SR_WRPERR | \
+     FLASH_SR_PGAERR | FLASH_SR_PGPERR | \
+     FLASH_SR_PGSERR)
+
+#define FLASH_SR_CLEAR_MASK \
+    (FLASH_SR_EOP | FLASH_SR_ERROR_MASK)
 
 #endif

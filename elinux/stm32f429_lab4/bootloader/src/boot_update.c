@@ -7,6 +7,7 @@
 
 #include "lib/protocol/xmodem/xmodem.h"
 
+#include "boot_install.h"
 #include "boot_update.h"
 #include "boot_xmodem_io.h"
 #include "image_loader.h"
@@ -52,13 +53,13 @@ bool boot_update_receive(void)
      * From here, XMODEM owns the UART.
      * Do not print console messages during transfer.
      */
-    xmodem_status_t status = xmodem_receive(
+    xmodem_status_t xmodem_status = xmodem_receive(
         &io,
         buffer,
         UPDATE_BUFFER_SIZE,
         &received_size);
 
-    if (status != XMODEM_OK)
+    if (xmodem_status != XMODEM_OK)
     {
         console_puts("\nXMODEM transfer failed.\n");
         return false;
@@ -77,6 +78,23 @@ bool boot_update_receive(void)
     }
 
     console_puts("Image validated and staged in SDRAM.\n");
+
+    /* Only after complete image validation succeeds. */
+    app_image_header_t *header = (app_image_header_t *) buffer;
+
+    size_t actual_image_length =
+        sizeof(app_image_header_t) + header->image_size;
+
+    boot_install_status_t install_status =
+        boot_install_image(buffer, actual_image_length);
+
+    if (install_status != BOOT_INSTALL_OK)
+    {
+        console_puts("Flash installation failed.\n");
+        return false;
+    }
+
+    console_puts("Flash installation verified.\n");
 
     return true;
 }

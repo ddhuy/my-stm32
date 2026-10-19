@@ -79,11 +79,11 @@ Discarded input sections
  .debug_macro   0x00000000      0x244 build/application/obj/board/stm32f429i-disc1/board.o
  .debug_macro   0x00000000      0x512 build/application/obj/board/stm32f429i-disc1/board.o
  .debug_macro   0x00000000       0xbe build/application/obj/board/stm32f429i-disc1/board.o
- .debug_macro   0x00000000      0x18a build/application/obj/board/stm32f429i-disc1/board.o
+ .debug_macro   0x00000000      0x196 build/application/obj/board/stm32f429i-disc1/board.o
  .debug_macro   0x00000000      0x17e build/application/obj/board/stm32f429i-disc1/board.o
  .debug_macro   0x00000000      0x130 build/application/obj/board/stm32f429i-disc1/board.o
  .debug_line    0x00000000      0x28f build/application/obj/board/stm32f429i-disc1/board.o
- .debug_str     0x00000000     0x769b build/application/obj/board/stm32f429i-disc1/board.o
+ .debug_str     0x00000000     0x7741 build/application/obj/board/stm32f429i-disc1/board.o
  .comment       0x00000000       0x46 build/application/obj/board/stm32f429i-disc1/board.o
  .debug_frame   0x00000000       0x78 build/application/obj/board/stm32f429i-disc1/board.o
  .ARM.attributes
@@ -209,13 +209,59 @@ Discarded input sections
  .debug_macro   0x00000000      0x244 build/application/obj/drivers/clk/stm32f4_clk.o
  .debug_macro   0x00000000      0x512 build/application/obj/drivers/clk/stm32f4_clk.o
  .debug_macro   0x00000000       0xbe build/application/obj/drivers/clk/stm32f4_clk.o
- .debug_macro   0x00000000      0x18a build/application/obj/drivers/clk/stm32f4_clk.o
+ .debug_macro   0x00000000      0x196 build/application/obj/drivers/clk/stm32f4_clk.o
  .debug_line    0x00000000      0x2fa build/application/obj/drivers/clk/stm32f4_clk.o
- .debug_str     0x00000000     0x6b76 build/application/obj/drivers/clk/stm32f4_clk.o
+ .debug_str     0x00000000     0x6c1c build/application/obj/drivers/clk/stm32f4_clk.o
  .comment       0x00000000       0x46 build/application/obj/drivers/clk/stm32f4_clk.o
  .debug_frame   0x00000000       0x38 build/application/obj/drivers/clk/stm32f4_clk.o
  .ARM.attributes
                 0x00000000       0x2e build/application/obj/drivers/clk/stm32f4_clk.o
+ .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
+ .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
+ .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
+ .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
+ .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
+ .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
+ .group         0x00000000        0xc build/application/obj/drivers/flash/stm32_flash.o
+ .text          0x00000000        0x0 build/application/obj/drivers/flash/stm32_flash.o
+ .data          0x00000000        0x0 build/application/obj/drivers/flash/stm32_flash.o
+ .bss           0x00000000        0x0 build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_sector_valid
+                0x00000000       0x1e build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_sector_erase_config
+                0x00000000       0x1e build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_unlock
+                0x00000000       0x58 build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_lock
+                0x00000000       0x40 build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_wait_ready
+                0x00000000       0x50 build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_clear_status
+                0x00000000       0x38 build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_erase_sector
+                0x00000000       0xdc build/application/obj/drivers/flash/stm32_flash.o
+ .text.stm32_flash_program_word
+                0x00000000      0x118 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_info    0x00000000      0x29d build/application/obj/drivers/flash/stm32_flash.o
+ .debug_abbrev  0x00000000      0x14d build/application/obj/drivers/flash/stm32_flash.o
+ .debug_aranges
+                0x00000000       0x58 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_rnglists
+                0x00000000       0x3f build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000       0x79 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000      0xaba build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000       0x22 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000      0x34e build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000       0x1c build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000       0x16 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000      0x244 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x00000000      0x190 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_line    0x00000000      0x38b build/application/obj/drivers/flash/stm32_flash.o
+ .debug_str     0x00000000     0x50fa build/application/obj/drivers/flash/stm32_flash.o
+ .comment       0x00000000       0x46 build/application/obj/drivers/flash/stm32_flash.o
+ .debug_frame   0x00000000      0x130 build/application/obj/drivers/flash/stm32_flash.o
+ .ARM.attributes
+                0x00000000       0x2e build/application/obj/drivers/flash/stm32_flash.o
  .group         0x00000000        0xc build/application/obj/drivers/led/stm32_led.o
  .group         0x00000000        0xc build/application/obj/drivers/led/stm32_led.o
  .group         0x00000000        0xc build/application/obj/drivers/led/stm32_led.o
@@ -433,6 +479,7 @@ LOAD build/application/obj/board/stm32f429i-disc1/board.o
 LOAD build/application/obj/board/stm32f429i-disc1/console.o
 LOAD build/application/obj/board/stm32f429i-disc1/sdram.o
 LOAD build/application/obj/drivers/clk/stm32f4_clk.o
+LOAD build/application/obj/drivers/flash/stm32_flash.o
 LOAD build/application/obj/drivers/led/stm32_led.o
 LOAD build/application/obj/drivers/ram/stm32_sdram.o
 LOAD build/application/obj/drivers/serial/stm32_usart.o

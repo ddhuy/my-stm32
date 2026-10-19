@@ -6,7 +6,8 @@
 #include "board/stm32f429i-disc1/console.h"
 
 #include "common/include/memory_map.h"
-#include "common/include/image_format.h"
+
+#include "drivers/flash/stm32_flash.h"
 
 #include "app_handoff.h"
 #include "boot_autoboot.h"

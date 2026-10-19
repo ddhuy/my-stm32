@@ -38,4 +38,22 @@
 #define APP_SRAM_BASE     SRAM_BASE
 #define APP_SRAM_SIZE     (_AC(128, u) * 1024)
 
+/*
+ * Initial firmware-update policy:
+ *
+ * Sectors 0-4: reserved for bootloader.
+ * Sector 5:    application image storage.
+ *
+ * We initially permit updates to sector 5 only.
+ */
+#define APP_FLASH_FIRST_SECTOR   _AC(5, u)
+#define APP_FLASH_SECTOR_SIZE    _AC(0x20000, u)  /* 128 KiB */
+
+#define APP_UPDATE_FLASH_END \
+    (APP_FLASH_BASE + APP_FLASH_SECTOR_SIZE)
+
+#define APP_UPDATE_FLASH_SIZE \
+    (APP_UPDATE_FLASH_END - APP_FLASH_BASE)
+
+
 #endif
