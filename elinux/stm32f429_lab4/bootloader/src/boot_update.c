@@ -85,6 +85,13 @@ bool boot_update_receive(void)
     size_t actual_image_length =
         sizeof(app_image_header_t) + header->image_size;
 
+    if (actual_image_length > APP_UPDATE_FLASH_SIZE)
+    {
+        console_puts(
+            "Firmware image exceeds the supported update region.\n");
+        return false;
+    }
+
     boot_install_status_t install_status =
         boot_install_image(buffer, actual_image_length);
 

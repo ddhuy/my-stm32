@@ -28,4 +28,10 @@ image_status_t image_validate_buffer(const uint8_t *buffer, size_t received_size
 /* Validate bounds, copy to SDRAM, then verify the payload CRC before handoff. */
 image_status_t image_load(void);
 
+/*
+ * Validate the packaged application stored in Flash.
+ * Does not copy the payload into SDRAM.
+ */
+image_status_t image_validate_flash(void);
+
 #endif

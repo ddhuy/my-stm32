@@ -147,13 +147,36 @@ int main(void)
         halt("bootloader: halted\n");
     }
 
+    /*
+     * Check Flash before starting the autoboot countdown.
+     *
+     * An invalid or incomplete firmware image should
+     * enter recovery mode immediately.
+     */
+    image_status_t image_status = image_validate_flash();
+
     /* Autoboot */
-    if (boot_autoboot_wait())
+    if (image_status == IMAGE_OK)
     {
-        if (!boot_application())
+        if (boot_autoboot_wait())
         {
-            console_puts("Autoboot failed. Entering console.\n");
+            if (!boot_application())
+            {
+                console_puts("Autoboot failed. Entering console.\n");
+            }
         }
+    }
+    else
+    {
+        console_puts("\nNo valid application in Flash.\n");
+
+        console_puts("Image validation error: ");
+        console_puthex((uint32_t)image_status);
+        console_puts("\n");
+
+        console_puts(
+            "Entering recovery console.\n"
+            "Use 'update' to install firmware.\n");
     }
 
     /* Enter the command interface. */
@@ -165,7 +188,7 @@ int main(void)
         {
             if (!boot_application())
             {
-                halt("bootloader: failed to boot application\n");
+                console_puts("Boot failed. Returning to recovery console.\n");
             }
         }
     }

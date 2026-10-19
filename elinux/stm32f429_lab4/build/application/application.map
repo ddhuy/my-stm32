@@ -447,18 +447,27 @@ Discarded input sections
  .ARM.attributes
                 0x00000000       0x2e build/application/obj/lib/crc/crc16.o
  .group         0x00000000        0xc build/application/obj/lib/crc/crc32.o
+ .group         0x00000000        0xc build/application/obj/lib/crc/crc32.o
+ .group         0x00000000        0xc build/application/obj/lib/crc/crc32.o
  .text          0x00000000        0x0 build/application/obj/lib/crc/crc32.o
  .data          0x00000000        0x0 build/application/obj/lib/crc/crc32.o
  .bss           0x00000000        0x0 build/application/obj/lib/crc/crc32.o
- .debug_info    0x00000000       0x22 build/application/obj/lib/crc/crc32.o
- .debug_abbrev  0x00000000       0x12 build/application/obj/lib/crc/crc32.o
+ .text.crc32_compute
+                0x00000000       0x78 build/application/obj/lib/crc/crc32.o
+ .debug_info    0x00000000      0x12c build/application/obj/lib/crc/crc32.o
+ .debug_abbrev  0x00000000       0xad build/application/obj/lib/crc/crc32.o
  .debug_aranges
-                0x00000000       0x18 build/application/obj/lib/crc/crc32.o
- .debug_macro   0x00000000       0x11 build/application/obj/lib/crc/crc32.o
+                0x00000000       0x20 build/application/obj/lib/crc/crc32.o
+ .debug_rnglists
+                0x00000000       0x13 build/application/obj/lib/crc/crc32.o
+ .debug_macro   0x00000000       0x37 build/application/obj/lib/crc/crc32.o
  .debug_macro   0x00000000      0xaba build/application/obj/lib/crc/crc32.o
- .debug_line    0x00000000       0x30 build/application/obj/lib/crc/crc32.o
- .debug_str     0x00000000     0x2e03 build/application/obj/lib/crc/crc32.o
+ .debug_macro   0x00000000      0x190 build/application/obj/lib/crc/crc32.o
+ .debug_macro   0x00000000      0x34e build/application/obj/lib/crc/crc32.o
+ .debug_line    0x00000000      0x126 build/application/obj/lib/crc/crc32.o
+ .debug_str     0x00000000     0x3c54 build/application/obj/lib/crc/crc32.o
  .comment       0x00000000       0x46 build/application/obj/lib/crc/crc32.o
+ .debug_frame   0x00000000       0x38 build/application/obj/lib/crc/crc32.o
  .ARM.attributes
                 0x00000000       0x2e build/application/obj/lib/crc/crc32.o
 

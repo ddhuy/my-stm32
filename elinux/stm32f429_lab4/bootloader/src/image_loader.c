@@ -1,6 +1,8 @@
 #include <stdint.h>
+
+#include "lib/crc/crc32.h"
+
 #include "image_loader.h"
-#include "crc32.h"
 #include "memory_map.h"
 
 
@@ -81,4 +83,15 @@ image_status_t image_load(void) {
         return IMAGE_ERR_CRC;
 
     return IMAGE_OK;
+}
+
+image_status_t image_validate_flash(void)
+{
+    const uint8_t *image =
+        (const uint8_t *)(uintptr_t)APP_FLASH_BASE;
+
+    const size_t available_size =
+        (size_t)(APP_FLASH_END - APP_FLASH_BASE);
+
+    return image_validate_buffer(image, available_size);
 }
