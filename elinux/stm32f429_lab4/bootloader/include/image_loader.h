@@ -3,7 +3,10 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "image_format.h"
+
+#include "common/include/image_format.h"
+
+#include "boot_slot.h"
 
 
 typedef enum {
@@ -33,5 +36,11 @@ image_status_t image_load(void);
  * Does not copy the payload into SDRAM.
  */
 image_status_t image_validate_flash(void);
+
+/* Validate a packaged image stored in a given slot. */
+image_status_t image_validate_slot(boot_slot_t slot);
+
+/* Copy a selected slot's payload to SDRAM and verify CRC32. */
+image_status_t image_load_slot(boot_slot_t slot);
 
 #endif

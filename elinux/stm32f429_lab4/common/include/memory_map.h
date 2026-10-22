@@ -55,5 +55,24 @@
 #define APP_UPDATE_FLASH_SIZE \
     (APP_UPDATE_FLASH_END - APP_FLASH_BASE)
 
+/*
+ * A/B firmware storage.
+ *
+ * Each slot occupies one 128 KiB Flash sector.
+ *
+ * Sector 5: Slot A
+ * Sector 6: Slot B
+ */
+#define APP_SLOT_SIZE          _AC(0x20000, u)
+
+#define APP_SLOT_A_BASE        APP_FLASH_BASE
+#define APP_SLOT_A_SECTOR      _AC(5, u)
+
+#define APP_SLOT_B_BASE        _AC(0x08040000, u)
+#define APP_SLOT_B_SECTOR      _AC(6, u)
+
+#define APP_SLOT_A_END         (APP_SLOT_A_BASE + APP_SLOT_SIZE)
+#define APP_SLOT_B_END         (APP_SLOT_B_BASE + APP_SLOT_SIZE)
+
 
 #endif

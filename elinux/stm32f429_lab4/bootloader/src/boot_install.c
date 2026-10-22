@@ -3,22 +3,10 @@
 #include <stdint.h>
 
 #include "drivers/flash/stm32_flash.h"
-#include "board/stm32f429i-disc1/console.h"
 #include "common/include/memory_map.h"
 
 #include "boot_install.h"
 
-/*
- * Application-specific installation policy.
- *
- * The Flash driver itself does not know
- * about application Flash boundaries.
- */
-static bool boot_install_range_valid(size_t image_length)
-{
-    return image_length != 0u &&
-           image_length <= APP_UPDATE_FLASH_SIZE;
-}
 
 /*
  * Compare the installed image against the staged image.
@@ -27,18 +15,19 @@ static bool boot_install_range_valid(size_t image_length)
  * byte that differs.
  */
 static bool boot_install_verify(
+    uint32_t flash_base,
     const uint8_t *image,
     size_t image_length,
     uint32_t *failed_address)
 {
     const volatile uint8_t *flash =
-        (const volatile uint8_t *)(uintptr_t)APP_FLASH_BASE;
+        (const volatile uint8_t *)(uintptr_t)flash_base;
 
     for (size_t i = 0u; i < image_length; ++i)
     {
         if (flash[i] != image[i])
         {
-            *failed_address = APP_FLASH_BASE + (uint32_t)i;
+            *failed_address = flash_base + (uint32_t)i;
             return false;
         }
     }
@@ -81,32 +70,8 @@ static boot_install_status_t boot_install_flash_error(
     return status;
 }
 
-/**
- * Return detail error message from the Install Stage 
- */
-static const char *boot_install_stage_message(
-    boot_install_stage_t stage)
-{
-    switch (stage)
-    {
-    case BOOT_INSTALL_STAGE_VALIDATE:
-        return "Image / range validation";
-
-    case BOOT_INSTALL_STAGE_ERASE:
-        return "Flash erase";
-
-    case BOOT_INSTALL_STAGE_PROGRAM:
-        return "Flash programming";
-
-    case BOOT_INSTALL_STAGE_VERIFY:
-        return "Flash readback verification";
-
-    default:
-        return "Unknown";
-    }
-}
-
-boot_install_status_t boot_install_image_detailed(
+boot_install_status_t boot_install_image_to_slot_detailed(
+    boot_slot_t slot,
     const uint8_t *staged_image,
     size_t image_length,
     boot_install_result_t *result)
@@ -131,7 +96,21 @@ boot_install_status_t boot_install_image_detailed(
         return result->status;
     }
 
-    if (!boot_install_range_valid(image_length))
+    boot_slot_info_t slot_info;
+
+    if (!boot_slot_get_info(slot, &slot_info))
+    {
+        result->status = BOOT_INSTALL_ERR_ARGUMENT;
+        result->stage = BOOT_INSTALL_STAGE_VALIDATE;
+        return result->status;
+    }
+
+    /*
+     * The entire packaged image must fit in one slot.
+     * No Flash operation occurs before this check.
+     */
+    if (image_length == 0u ||
+        image_length > slot_info.size)
     {
         result->status = BOOT_INSTALL_ERR_RANGE;
         result->stage = BOOT_INSTALL_STAGE_VALIDATE;
@@ -139,15 +118,13 @@ boot_install_status_t boot_install_image_detailed(
     }
 
     /*
-     * Erase the application sector.
-     *
-     * No bootloader sectors are selected.
+     * Erase the destination slot's sector.
      */
     result->stage = BOOT_INSTALL_STAGE_ERASE;
-    result->address = APP_FLASH_BASE;
+    result->address = slot_info.base;
 
     stm32_flash_status_t flash_status =
-        stm32_flash_erase_sector(APP_FLASH_FIRST_SECTOR);
+        stm32_flash_erase_sector(slot_info.sector);
 
     if (flash_status != STM32_FLASH_OK)
     {
@@ -156,7 +133,7 @@ boot_install_status_t boot_install_image_detailed(
             BOOT_INSTALL_ERR_ERASE,
             BOOT_INSTALL_STAGE_ERASE,
             flash_status,
-            APP_FLASH_BASE);
+            slot_info.base);
     }
 
     /*
@@ -166,10 +143,10 @@ boot_install_status_t boot_install_image_detailed(
      * all words, and locks Flash afterward.
      */
     result->stage = BOOT_INSTALL_STAGE_PROGRAM;
-    result->address = APP_FLASH_BASE;
+    result->address = slot_info.base;
 
     flash_status = stm32_flash_program(
-        APP_FLASH_BASE,
+        slot_info.base,
         staged_image,
         image_length);
 
@@ -179,7 +156,7 @@ boot_install_status_t boot_install_image_detailed(
          * The current bulk API does not report
          * which word failed.
          *
-         * APP_FLASH_BASE therefore identifies
+         * slot_info.base therefore identifies
          * the beginning of the programmed region.
          */
         return boot_install_flash_error(
@@ -187,7 +164,7 @@ boot_install_status_t boot_install_image_detailed(
             BOOT_INSTALL_ERR_PROGRAM,
             BOOT_INSTALL_STAGE_PROGRAM,
             flash_status,
-            APP_FLASH_BASE);
+            slot_info.base);
     }
 
     /*
@@ -198,6 +175,7 @@ boot_install_status_t boot_install_image_detailed(
     uint32_t failed_address = 0u;
 
     if (!boot_install_verify(
+            slot_info.base,
             staged_image,
             image_length,
             &failed_address))
@@ -213,6 +191,18 @@ boot_install_status_t boot_install_image_detailed(
     return BOOT_INSTALL_OK;
 }
 
+boot_install_status_t boot_install_image_detailed(
+    const uint8_t *staged_image,
+    size_t image_length,
+    boot_install_result_t *result)
+{
+    return boot_install_image_to_slot_detailed(
+        BOOT_SLOT_A,
+        staged_image,
+        image_length,
+        result);
+}
+
 /*
  * Preserve the original public API.
  */
@@ -226,35 +216,4 @@ boot_install_status_t boot_install_image(
         staged_image,
         image_length,
         &result);
-}
-
-/**
- * Print the detail of Install Stage.
- */
-void boot_install_print_error(
-    const boot_install_result_t *result)
-{
-    console_puts("\nFirmware installation failed!\n");
-
-    console_puts("Stage        : ");
-    console_puts(boot_install_stage_message(result->stage));
-    console_puts("\n");
-
-    console_puts("Install error: ");
-    console_puthex((uint32_t)result->status);
-    console_puts("\n");
-
-    console_puts("Flash status : ");
-    console_puthex((uint32_t)result->flash_status);
-    console_puts("\n");
-
-    console_puts("FLASH_SR     : ");
-    console_puthex(result->flash_sr);
-    console_puts("\n");
-
-    console_puts("Address      : ");
-    console_puthex(result->address);
-    console_puts("\n");
-
-    console_puts("Returning to recovery console.\n");
 }

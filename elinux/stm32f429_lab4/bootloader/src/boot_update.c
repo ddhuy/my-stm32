@@ -22,6 +22,8 @@
  */
 #define UPDATE_BUFFER_BASE  SDRAM_BASE
 #define UPDATE_BUFFER_SIZE  SDRAM_SIZE
+#define UPDATE_DRAIN_QUIET_MS  1000u
+#define UPDATE_DRAIN_LIMIT_MS  5000u
 
 static const char *image_error_message(image_status_t status)
 {
@@ -38,6 +40,65 @@ static const char *image_error_message(image_status_t status)
     default:                     return "unknown image validation error";
     }
 }
+
+
+/**
+ * Return detail error message from the Install Stage 
+ */
+static const char *boot_update_stage_message(
+    boot_install_stage_t stage)
+{
+    switch (stage)
+    {
+    case BOOT_INSTALL_STAGE_VALIDATE:
+        return "Image / range validation";
+
+    case BOOT_INSTALL_STAGE_ERASE:
+        return "Flash erase";
+
+    case BOOT_INSTALL_STAGE_PROGRAM:
+        return "Flash programming";
+
+    case BOOT_INSTALL_STAGE_VERIFY:
+        return "Flash readback verification";
+
+    default:
+        return "Unknown";
+    }
+}
+
+
+/**
+ * Print the detail of Install Stage.
+ */
+static void boot_update_print_error(
+    const boot_install_result_t *result)
+{
+    console_puts("\nFirmware installation failed!\n");
+
+    console_puts("Stage        : ");
+    console_puts(boot_update_stage_message(result->stage));
+    console_puts("\n");
+
+    console_puts("Install error: ");
+    console_puthex((uint32_t)result->status);
+    console_puts("\n");
+
+    console_puts("Flash status : ");
+    console_puthex((uint32_t)result->flash_status);
+    console_puts("\n");
+
+    console_puts("FLASH_SR     : ");
+    console_puthex(result->flash_sr);
+    console_puts("\n");
+
+    console_puts("Address      : ");
+    console_puthex(result->address);
+    console_puts("\n");
+
+    console_puts("Returning to recovery console.\n");
+}
+
 
 bool boot_update_receive(void)
 {
@@ -61,6 +122,17 @@ bool boot_update_receive(void)
 
     if (xmodem_status != XMODEM_OK)
     {
+        /* Finish transmitting any cancellation before waiting for silence. */
+        console_flush();
+        if (!boot_xmodem_io_drain(UPDATE_DRAIN_QUIET_MS, UPDATE_DRAIN_LIMIT_MS))
+        {
+            console_puts("\nXMODEM input did not settle. Stop the sender and reset the board.\n");
+            console_flush();
+            /* Never interpret an ongoing binary transfer as console commands. */
+            for (;;)
+            {
+            }
+        }
         console_puts("\nXMODEM transfer failed.\n");
         return false;
     }
@@ -91,17 +163,29 @@ bool boot_update_receive(void)
             "Firmware image exceeds the supported update region.\n");
         return false;
     }
-    
+
+    /*
+    * Policy:
+    *
+    * Slot A is the known-good application.
+    * Install the replacement into Slot B only.
+    */
+    console_puts("Installing firmware into Slot B...\n");
+
+    const boot_slot_t target_slot = BOOT_SLOT_B;
+
     boot_install_result_t install_result;
 
-    boot_install_status_t install_status = boot_install_image_detailed(
-        buffer,
-        actual_image_length,
-        &install_result);
+    boot_install_status_t install_status =
+        boot_install_image_to_slot_detailed(
+            target_slot,
+            buffer,
+            actual_image_length,
+            &install_result);
 
     if (install_status != BOOT_INSTALL_OK)
     {
-        boot_install_print_error(&install_result);
+        boot_update_print_error(&install_result);
         return false;
     }
 

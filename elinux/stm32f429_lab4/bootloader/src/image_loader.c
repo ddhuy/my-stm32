@@ -2,8 +2,9 @@
 
 #include "lib/crc/crc32.h"
 
+#include "common/include/memory_map.h"
+
 #include "image_loader.h"
-#include "memory_map.h"
 
 
 image_status_t image_header_validate(const app_image_header_t *header) {
@@ -63,35 +64,75 @@ image_status_t image_validate_buffer(const uint8_t *buffer, size_t received_size
 
 
 image_status_t image_load(void) {
-    const app_image_header_t *header =
-        (const app_image_header_t *)APP_FLASH_BASE;
-
-    const image_status_t status = image_header_validate(header);
-    if (status != IMAGE_OK)
-        return status;
-
-    const uint8_t *src =
-        (const uint8_t *)(APP_FLASH_BASE + sizeof(app_image_header_t));
-    
-    uint8_t *dst = (uint8_t *)(uintptr_t) header->load_address;
-
-    for (uint32_t i = 0; i < header->image_size; ++i)
-        dst[i] = src[i];
-
-    /* Check the bytes that will execute, catching flash and copy corruption. */
-    if (crc32_compute(dst, header->image_size) != header->crc)
-        return IMAGE_ERR_CRC;
-
-    return IMAGE_OK;
+    return image_load_slot(BOOT_SLOT_A);
 }
+
 
 image_status_t image_validate_flash(void)
 {
-    const uint8_t *image =
-        (const uint8_t *)(uintptr_t)APP_FLASH_BASE;
+    return image_validate_slot(BOOT_SLOT_A);
+}
 
-    const size_t available_size =
-        (size_t)(APP_FLASH_END - APP_FLASH_BASE);
 
-    return image_validate_buffer(image, available_size);
+image_status_t image_validate_slot(boot_slot_t slot)
+{
+    boot_slot_info_t info;
+
+    if (!boot_slot_get_info(slot, &info))
+    {
+        return IMAGE_ERR_FLASH_BOUNDS;
+    }
+
+    return image_validate_buffer(
+        (const uint8_t *)(uintptr_t)info.base,
+        (size_t)info.size);
+}
+
+
+image_status_t image_load_slot(boot_slot_t slot)
+{
+    boot_slot_info_t info;
+
+    if (!boot_slot_get_info(slot, &info))
+    {
+        return IMAGE_ERR_FLASH_BOUNDS;
+    }
+
+    /*
+     * Validate the entire packaged image in Flash
+     * before copying anything into SDRAM.
+     *
+     * This also enforces the selected slot's size.
+     */
+    image_status_t status = image_validate_slot(slot);
+
+    if (status != IMAGE_OK)
+    {
+        return status;
+    }
+
+    const app_image_header_t *header =
+        (const app_image_header_t *)(uintptr_t)info.base;
+
+    const uint8_t *src =
+        (const uint8_t *)(uintptr_t)(
+            info.base + sizeof(app_image_header_t));
+
+    uint8_t *dst =
+        (uint8_t *)(uintptr_t)APP_SDRAM_BASE;
+
+    for (uint32_t i = 0u; i < header->image_size; ++i)
+    {
+        dst[i] = src[i];
+    }
+
+    /*
+     * Verify the executable copy in SDRAM.
+     */
+    if (crc32_compute(dst, header->image_size) != header->crc)
+    {
+        return IMAGE_ERR_CRC;
+    }
+
+    return IMAGE_OK;
 }

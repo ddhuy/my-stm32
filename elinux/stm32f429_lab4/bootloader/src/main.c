@@ -147,6 +147,11 @@ int main(void)
         halt("bootloader: halted\n");
     }
 
+    image_status_t status = image_validate_slot(BOOT_SLOT_B);
+    console_puts("image_validate_lot(BOOT_SLOT_B) = ");
+    console_puthex(status);
+    console_puts("");
+
     /*
      * Check Flash before starting the autoboot countdown.
      *

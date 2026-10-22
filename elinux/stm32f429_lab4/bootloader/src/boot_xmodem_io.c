@@ -67,9 +67,36 @@ static void boot_uart_write_byte(
     console_putc((char)byte);
 }
 
-/*
- * Construct an XMODEM transport interface.
- */
+/* Discard residual transfer input without echoing it. */
+bool boot_xmodem_io_drain(uint32_t quiet_ms, uint32_t max_ms)
+{
+    if (quiet_ms == 0u || max_ms < quiet_ms)
+        return false;
+
+    uint32_t elapsed = 0u;
+    uint32_t quiet = 0u;
+    (void)boot_time_tick();
+
+    while (elapsed < max_ms)
+    {
+        char discarded;
+        bool received = console_try_getc(&discarded);
+        if (received)
+            quiet = 0u;
+
+        /* Always service the deadline, even under continuous input. */
+        if (boot_time_tick())
+        {
+            ++elapsed;
+            if (!received && ++quiet >= quiet_ms)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+/* Construct an XMODEM transport interface. */
 xmodem_io_t boot_xmodem_io_create(void)
 {
     xmodem_io_t io = {

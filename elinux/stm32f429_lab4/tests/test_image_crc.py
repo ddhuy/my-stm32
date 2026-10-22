@@ -23,7 +23,7 @@ class ImageCrcTests(unittest.TestCase):
             subprocess.run([
                 "cc", "-std=c11", "-Wall", "-Wextra", "-Werror",
                 "-I.", "-Icommon/include", "-Ibootloader/include",
-                "tests/image_loader_test.c", "bootloader/src/crc32.c",
+                "tests/image_loader_test.c", "lib/crc/crc32.c",
                 "bootloader/src/image_loader.c", "-o", str(executable),
             ], cwd=ROOT, check=True)
             for payload in (b"123456789", bytes(range(256)), bytes(range(256)) * 17 + b"\xff"):

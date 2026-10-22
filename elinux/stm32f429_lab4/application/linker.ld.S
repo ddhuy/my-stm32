@@ -2,7 +2,7 @@
  * Application linker script. Run through the C preprocessor by the Makefile
  * (build/application/linker.ld), so addresses come from memory_map.h.
  */
-#include "memory_map.h"
+#include "common/include/memory_map.h"
 
 ENTRY(reset_handler)
 

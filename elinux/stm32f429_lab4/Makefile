@@ -23,8 +23,7 @@ BOOT_BUILD_DIR := $(BUILD_DIR)/bootloader
 TEST_BUILD_DIR := $(BUILD_DIR)/tests
 
 # Shared by both programs: the layers, the drivers and the system contract
-LAYER_INCLUDES := -I. \
-				  -Icommon/include \
+LAYER_INCLUDES := -I.
 
 ARCH_FLAGS := -mcpu=cortex-m4 -mthumb
 
@@ -35,7 +34,7 @@ BASE_CFLAGS := $(ARCH_FLAGS) -O0 -g3 -Wall -Wextra \
 # Each program sees only its own private headers, never the other's
 APP_INCLUDES  := -Iapplication/include $(LAYER_INCLUDES)
 BOOT_INCLUDES := -Ibootloader/include $(LAYER_INCLUDES)
-TEST_INCLUDES := $(LAYER_INCLUDES)
+TEST_INCLUDES := -Ibootloader/include -Iapplication/include $(LAYER_INCLUDES)
 
 APP_CFLAGS  := $(BASE_CFLAGS) $(APP_INCLUDES)
 BOOT_CFLAGS := $(BASE_CFLAGS) $(BOOT_INCLUDES)
@@ -50,7 +49,8 @@ LDS_CPP := $(CC) -E -P -x assembler-with-cpp -MMD -MP
 # Value of a C macro from the shared headers, as a decimal number.
 cpp_value = $(shell printf '%d' $$(( $$(echo '$(1)' | \
     $(CC) -E -P -x assembler-with-cpp $(LAYER_INCLUDES) \
-    -include memory_map.h -include image_format.h -) )))
+    -include common/include/memory_map.h \
+	-include common/include/image_format.h -) )))
 
 
 # ---- Application: runs from SDRAM, packaged with a header for the bootloader
@@ -138,8 +138,9 @@ $(BOOT_BIN): $(BOOT_ELF)
 build/tests/test_crc16:          SRC_DEPS := lib/crc/crc16.c
 build/tests/test_xmodem:         SRC_DEPS := lib/crc/crc16.c lib/protocol/xmodem/xmodem.c
 build/tests/test_xmodem_receive: SRC_DEPS := lib/crc/crc16.c lib/protocol/xmodem/xmodem.c
+build/tests/test_xmodem_drain:   SRC_DEPS := bootloader/src/boot_xmodem_io.c
 
-test: $(TEST_BINARIES)
+tests: $(TEST_BINARIES)
 
 run-tests: $(TEST_RUNNERS)
 

@@ -4,9 +4,9 @@
 #include <string.h>
 #include <sys/mman.h>
 
-#include "crc32.h"
-#include "image_loader.h"
-#include "memory_map.h"
+#include "lib/crc/crc32.h"
+#include "common/include/image_loader.h"
+#include "common/include/memory_map.h"
 
 /* Linux host test: reserve the MCU address ranges without replacing mappings. */
 int main(int argc, char **argv)

@@ -4,7 +4,7 @@
  * The FLASH region ends where the application image starts, so a bootloader
  * that grows too big fails to link instead of overwriting the image.
  */
-#include "memory_map.h"
+#include "common/include/memory_map.h"
 
 ENTRY(reset_handler)
 

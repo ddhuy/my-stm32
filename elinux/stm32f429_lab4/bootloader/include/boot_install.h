@@ -5,6 +5,8 @@
 #include <stdint.h>
 
 #include "drivers/flash/stm32_flash.h"
+#include "boot_slot.h"
+
 
 typedef enum
 {
@@ -60,10 +62,15 @@ boot_install_status_t boot_install_image(
     const uint8_t *staged_image,
     size_t image_length);
 
-/**
- * Print the detail of Install Stage.
+/*
+ * Install an already-validated image into a selected slot.
+ *
+ * The caller must authorize the destination slot.
  */
-void boot_install_print_error(
-    const boot_install_result_t *result);
+boot_install_status_t boot_install_image_to_slot_detailed(
+    boot_slot_t slot,
+    const uint8_t *staged_image,
+    size_t image_length,
+    boot_install_result_t *result);
 
 #endif
