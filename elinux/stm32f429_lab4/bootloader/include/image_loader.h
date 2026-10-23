@@ -29,13 +29,13 @@ image_status_t image_header_validate(const app_image_header_t *header);
 image_status_t image_validate_buffer(const uint8_t *buffer, size_t received_size);
 
 /* Validate bounds, copy to SDRAM, then verify the payload CRC before handoff. */
-image_status_t image_load(void);
+image_status_t image_load(boot_slot_t slot);
 
 /*
  * Validate the packaged application stored in Flash.
  * Does not copy the payload into SDRAM.
  */
-image_status_t image_validate_flash(void);
+image_status_t image_validate_flash(boot_slot_t slot);
 
 /* Validate a packaged image stored in a given slot. */
 image_status_t image_validate_slot(boot_slot_t slot);

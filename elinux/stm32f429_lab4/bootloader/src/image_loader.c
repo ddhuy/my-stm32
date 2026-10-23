@@ -63,14 +63,14 @@ image_status_t image_validate_buffer(const uint8_t *buffer, size_t received_size
 }
 
 
-image_status_t image_load(void) {
-    return image_load_slot(BOOT_SLOT_A);
+image_status_t image_load(boot_slot_t slot) {
+    return image_load_slot(slot);
 }
 
 
-image_status_t image_validate_flash(void)
+image_status_t image_validate_flash(boot_slot_t slot)
 {
-    return image_validate_slot(BOOT_SLOT_A);
+    return image_validate_slot(slot);
 }
 
 

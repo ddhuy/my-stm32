@@ -12,6 +12,7 @@
 #include "app_handoff.h"
 #include "boot_autoboot.h"
 #include "boot_console.h"
+#include "boot_metadata.h"
 #include "boot_time.h"
 #include "memtest.h"
 #include "image_loader.h"
@@ -83,6 +84,14 @@ static bool sdram_memtest(void)
 
 static bool boot_application(void)
 {
+    boot_slot_t selected_slot;
+
+    if (!boot_select_slot(&selected_slot))
+    {
+        console_puts("No valid firmware in either slot.");
+        return false;
+    }
+
     /*
     * Validate the image and copy it from
     * Flash into SDRAM.
@@ -90,10 +99,10 @@ static bool boot_application(void)
     * Adapt this check to your current
     * image_status_t API.
     */
-    image_status_t image_status = image_load();
+    image_status_t image_status = image_load_slot(selected_slot);
     if (image_status != IMAGE_OK)
     {
-        console_puts("Invalid application vectors\n");
+        console_puts("Failed to load selected firmware image.\n");
         console_puts("Image Loader: ");
         console_puthex(image_status);
         console_puts("\n");
@@ -115,6 +124,8 @@ static bool boot_application(void)
         return false;
     }
 
+    console_puts("Booting slot ");
+    console_puts(selected_slot == BOOT_SLOT_A ? "A\n": "B\n");
     console_puts("Starting application...\n");
     console_flush();
 
@@ -141,16 +152,11 @@ int main(void)
     if (!board_sdram_init())
         halt("bootloader: SDRAM init failed\n");
 
-    /* Destroys SDRAM contents, so it must run before image_load() */
+    /* Test SDRAM on every bootup to make sure it works fine. */
     if (!sdram_memtest())
     {
         halt("bootloader: halted\n");
     }
-
-    image_status_t status = image_validate_slot(BOOT_SLOT_B);
-    console_puts("image_validate_lot(BOOT_SLOT_B) = ");
-    console_puthex(status);
-    console_puts("");
 
     /*
      * Check Flash before starting the autoboot countdown.
@@ -158,11 +164,16 @@ int main(void)
      * An invalid or incomplete firmware image should
      * enter recovery mode immediately.
      */
-    image_status_t image_status = image_validate_flash();
+    boot_slot_t selected_slot;
+
+    bool fw_available = boot_select_slot(&selected_slot);
 
     /* Autoboot */
-    if (image_status == IMAGE_OK)
+    if (fw_available)
     {
+        console_puts("Selected boot slot: ");
+        console_puts(selected_slot == BOOT_SLOT_A ? "A\n" : "B\n");
+
         if (boot_autoboot_wait())
         {
             if (!boot_application())
@@ -174,11 +185,6 @@ int main(void)
     else
     {
         console_puts("\nNo valid application in Flash.\n");
-
-        console_puts("Image validation error: ");
-        console_puthex((uint32_t)image_status);
-        console_puts("\n");
-
         console_puts(
             "Entering recovery console.\n"
             "Use 'update' to install firmware.\n");

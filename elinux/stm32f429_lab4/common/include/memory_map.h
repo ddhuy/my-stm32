@@ -74,5 +74,9 @@
 #define APP_SLOT_A_END         (APP_SLOT_A_BASE + APP_SLOT_SIZE)
 #define APP_SLOT_B_END         (APP_SLOT_B_BASE + APP_SLOT_SIZE)
 
+/* Persistent A/B boot-selection metadata. */
+#define BOOT_META_FLASH_BASE    _AC(0x08100000, u)
+#define BOOT_META_FLASH_SIZE    _AC(0x4000, u)
+#define BOOT_META_FLASH_SECTOR  _AC(12, u)
 
 #endif

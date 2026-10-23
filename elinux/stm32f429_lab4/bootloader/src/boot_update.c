@@ -8,7 +8,8 @@
 #include "lib/protocol/xmodem/xmodem.h"
 
 #include "boot_install.h"
-#include "boot_update.h"
+#include "boot_metadata.h"
+#include "boot_slot.h"
 #include "boot_xmodem_io.h"
 #include "image_loader.h"
 
@@ -99,6 +100,28 @@ static void boot_update_print_error(
     console_puts("Returning to recovery console.\n");
 }
 
+/*
+ * Choose the inactive firmware slot.
+ *
+ * If a bootable image exists, preserve it and
+ * install the replacement into the other slot.
+ *
+ * If neither slot is valid, use Slot B as our
+ * recovery installation destination.
+ */
+static boot_slot_t boot_update_target_slot(void)
+{
+    boot_slot_t active_slot;
+
+    if (boot_select_slot(&active_slot))
+    {
+        return (active_slot == BOOT_SLOT_A)
+            ? BOOT_SLOT_B
+            : BOOT_SLOT_A;
+    }
+
+    return BOOT_SLOT_B;
+}
 
 bool boot_update_receive(void)
 {
@@ -138,9 +161,14 @@ bool boot_update_receive(void)
     }
 
     console_puts("\nXMODEM transfer completed.\n");
+    
+    /*
+    * Validate the complete staged image before
+    * interpreting its header or touching Flash.
+    */
+    image_status_t image_status =
+        image_validate_buffer(buffer, received_size);
 
-    /* Validate header + payload in place, excluding final-block padding. */
-    image_status_t image_status = image_validate_buffer(buffer, received_size);
     if (image_status != IMAGE_OK)
     {
         console_puts("Image validation failed: ");
@@ -151,28 +179,49 @@ bool boot_update_receive(void)
 
     console_puts("Image validated and staged in SDRAM.\n");
 
-    /* Only after complete image validation succeeds. */
-    app_image_header_t *header = (app_image_header_t *) buffer;
+    /*
+    * Safe to access the header after validation.
+    */
+    const app_image_header_t *header =
+        (const app_image_header_t *)buffer;
 
     size_t actual_image_length =
         sizeof(app_image_header_t) + header->image_size;
 
-    if (actual_image_length > APP_UPDATE_FLASH_SIZE)
+    /*
+     * Choose the slot that is not currently booted.
+     * If neither slot is bootable, use Slot B for recovery.
+     */
+    boot_slot_t target_slot = boot_update_target_slot();
+
+    boot_slot_info_t slot_info;
+
+    if (!boot_slot_get_info(target_slot, &slot_info))
     {
-        console_puts(
-            "Firmware image exceeds the supported update region.\n");
+        console_puts("Invalid destination slot.\n");
         return false;
     }
 
     /*
-    * Policy:
-    *
-    * Slot A is the known-good application.
-    * Install the replacement into Slot B only.
-    */
-    console_puts("Installing firmware into Slot B...\n");
+     * Reject oversized images before erasing Flash.
+     */
+    if (actual_image_length > slot_info.size)
+    {
+        console_puts("Firmware exceeds slot capacity.\n");
+        return false;
+    }
 
-    const boot_slot_t target_slot = BOOT_SLOT_B;
+    /*
+     * Reject incomplete images.
+     */
+    if (actual_image_length > received_size)
+    {
+        console_puts("Incomplete firmware image.\n");
+        return false;
+    }
+
+    console_puts("Installing firmware into Slot ");
+    console_puts(target_slot == BOOT_SLOT_A ? "A\n" : "B\n");
 
     boot_install_result_t install_result;
 
@@ -183,13 +232,32 @@ bool boot_update_receive(void)
             actual_image_length,
             &install_result);
 
+    console_puts("Flash destination: ");
+    console_puthex(slot_info.base);
+    console_puts("\n");
+
     if (install_status != BOOT_INSTALL_OK)
     {
         boot_update_print_error(&install_result);
         return false;
     }
 
+    /*
+     * Revalidate the installed packaged image.
+     */
+    image_status_t installed_status =
+        image_validate_slot(target_slot);
+
+    if (installed_status != IMAGE_OK)
+    {
+        console_puts("Installed image validation failed: ");
+        console_puts(image_error_message(installed_status));
+        console_puts("\n");
+        return false;
+    }
+
     console_puts("Flash installation verified.\n");
+    console_puts("Boot selection has not changed.\n");
 
     return true;
 }

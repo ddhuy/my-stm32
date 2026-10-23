@@ -57,7 +57,26 @@ Discarded input sections
  .debug_macro   0x00000000       0x16 build/bootloader/obj/bootloader/src/boot_install.o
  .debug_macro   0x00000000      0x24a build/bootloader/obj/bootloader/src/boot_install.o
  .debug_macro   0x00000000      0x130 build/bootloader/obj/bootloader/src/boot_install.o
- .debug_macro   0x00000000       0x82 build/bootloader/obj/bootloader/src/boot_install.o
+ .debug_macro   0x00000000       0x94 build/bootloader/obj/bootloader/src/boot_install.o
+ .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_metadata.o
+ .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_metadata.o
+ .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_metadata.o
+ .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_metadata.o
+ .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_metadata.o
+ .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_metadata.o
+ .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_metadata.o
+ .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_metadata.o
+ .text          0x00000000        0x0 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .data          0x00000000        0x0 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .bss           0x00000000        0x0 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00000000      0xaba build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00000000       0x22 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00000000      0x190 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00000000      0x34e build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00000000       0x16 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00000000      0x24a build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00000000      0x130 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00000000       0x94 build/bootloader/obj/bootloader/src/boot_metadata.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_slot.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_slot.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_slot.o
@@ -76,7 +95,7 @@ Discarded input sections
  .debug_macro   0x00000000      0x130 build/bootloader/obj/bootloader/src/boot_slot.o
  .debug_macro   0x00000000       0x22 build/bootloader/obj/bootloader/src/boot_slot.o
  .debug_macro   0x00000000      0x34e build/bootloader/obj/bootloader/src/boot_slot.o
- .debug_macro   0x00000000       0x82 build/bootloader/obj/bootloader/src/boot_slot.o
+ .debug_macro   0x00000000       0x94 build/bootloader/obj/bootloader/src/boot_slot.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_time.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_time.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_time.o
@@ -112,7 +131,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x16 build/bootloader/obj/bootloader/src/boot_update.o
  .debug_macro   0x00000000      0x24a build/bootloader/obj/bootloader/src/boot_update.o
  .debug_macro   0x00000000      0x130 build/bootloader/obj/bootloader/src/boot_update.o
- .debug_macro   0x00000000       0x82 build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_macro   0x00000000       0x94 build/bootloader/obj/bootloader/src/boot_update.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_xmodem_io.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_xmodem_io.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/boot_xmodem_io.o
@@ -138,6 +157,10 @@ Discarded input sections
  .text          0x00000000        0x0 build/bootloader/obj/bootloader/src/image_loader.o
  .data          0x00000000        0x0 build/bootloader/obj/bootloader/src/image_loader.o
  .bss           0x00000000        0x0 build/bootloader/obj/bootloader/src/image_loader.o
+ .text.image_load
+                0x00000000       0x1c build/bootloader/obj/bootloader/src/image_loader.o
+ .text.image_validate_flash
+                0x00000000       0x1c build/bootloader/obj/bootloader/src/image_loader.o
  .debug_macro   0x00000000      0xaba build/bootloader/obj/bootloader/src/image_loader.o
  .debug_macro   0x00000000      0x34e build/bootloader/obj/bootloader/src/image_loader.o
  .debug_macro   0x00000000      0x190 build/bootloader/obj/bootloader/src/image_loader.o
@@ -145,7 +168,7 @@ Discarded input sections
  .debug_macro   0x00000000      0x24a build/bootloader/obj/bootloader/src/image_loader.o
  .debug_macro   0x00000000      0x130 build/bootloader/obj/bootloader/src/image_loader.o
  .debug_macro   0x00000000       0x22 build/bootloader/obj/bootloader/src/image_loader.o
- .debug_macro   0x00000000       0x82 build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_macro   0x00000000       0x94 build/bootloader/obj/bootloader/src/image_loader.o
  .debug_macro   0x00000000       0x10 build/bootloader/obj/bootloader/src/image_loader.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/main.o
  .group         0x00000000        0xc build/bootloader/obj/bootloader/src/main.o
@@ -464,6 +487,7 @@ LOAD build/bootloader/obj/bootloader/src/app_handoff.o
 LOAD build/bootloader/obj/bootloader/src/boot_autoboot.o
 LOAD build/bootloader/obj/bootloader/src/boot_console.o
 LOAD build/bootloader/obj/bootloader/src/boot_install.o
+LOAD build/bootloader/obj/bootloader/src/boot_metadata.o
 LOAD build/bootloader/obj/bootloader/src/boot_slot.o
 LOAD build/bootloader/obj/bootloader/src/boot_time.o
 LOAD build/bootloader/obj/bootloader/src/boot_update.o
@@ -494,7 +518,7 @@ LOAD build/bootloader/obj/lib/crc/crc32.o
  .isr_vector    0x08000000      0x1ac build/bootloader/obj/bootloader/src/startup.o
                 0x08000000                vector_table
 
-.text           0x080001ac     0x3328
+.text           0x080001ac     0x391c
                 0x080001ac                        . = ALIGN (0x4)
  *(.text*)
  .text.dsb      0x080001ac       0x10 build/bootloader/obj/bootloader/src/app_handoff.o
@@ -516,269 +540,285 @@ LOAD build/bootloader/obj/lib/crc/crc32.o
  .text.str_equals
                 0x080003b0       0x54 build/bootloader/obj/bootloader/src/boot_console.o
  .text.boot_console_run
-                0x08000404      0x140 build/bootloader/obj/bootloader/src/boot_console.o
+                0x08000404      0x1e0 build/bootloader/obj/bootloader/src/boot_console.o
                 0x08000404                boot_console_run
  .text.boot_install_verify
-                0x08000544       0x56 build/bootloader/obj/bootloader/src/boot_install.o
+                0x080005e4       0x56 build/bootloader/obj/bootloader/src/boot_install.o
  .text.boot_install_result_init
-                0x0800059a       0x30 build/bootloader/obj/bootloader/src/boot_install.o
+                0x0800063a       0x30 build/bootloader/obj/bootloader/src/boot_install.o
  .text.boot_install_flash_error
-                0x080005ca       0x46 build/bootloader/obj/bootloader/src/boot_install.o
+                0x0800066a       0x46 build/bootloader/obj/bootloader/src/boot_install.o
  .text.boot_install_image_to_slot_detailed
-                0x08000610      0x14c build/bootloader/obj/bootloader/src/boot_install.o
-                0x08000610                boot_install_image_to_slot_detailed
+                0x080006b0      0x14c build/bootloader/obj/bootloader/src/boot_install.o
+                0x080006b0                boot_install_image_to_slot_detailed
+ .text.meta_record
+                0x080007fc       0x1a build/bootloader/obj/bootloader/src/boot_metadata.o
+ .text.meta_is_erased
+                0x08000816       0x46 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .text.meta_crc
+                0x0800085c       0x1a build/bootloader/obj/bootloader/src/boot_metadata.o
+ *fill*         0x08000876        0x2 
+ .text.meta_is_valid
+                0x08000878       0x5c build/bootloader/obj/bootloader/src/boot_metadata.o
+ .text.boot_meta_read
+                0x080008d4       0x56 build/bootloader/obj/bootloader/src/boot_metadata.o
+                0x080008d4                boot_meta_read
+ .text.meta_find_append_index
+                0x0800092a       0x72 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .text.boot_meta_select
+                0x0800099c      0x114 build/bootloader/obj/bootloader/src/boot_metadata.o
+                0x0800099c                boot_meta_select
+ .text.boot_select_slot
+                0x08000ab0       0x68 build/bootloader/obj/bootloader/src/boot_metadata.o
+                0x08000ab0                boot_select_slot
  .text.boot_slot_get_info
-                0x0800075c       0x68 build/bootloader/obj/bootloader/src/boot_slot.o
-                0x0800075c                boot_slot_get_info
+                0x08000b18       0x68 build/bootloader/obj/bootloader/src/boot_slot.o
+                0x08000b18                boot_slot_get_info
  .text.boot_time_init
-                0x080007c4       0x74 build/bootloader/obj/bootloader/src/boot_time.o
-                0x080007c4                boot_time_init
+                0x08000b80       0x74 build/bootloader/obj/bootloader/src/boot_time.o
+                0x08000b80                boot_time_init
  .text.boot_time_tick
-                0x08000838       0x24 build/bootloader/obj/bootloader/src/boot_time.o
-                0x08000838                boot_time_tick
+                0x08000bf4       0x24 build/bootloader/obj/bootloader/src/boot_time.o
+                0x08000bf4                boot_time_tick
  .text.image_error_message
-                0x0800085c       0x88 build/bootloader/obj/bootloader/src/boot_update.o
+                0x08000c18       0x88 build/bootloader/obj/bootloader/src/boot_update.o
  .text.boot_update_stage_message
-                0x080008e4       0x58 build/bootloader/obj/bootloader/src/boot_update.o
+                0x08000ca0       0x58 build/bootloader/obj/bootloader/src/boot_update.o
  .text.boot_update_print_error
-                0x0800093c       0xb4 build/bootloader/obj/bootloader/src/boot_update.o
+                0x08000cf8       0xb4 build/bootloader/obj/bootloader/src/boot_update.o
+ .text.boot_update_target_slot
+                0x08000dac       0x2c build/bootloader/obj/bootloader/src/boot_update.o
  .text.boot_update_receive
-                0x080009f0      0x148 build/bootloader/obj/bootloader/src/boot_update.o
-                0x080009f0                boot_update_receive
+                0x08000dd8      0x210 build/bootloader/obj/bootloader/src/boot_update.o
+                0x08000dd8                boot_update_receive
  .text.boot_uart_read_byte
-                0x08000b38       0x5a build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+                0x08000fe8       0x5a build/bootloader/obj/bootloader/src/boot_xmodem_io.o
  .text.boot_uart_write_byte
-                0x08000b92       0x1c build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+                0x08001042       0x1c build/bootloader/obj/bootloader/src/boot_xmodem_io.o
  .text.boot_xmodem_io_drain
-                0x08000bae       0x82 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
-                0x08000bae                boot_xmodem_io_drain
+                0x0800105e       0x82 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+                0x0800105e                boot_xmodem_io_drain
  .text.boot_xmodem_io_create
-                0x08000c30       0x34 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
-                0x08000c30                boot_xmodem_io_create
+                0x080010e0       0x34 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+                0x080010e0                boot_xmodem_io_create
  .text.image_header_validate
-                0x08000c64       0x74 build/bootloader/obj/bootloader/src/image_loader.o
-                0x08000c64                image_header_validate
+                0x08001114       0x74 build/bootloader/obj/bootloader/src/image_loader.o
+                0x08001114                image_header_validate
  .text.image_validate_buffer
-                0x08000cd8       0x92 build/bootloader/obj/bootloader/src/image_loader.o
-                0x08000cd8                image_validate_buffer
- .text.image_load
-                0x08000d6a       0x10 build/bootloader/obj/bootloader/src/image_loader.o
-                0x08000d6a                image_load
- .text.image_validate_flash
-                0x08000d7a       0x10 build/bootloader/obj/bootloader/src/image_loader.o
-                0x08000d7a                image_validate_flash
+                0x08001188       0x92 build/bootloader/obj/bootloader/src/image_loader.o
+                0x08001188                image_validate_buffer
  .text.image_validate_slot
-                0x08000d8a       0x40 build/bootloader/obj/bootloader/src/image_loader.o
-                0x08000d8a                image_validate_slot
+                0x0800121a       0x40 build/bootloader/obj/bootloader/src/image_loader.o
+                0x0800121a                image_validate_slot
  .text.image_load_slot
-                0x08000dca       0x9e build/bootloader/obj/bootloader/src/image_loader.o
-                0x08000dca                image_load_slot
- .text.dsb      0x08000e68       0x10 build/bootloader/obj/bootloader/src/main.o
- .text.isb      0x08000e78       0x10 build/bootloader/obj/bootloader/src/main.o
+                0x0800125a       0x9e build/bootloader/obj/bootloader/src/image_loader.o
+                0x0800125a                image_load_slot
+ .text.dsb      0x080012f8       0x10 build/bootloader/obj/bootloader/src/main.o
+ .text.isb      0x08001308       0x10 build/bootloader/obj/bootloader/src/main.o
  .text.mpu_disable
-                0x08000e88       0x1c build/bootloader/obj/bootloader/src/main.o
+                0x08001318       0x1c build/bootloader/obj/bootloader/src/main.o
  .text.mpu_set_region
-                0x08000ea4       0x34 build/bootloader/obj/bootloader/src/main.o
+                0x08001334       0x34 build/bootloader/obj/bootloader/src/main.o
  .text.mpu_enable
-                0x08000ed8       0x28 build/bootloader/obj/bootloader/src/main.o
- .text.halt     0x08000f00       0x12 build/bootloader/obj/bootloader/src/main.o
- *fill*         0x08000f12        0x2 
+                0x08001368       0x28 build/bootloader/obj/bootloader/src/main.o
+ .text.halt     0x08001390       0x12 build/bootloader/obj/bootloader/src/main.o
+ *fill*         0x080013a2        0x2 
  .text.mpu_map_app_region
-                0x08000f14       0x24 build/bootloader/obj/bootloader/src/main.o
+                0x080013a4       0x24 build/bootloader/obj/bootloader/src/main.o
  .text.sdram_memtest
-                0x08000f38       0xcc build/bootloader/obj/bootloader/src/main.o
+                0x080013c8       0xcc build/bootloader/obj/bootloader/src/main.o
  .text.boot_application
-                0x08001004       0x90 build/bootloader/obj/bootloader/src/main.o
- .text.main     0x08001094      0x13c build/bootloader/obj/bootloader/src/main.o
-                0x08001094                main
- .text.wr32     0x080011d0       0x1a build/bootloader/obj/bootloader/src/memtest.o
- .text.wr16     0x080011ea       0x1c build/bootloader/obj/bootloader/src/memtest.o
- .text.wr8      0x08001206       0x1c build/bootloader/obj/bootloader/src/memtest.o
- .text.rd32     0x08001222       0x16 build/bootloader/obj/bootloader/src/memtest.o
- .text.fail     0x08001238       0x32 build/bootloader/obj/bootloader/src/memtest.o
- .text.check    0x0800126a       0x3c build/bootloader/obj/bootloader/src/memtest.o
- *fill*         0x080012a6        0x2 
+                0x08001494       0xd8 build/bootloader/obj/bootloader/src/main.o
+ .text.main     0x0800156c      0x120 build/bootloader/obj/bootloader/src/main.o
+                0x0800156c                main
+ .text.wr32     0x0800168c       0x1a build/bootloader/obj/bootloader/src/memtest.o
+ .text.wr16     0x080016a6       0x1c build/bootloader/obj/bootloader/src/memtest.o
+ .text.wr8      0x080016c2       0x1c build/bootloader/obj/bootloader/src/memtest.o
+ .text.rd32     0x080016de       0x16 build/bootloader/obj/bootloader/src/memtest.o
+ .text.fail     0x080016f4       0x32 build/bootloader/obj/bootloader/src/memtest.o
+ .text.check    0x08001726       0x3c build/bootloader/obj/bootloader/src/memtest.o
+ *fill*         0x08001762        0x2 
  .text.test_data_bus
-                0x080012a8       0x98 build/bootloader/obj/bootloader/src/memtest.o
+                0x08001764       0x98 build/bootloader/obj/bootloader/src/memtest.o
  .text.test_address_bus
-                0x08001340      0x134 build/bootloader/obj/bootloader/src/memtest.o
+                0x080017fc      0x134 build/bootloader/obj/bootloader/src/memtest.o
  .text.test_byte_lanes
-                0x08001474       0xb0 build/bootloader/obj/bootloader/src/memtest.o
+                0x08001930       0xb0 build/bootloader/obj/bootloader/src/memtest.o
  .text.test_device
-                0x08001524       0xd8 build/bootloader/obj/bootloader/src/memtest.o
+                0x080019e0       0xd8 build/bootloader/obj/bootloader/src/memtest.o
  .text.memtest_run
-                0x080015fc       0xa8 build/bootloader/obj/bootloader/src/memtest.o
-                0x080015fc                memtest_run
+                0x08001ab8       0xa8 build/bootloader/obj/bootloader/src/memtest.o
+                0x08001ab8                memtest_run
  .text.default_handler
-                0x080016a4        0x8 build/bootloader/obj/bootloader/src/startup.o
-                0x080016a4                default_handler
+                0x08001b60        0x8 build/bootloader/obj/bootloader/src/startup.o
+                0x08001b60                default_handler
  .text.reset_handler
-                0x080016ac       0x6c build/bootloader/obj/bootloader/src/startup.o
-                0x080016ac                reset_handler
+                0x08001b68       0x6c build/bootloader/obj/bootloader/src/startup.o
+                0x08001b68                reset_handler
  .text.board_pin_af
-                0x08001718       0xe8 build/bootloader/obj/board/stm32f429i-disc1/board.o
-                0x08001718                board_pin_af
+                0x08001bd4       0xe8 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x08001bd4                board_pin_af
  .text.board_clock_init
-                0x08001800       0x14 build/bootloader/obj/board/stm32f429i-disc1/board.o
-                0x08001800                board_clock_init
+                0x08001cbc       0x14 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x08001cbc                board_clock_init
  .text.board_console_init
-                0x08001814       0x68 build/bootloader/obj/board/stm32f429i-disc1/board.o
-                0x08001814                board_console_init
+                0x08001cd0       0x68 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x08001cd0                board_console_init
  .text.console_putc
-                0x0800187c       0x30 build/bootloader/obj/board/stm32f429i-disc1/console.o
-                0x0800187c                console_putc
+                0x08001d38       0x30 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x08001d38                console_putc
  .text.console_puts
-                0x080018ac       0x2a build/bootloader/obj/board/stm32f429i-disc1/console.o
-                0x080018ac                console_puts
- *fill*         0x080018d6        0x2 
+                0x08001d68       0x2a build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x08001d68                console_puts
+ *fill*         0x08001d92        0x2 
  .text.console_puthex
-                0x080018d8       0x68 build/bootloader/obj/board/stm32f429i-disc1/console.o
-                0x080018d8                console_puthex
+                0x08001d94       0x68 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x08001d94                console_puthex
  .text.console_getc
-                0x08001940       0x14 build/bootloader/obj/board/stm32f429i-disc1/console.o
-                0x08001940                console_getc
+                0x08001dfc       0x14 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x08001dfc                console_getc
  .text.console_gets
-                0x08001954      0x100 build/bootloader/obj/board/stm32f429i-disc1/console.o
-                0x08001954                console_gets
+                0x08001e10      0x100 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x08001e10                console_gets
  .text.console_try_getc
-                0x08001a54       0x20 build/bootloader/obj/board/stm32f429i-disc1/console.o
-                0x08001a54                console_try_getc
+                0x08001f10       0x20 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x08001f10                console_try_getc
  .text.console_flush
-                0x08001a74       0x14 build/bootloader/obj/board/stm32f429i-disc1/console.o
-                0x08001a74                console_flush
+                0x08001f30       0x14 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x08001f30                console_flush
  .text.sdram_pins_init
-                0x08001a88       0x64 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x08001f44       0x64 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
  .text.board_sdram_init
-                0x08001aec       0x2c build/bootloader/obj/board/stm32f429i-disc1/sdram.o
-                0x08001aec                board_sdram_init
+                0x08001fa8       0x2c build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x08001fa8                board_sdram_init
  .text.stm32f4_clk_init
-                0x08001b18      0x284 build/bootloader/obj/drivers/clk/stm32f4_clk.o
-                0x08001b18                stm32f4_clk_init
+                0x08001fd4      0x284 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+                0x08001fd4                stm32f4_clk_init
  .text.stm32_flash_sector_valid
-                0x08001d9c       0x1e build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x08002258       0x1e build/bootloader/obj/drivers/flash/stm32_flash.o
  .text.stm32_flash_sector_erase_config
-                0x08001dba       0x1e build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x08002276       0x1e build/bootloader/obj/drivers/flash/stm32_flash.o
  .text.stm32_flash_program_range_valid
-                0x08001dd8       0x76 build/bootloader/obj/drivers/flash/stm32_flash.o
- *fill*         0x08001e4e        0x2 
+                0x08002294       0x76 build/bootloader/obj/drivers/flash/stm32_flash.o
+ *fill*         0x0800230a        0x2 
  .text.stm32_flash_finish_program
-                0x08001e50       0x4c build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x0800230c       0x4c build/bootloader/obj/drivers/flash/stm32_flash.o
  .text.stm32_flash_unlock
-                0x08001e9c       0x58 build/bootloader/obj/drivers/flash/stm32_flash.o
-                0x08001e9c                stm32_flash_unlock
+                0x08002358       0x58 build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x08002358                stm32_flash_unlock
  .text.stm32_flash_lock
-                0x08001ef4       0x40 build/bootloader/obj/drivers/flash/stm32_flash.o
-                0x08001ef4                stm32_flash_lock
+                0x080023b0       0x40 build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x080023b0                stm32_flash_lock
  .text.stm32_flash_wait_ready
-                0x08001f34       0x50 build/bootloader/obj/drivers/flash/stm32_flash.o
-                0x08001f34                stm32_flash_wait_ready
+                0x080023f0       0x50 build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x080023f0                stm32_flash_wait_ready
  .text.stm32_flash_clear_status
-                0x08001f84       0x38 build/bootloader/obj/drivers/flash/stm32_flash.o
-                0x08001f84                stm32_flash_clear_status
+                0x08002440       0x38 build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x08002440                stm32_flash_clear_status
  .text.stm32_flash_erase_sector
-                0x08001fbc       0xdc build/bootloader/obj/drivers/flash/stm32_flash.o
-                0x08001fbc                stm32_flash_erase_sector
+                0x08002478       0xdc build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x08002478                stm32_flash_erase_sector
  .text.stm32_flash_program_word_unlocked
-                0x08002098       0xe4 build/bootloader/obj/drivers/flash/stm32_flash.o
-                0x08002098                stm32_flash_program_word_unlocked
+                0x08002554       0xe4 build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x08002554                stm32_flash_program_word_unlocked
  .text.stm32_flash_program
-                0x0800217c       0xdc build/bootloader/obj/drivers/flash/stm32_flash.o
-                0x0800217c                stm32_flash_program
+                0x08002638       0xdc build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x08002638                stm32_flash_program
  .text.stm32_flash_status_register
-                0x08002258       0x14 build/bootloader/obj/drivers/flash/stm32_flash.o
-                0x08002258                stm32_flash_status_register
- .text.spin     0x0800226c       0x22 build/bootloader/obj/drivers/ram/stm32_sdram.o
- *fill*         0x0800228e        0x2 
+                0x08002714       0x14 build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x08002714                stm32_flash_status_register
+ .text.spin     0x08002728       0x22 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ *fill*         0x0800274a        0x2 
  .text.fmc_wait
-                0x08002290       0x3c build/bootloader/obj/drivers/ram/stm32_sdram.o
- .text.fmc_cmd  0x080022cc       0x4c build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x0800274c       0x3c build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .text.fmc_cmd  0x08002788       0x4c build/bootloader/obj/drivers/ram/stm32_sdram.o
  .text.stm32_sdram_init
-                0x08002318      0x1c8 build/bootloader/obj/drivers/ram/stm32_sdram.o
-                0x08002318                stm32_sdram_init
+                0x080027d4      0x1c8 build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x080027d4                stm32_sdram_init
  .text.stm32_usart_init
-                0x080024e0       0x56 build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x080024e0                stm32_usart_init
+                0x0800299c       0x56 build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x0800299c                stm32_usart_init
  .text.stm32_usart_putc
-                0x08002536       0x2e build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x08002536                stm32_usart_putc
+                0x080029f2       0x2e build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x080029f2                stm32_usart_putc
  .text.stm32_usart_flush
-                0x08002564       0x22 build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x08002564                stm32_usart_flush
+                0x08002a20       0x22 build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x08002a20                stm32_usart_flush
  .text.stm32_usart_getc
-                0x08002586       0x2c build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x08002586                stm32_usart_getc
+                0x08002a42       0x2c build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x08002a42                stm32_usart_getc
  .text.stm32_usart_try_getc
-                0x080025b2       0x54 build/bootloader/obj/drivers/serial/stm32_usart.o
-                0x080025b2                stm32_usart_try_getc
+                0x08002a6e       0x54 build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x08002a6e                stm32_usart_try_getc
  .text.xmodem_send
-                0x08002606       0x22 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+                0x08002ac2       0x22 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
  .text.xmodem_cancel
-                0x08002628       0x20 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+                0x08002ae4       0x20 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
  .text.xmodem_read_packet
-                0x08002648       0xde build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+                0x08002b04       0xde build/bootloader/obj/lib/protocol/xmodem/xmodem.o
  .text.xmodem_packet_validate
-                0x08002726       0x6e build/bootloader/obj/lib/protocol/xmodem/xmodem.o
-                0x08002726                xmodem_packet_validate
+                0x08002be2       0x6e build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+                0x08002be2                xmodem_packet_validate
  .text.xmodem_receive
-                0x08002794      0x260 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
-                0x08002794                xmodem_receive
+                0x08002c50      0x260 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+                0x08002c50                xmodem_receive
  .text.crc16_xmodem
-                0x080029f4       0x78 build/bootloader/obj/lib/crc/crc16.o
-                0x080029f4                crc16_xmodem
+                0x08002eb0       0x78 build/bootloader/obj/lib/crc/crc16.o
+                0x08002eb0                crc16_xmodem
  .text.crc32_compute
-                0x08002a6c       0x78 build/bootloader/obj/lib/crc/crc32.o
-                0x08002a6c                crc32_compute
+                0x08002f28       0x78 build/bootloader/obj/lib/crc/crc32.o
+                0x08002f28                crc32_compute
  *(.rodata*)
- .rodata        0x08002ae4       0x78 build/bootloader/obj/bootloader/src/boot_autoboot.o
- .rodata        0x08002b5c      0x1c8 build/bootloader/obj/bootloader/src/boot_console.o
- .rodata        0x08002d24      0x366 build/bootloader/obj/bootloader/src/boot_update.o
- *fill*         0x0800308a        0x2 
- .rodata        0x0800308c        0xc build/bootloader/obj/bootloader/src/boot_xmodem_io.o
- .rodata        0x08003098      0x295 build/bootloader/obj/bootloader/src/main.o
- *fill*         0x0800332d        0x3 
- .rodata        0x08003330       0xd6 build/bootloader/obj/bootloader/src/memtest.o
- *fill*         0x08003406        0x2 
+ .rodata        0x08002fa0       0x78 build/bootloader/obj/bootloader/src/boot_autoboot.o
+ .rodata        0x08003018      0x260 build/bootloader/obj/bootloader/src/boot_console.o
+ .rodata        0x08003278      0x3e9 build/bootloader/obj/bootloader/src/boot_update.o
+ *fill*         0x08003661        0x3 
+ .rodata        0x08003664        0xc build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+ .rodata        0x08003670      0x2b1 build/bootloader/obj/bootloader/src/main.o
+ *fill*         0x08003921        0x3 
+ .rodata        0x08003924       0xd6 build/bootloader/obj/bootloader/src/memtest.o
+ *fill*         0x080039fa        0x2 
  .rodata.clk_config
-                0x08003408       0x20 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .rodata        0x08003428        0x4 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x080039fc       0x20 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .rodata        0x08003a1c        0x4 build/bootloader/obj/board/stm32f429i-disc1/console.o
  .rodata.digits.1
-                0x0800342c       0x11 build/bootloader/obj/board/stm32f429i-disc1/console.o
- *fill*         0x0800343d        0x3 
+                0x08003a20       0x11 build/bootloader/obj/board/stm32f429i-disc1/console.o
+ *fill*         0x08003a31        0x3 
  .rodata.sdram_config
-                0x08003440       0x48 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .rodata.pins   0x08003488       0x4c build/bootloader/obj/board/stm32f429i-disc1/sdram.o
-                0x080034d4                        . = ALIGN (0x4)
+                0x08003a34       0x48 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .rodata.pins   0x08003a7c       0x4c build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x08003ac8                        . = ALIGN (0x4)
 
-.glue_7         0x080034d4        0x0
- .glue_7        0x080034d4        0x0 linker stubs
+.glue_7         0x08003ac8        0x0
+ .glue_7        0x08003ac8        0x0 linker stubs
 
-.glue_7t        0x080034d4        0x0
- .glue_7t       0x080034d4        0x0 linker stubs
+.glue_7t        0x08003ac8        0x0
+ .glue_7t       0x08003ac8        0x0 linker stubs
 
-.vfp11_veneer   0x080034d4        0x0
- .vfp11_veneer  0x080034d4        0x0 linker stubs
+.vfp11_veneer   0x08003ac8        0x0
+ .vfp11_veneer  0x08003ac8        0x0 linker stubs
 
-.v4_bx          0x080034d4        0x0
- .v4_bx         0x080034d4        0x0 linker stubs
+.v4_bx          0x08003ac8        0x0
+ .v4_bx         0x08003ac8        0x0 linker stubs
 
-.iplt           0x080034d4        0x0
- .iplt          0x080034d4        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
+.iplt           0x08003ac8        0x0
+ .iplt          0x08003ac8        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
 
-.rel.dyn        0x080034d4        0x0
- .rel.iplt      0x080034d4        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
+.rel.dyn        0x08003ac8        0x0
+ .rel.iplt      0x08003ac8        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
 
-.data           0x20000000        0x0 load address 0x080034d4
+.data           0x20000000        0x0 load address 0x08003ac8
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        __sdata = .
  *(.data*)
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        __edata = .
-                0x080034d4                        __sidata = LOADADDR (.data)
+                0x08003ac8                        __sidata = LOADADDR (.data)
 
-.igot.plt       0x20000000        0x0 load address 0x080034d4
+.igot.plt       0x20000000        0x0 load address 0x08003ac8
  .igot.plt      0x20000000        0x0 build/bootloader/obj/bootloader/src/app_handoff.o
 
-.bss            0x20000000        0x4 load address 0x080034d4
+.bss            0x20000000        0x4 load address 0x08003ac8
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        __sbss = .
  *(.bss*)
@@ -793,55 +833,57 @@ LOAD build/bootloader/obj/lib/crc/crc32.o
 OUTPUT(build/bootloader/bootloader.elf elf32-littlearm)
 LOAD linker stubs
 
-.debug_info     0x00000000     0x37ce
+.debug_info     0x00000000     0x3dfe
  .debug_info    0x00000000      0x1ef build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_info    0x000001ef      0x126 build/bootloader/obj/bootloader/src/boot_autoboot.o
- .debug_info    0x00000315      0x161 build/bootloader/obj/bootloader/src/boot_console.o
- .debug_info    0x00000476      0x49c build/bootloader/obj/bootloader/src/boot_install.o
- .debug_info    0x00000912      0x126 build/bootloader/obj/bootloader/src/boot_slot.o
- .debug_info    0x00000a38       0xeb build/bootloader/obj/bootloader/src/boot_time.o
- .debug_info    0x00000b23      0x537 build/bootloader/obj/bootloader/src/boot_update.o
- .debug_info    0x0000105a      0x27f build/bootloader/obj/bootloader/src/boot_xmodem_io.o
- .debug_info    0x000012d9      0x39f build/bootloader/obj/bootloader/src/image_loader.o
- .debug_info    0x00001678      0x42e build/bootloader/obj/bootloader/src/main.o
- .debug_info    0x00001aa6      0x419 build/bootloader/obj/bootloader/src/memtest.o
- .debug_info    0x00001ebf      0x16e build/bootloader/obj/bootloader/src/startup.o
- .debug_info    0x0000202d      0x1ee build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_info    0x0000221b      0x270 build/bootloader/obj/board/stm32f429i-disc1/console.o
- .debug_info    0x0000248b      0x291 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_info    0x0000271c      0x1d9 build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_info    0x000028f5      0x433 build/bootloader/obj/drivers/flash/stm32_flash.o
- .debug_info    0x00002d28      0x26d build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_info    0x00002f95      0x1ae build/bootloader/obj/drivers/serial/stm32_usart.o
- .debug_info    0x00003143      0x447 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
- .debug_info    0x0000358a      0x118 build/bootloader/obj/lib/crc/crc16.o
- .debug_info    0x000036a2      0x12c build/bootloader/obj/lib/crc/crc32.o
+ .debug_info    0x00000315      0x212 build/bootloader/obj/bootloader/src/boot_console.o
+ .debug_info    0x00000527      0x49c build/bootloader/obj/bootloader/src/boot_install.o
+ .debug_info    0x000009c3      0x475 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_info    0x00000e38      0x126 build/bootloader/obj/bootloader/src/boot_slot.o
+ .debug_info    0x00000f5e       0xeb build/bootloader/obj/bootloader/src/boot_time.o
+ .debug_info    0x00001049      0x60a build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_info    0x00001653      0x27f build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+ .debug_info    0x000018d2      0x3c5 build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_info    0x00001c97      0x43f build/bootloader/obj/bootloader/src/main.o
+ .debug_info    0x000020d6      0x419 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_info    0x000024ef      0x16e build/bootloader/obj/bootloader/src/startup.o
+ .debug_info    0x0000265d      0x1ee build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_info    0x0000284b      0x270 build/bootloader/obj/board/stm32f429i-disc1/console.o
+ .debug_info    0x00002abb      0x291 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_info    0x00002d4c      0x1d9 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_info    0x00002f25      0x433 build/bootloader/obj/drivers/flash/stm32_flash.o
+ .debug_info    0x00003358      0x26d build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_info    0x000035c5      0x1ae build/bootloader/obj/drivers/serial/stm32_usart.o
+ .debug_info    0x00003773      0x447 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+ .debug_info    0x00003bba      0x118 build/bootloader/obj/lib/crc/crc16.o
+ .debug_info    0x00003cd2      0x12c build/bootloader/obj/lib/crc/crc32.o
 
-.debug_abbrev   0x00000000     0x1a56
+.debug_abbrev   0x00000000     0x1bdb
  .debug_abbrev  0x00000000      0x13e build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_abbrev  0x0000013e       0xdb build/bootloader/obj/bootloader/src/boot_autoboot.o
- .debug_abbrev  0x00000219      0x11c build/bootloader/obj/bootloader/src/boot_console.o
- .debug_abbrev  0x00000335      0x173 build/bootloader/obj/bootloader/src/boot_install.o
- .debug_abbrev  0x000004a8       0xb1 build/bootloader/obj/bootloader/src/boot_slot.o
- .debug_abbrev  0x00000559       0xad build/bootloader/obj/bootloader/src/boot_time.o
- .debug_abbrev  0x00000606      0x1b3 build/bootloader/obj/bootloader/src/boot_update.o
- .debug_abbrev  0x000007b9      0x175 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
- .debug_abbrev  0x0000092e      0x156 build/bootloader/obj/bootloader/src/image_loader.o
- .debug_abbrev  0x00000a84      0x1f5 build/bootloader/obj/bootloader/src/main.o
- .debug_abbrev  0x00000c79      0x15c build/bootloader/obj/bootloader/src/memtest.o
- .debug_abbrev  0x00000dd5       0xf8 build/bootloader/obj/bootloader/src/startup.o
- .debug_abbrev  0x00000ecd      0x136 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_abbrev  0x00001003      0x16f build/bootloader/obj/board/stm32f429i-disc1/console.o
- .debug_abbrev  0x00001172      0x130 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_abbrev  0x000012a2       0xd2 build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_abbrev  0x00001374      0x1d5 build/bootloader/obj/drivers/flash/stm32_flash.o
- .debug_abbrev  0x00001549      0x120 build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_abbrev  0x00001669       0xeb build/bootloader/obj/drivers/serial/stm32_usart.o
- .debug_abbrev  0x00001754      0x1bf build/bootloader/obj/lib/protocol/xmodem/xmodem.o
- .debug_abbrev  0x00001913       0x96 build/bootloader/obj/lib/crc/crc16.o
- .debug_abbrev  0x000019a9       0xad build/bootloader/obj/lib/crc/crc32.o
+ .debug_abbrev  0x00000219      0x135 build/bootloader/obj/bootloader/src/boot_console.o
+ .debug_abbrev  0x0000034e      0x173 build/bootloader/obj/bootloader/src/boot_install.o
+ .debug_abbrev  0x000004c1      0x16e build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_abbrev  0x0000062f       0xb1 build/bootloader/obj/bootloader/src/boot_slot.o
+ .debug_abbrev  0x000006e0       0xad build/bootloader/obj/bootloader/src/boot_time.o
+ .debug_abbrev  0x0000078d      0x1ce build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_abbrev  0x0000095b      0x175 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+ .debug_abbrev  0x00000ad0      0x139 build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_abbrev  0x00000c09      0x1f5 build/bootloader/obj/bootloader/src/main.o
+ .debug_abbrev  0x00000dfe      0x15c build/bootloader/obj/bootloader/src/memtest.o
+ .debug_abbrev  0x00000f5a       0xf8 build/bootloader/obj/bootloader/src/startup.o
+ .debug_abbrev  0x00001052      0x136 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_abbrev  0x00001188      0x16f build/bootloader/obj/board/stm32f429i-disc1/console.o
+ .debug_abbrev  0x000012f7      0x130 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_abbrev  0x00001427       0xd2 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_abbrev  0x000014f9      0x1d5 build/bootloader/obj/drivers/flash/stm32_flash.o
+ .debug_abbrev  0x000016ce      0x120 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_abbrev  0x000017ee       0xeb build/bootloader/obj/drivers/serial/stm32_usart.o
+ .debug_abbrev  0x000018d9      0x1bf build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+ .debug_abbrev  0x00001a98       0x96 build/bootloader/obj/lib/crc/crc16.o
+ .debug_abbrev  0x00001b2e       0xad build/bootloader/obj/lib/crc/crc32.o
 
-.debug_aranges  0x00000000      0x520
+.debug_aranges  0x00000000      0x580
  .debug_aranges
                 0x00000000       0x48 build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_aranges
@@ -851,44 +893,46 @@ LOAD linker stubs
  .debug_aranges
                 0x00000090       0x48 build/bootloader/obj/bootloader/src/boot_install.o
  .debug_aranges
-                0x000000d8       0x20 build/bootloader/obj/bootloader/src/boot_slot.o
+                0x000000d8       0x58 build/bootloader/obj/bootloader/src/boot_metadata.o
  .debug_aranges
-                0x000000f8       0x30 build/bootloader/obj/bootloader/src/boot_time.o
+                0x00000130       0x20 build/bootloader/obj/bootloader/src/boot_slot.o
  .debug_aranges
-                0x00000128       0x38 build/bootloader/obj/bootloader/src/boot_update.o
+                0x00000150       0x30 build/bootloader/obj/bootloader/src/boot_time.o
  .debug_aranges
-                0x00000160       0x38 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+                0x00000180       0x40 build/bootloader/obj/bootloader/src/boot_update.o
  .debug_aranges
-                0x00000198       0x48 build/bootloader/obj/bootloader/src/image_loader.o
+                0x000001c0       0x38 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
  .debug_aranges
-                0x000001e0       0x68 build/bootloader/obj/bootloader/src/main.o
+                0x000001f8       0x48 build/bootloader/obj/bootloader/src/image_loader.o
  .debug_aranges
-                0x00000248       0x70 build/bootloader/obj/bootloader/src/memtest.o
+                0x00000240       0x68 build/bootloader/obj/bootloader/src/main.o
  .debug_aranges
-                0x000002b8       0x28 build/bootloader/obj/bootloader/src/startup.o
+                0x000002a8       0x70 build/bootloader/obj/bootloader/src/memtest.o
  .debug_aranges
-                0x000002e0       0x30 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x00000318       0x28 build/bootloader/obj/bootloader/src/startup.o
  .debug_aranges
-                0x00000310       0x50 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x00000340       0x30 build/bootloader/obj/board/stm32f429i-disc1/board.o
  .debug_aranges
-                0x00000360       0x28 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x00000370       0x50 build/bootloader/obj/board/stm32f429i-disc1/console.o
  .debug_aranges
-                0x00000388       0x20 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+                0x000003c0       0x28 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
  .debug_aranges
-                0x000003a8       0x80 build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x000003e8       0x20 build/bootloader/obj/drivers/clk/stm32f4_clk.o
  .debug_aranges
-                0x00000428       0x38 build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x00000408       0x80 build/bootloader/obj/drivers/flash/stm32_flash.o
  .debug_aranges
-                0x00000460       0x40 build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x00000488       0x38 build/bootloader/obj/drivers/ram/stm32_sdram.o
  .debug_aranges
-                0x000004a0       0x40 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+                0x000004c0       0x40 build/bootloader/obj/drivers/serial/stm32_usart.o
  .debug_aranges
-                0x000004e0       0x20 build/bootloader/obj/lib/crc/crc16.o
+                0x00000500       0x40 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
  .debug_aranges
-                0x00000500       0x20 build/bootloader/obj/lib/crc/crc32.o
+                0x00000540       0x20 build/bootloader/obj/lib/crc/crc16.o
+ .debug_aranges
+                0x00000560       0x20 build/bootloader/obj/lib/crc/crc32.o
 
 .debug_rnglists
-                0x00000000      0x39d
+                0x00000000      0x3e1
  .debug_rnglists
                 0x00000000       0x31 build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_rnglists
@@ -898,43 +942,45 @@ LOAD linker stubs
  .debug_rnglists
                 0x0000005f       0x32 build/bootloader/obj/bootloader/src/boot_install.o
  .debug_rnglists
-                0x00000091       0x13 build/bootloader/obj/bootloader/src/boot_slot.o
+                0x00000091       0x3e build/bootloader/obj/bootloader/src/boot_metadata.o
  .debug_rnglists
-                0x000000a4       0x1f build/bootloader/obj/bootloader/src/boot_time.o
+                0x000000cf       0x13 build/bootloader/obj/bootloader/src/boot_slot.o
  .debug_rnglists
-                0x000000c3       0x28 build/bootloader/obj/bootloader/src/boot_update.o
+                0x000000e2       0x1f build/bootloader/obj/bootloader/src/boot_time.o
  .debug_rnglists
-                0x000000eb       0x26 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+                0x00000101       0x2e build/bootloader/obj/bootloader/src/boot_update.o
  .debug_rnglists
-                0x00000111       0x33 build/bootloader/obj/bootloader/src/image_loader.o
+                0x0000012f       0x26 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
  .debug_rnglists
-                0x00000144       0x4c build/bootloader/obj/bootloader/src/main.o
+                0x00000155       0x33 build/bootloader/obj/bootloader/src/image_loader.o
  .debug_rnglists
-                0x00000190       0x54 build/bootloader/obj/bootloader/src/memtest.o
+                0x00000188       0x4c build/bootloader/obj/bootloader/src/main.o
  .debug_rnglists
-                0x000001e4       0x19 build/bootloader/obj/bootloader/src/startup.o
+                0x000001d4       0x54 build/bootloader/obj/bootloader/src/memtest.o
  .debug_rnglists
-                0x000001fd       0x20 build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x00000228       0x19 build/bootloader/obj/bootloader/src/startup.o
  .debug_rnglists
-                0x0000021d       0x38 build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x00000241       0x20 build/bootloader/obj/board/stm32f429i-disc1/board.o
  .debug_rnglists
-                0x00000255       0x19 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x00000261       0x38 build/bootloader/obj/board/stm32f429i-disc1/console.o
  .debug_rnglists
-                0x0000026e       0x14 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+                0x00000299       0x19 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
  .debug_rnglists
-                0x00000282       0x6b build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x000002b2       0x14 build/bootloader/obj/drivers/clk/stm32f4_clk.o
  .debug_rnglists
-                0x000002ed       0x26 build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x000002c6       0x6b build/bootloader/obj/drivers/flash/stm32_flash.o
  .debug_rnglists
-                0x00000313       0x2b build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x00000331       0x26 build/bootloader/obj/drivers/ram/stm32_sdram.o
  .debug_rnglists
-                0x0000033e       0x39 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+                0x00000357       0x2b build/bootloader/obj/drivers/serial/stm32_usart.o
  .debug_rnglists
-                0x00000377       0x13 build/bootloader/obj/lib/crc/crc16.o
+                0x00000382       0x39 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
  .debug_rnglists
-                0x0000038a       0x13 build/bootloader/obj/lib/crc/crc32.o
+                0x000003bb       0x13 build/bootloader/obj/lib/crc/crc16.o
+ .debug_rnglists
+                0x000003ce       0x13 build/bootloader/obj/lib/crc/crc32.o
 
-.debug_macro    0x00000000     0x378a
+.debug_macro    0x00000000     0x389a
  .debug_macro   0x00000000       0xb8 build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_macro   0x000000b8      0xaba build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_macro   0x00000b72      0x34e build/bootloader/obj/bootloader/src/app_handoff.o
@@ -949,95 +995,98 @@ LOAD linker stubs
  .debug_macro   0x00001426      0x24a build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_macro   0x00001670      0x130 build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_macro   0x000017a0       0x22 build/bootloader/obj/bootloader/src/app_handoff.o
- .debug_macro   0x000017c2       0x82 build/bootloader/obj/bootloader/src/app_handoff.o
- .debug_macro   0x00001844       0x51 build/bootloader/obj/bootloader/src/boot_autoboot.o
- .debug_macro   0x00001895       0x51 build/bootloader/obj/bootloader/src/boot_console.o
- .debug_macro   0x000018e6       0x86 build/bootloader/obj/bootloader/src/boot_install.o
- .debug_macro   0x0000196c      0x190 build/bootloader/obj/bootloader/src/boot_install.o
- .debug_macro   0x00001afc       0x6a build/bootloader/obj/bootloader/src/boot_slot.o
- .debug_macro   0x00001b66       0x5e build/bootloader/obj/bootloader/src/boot_time.o
- .debug_macro   0x00001bc4       0x1c build/bootloader/obj/bootloader/src/boot_time.o
- .debug_macro   0x00001be0       0x52 build/bootloader/obj/bootloader/src/boot_time.o
- .debug_macro   0x00001c32       0xe6 build/bootloader/obj/bootloader/src/boot_update.o
- .debug_macro   0x00001d18       0x46 build/bootloader/obj/bootloader/src/boot_update.o
- .debug_macro   0x00001d5e       0x10 build/bootloader/obj/bootloader/src/boot_update.o
- .debug_macro   0x00001d6e       0x63 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
- .debug_macro   0x00001dd1       0x8b build/bootloader/obj/bootloader/src/image_loader.o
- .debug_macro   0x00001e5c      0x108 build/bootloader/obj/bootloader/src/main.o
- .debug_macro   0x00001f64       0xdc build/bootloader/obj/bootloader/src/main.o
- .debug_macro   0x00002040      0x12a build/bootloader/obj/bootloader/src/main.o
- .debug_macro   0x0000216a       0x88 build/bootloader/obj/bootloader/src/main.o
- .debug_macro   0x000021f2       0x37 build/bootloader/obj/bootloader/src/memtest.o
- .debug_macro   0x00002229       0x72 build/bootloader/obj/bootloader/src/startup.o
- .debug_macro   0x0000229b       0xb7 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_macro   0x00002352      0x244 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_macro   0x00002596      0x512 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_macro   0x00002aa8       0xbe build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_macro   0x00002b66      0x196 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_macro   0x00002cfc      0x17e build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_macro   0x00002e7a       0x62 build/bootloader/obj/board/stm32f429i-disc1/console.o
- .debug_macro   0x00002edc       0x9d build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_macro   0x00002f79      0x12a build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_macro   0x000030a3       0x10 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_macro   0x000030b3       0x85 build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_macro   0x00003138       0x82 build/bootloader/obj/drivers/flash/stm32_flash.o
- .debug_macro   0x000031ba      0x190 build/bootloader/obj/drivers/flash/stm32_flash.o
- .debug_macro   0x0000334a       0x90 build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_macro   0x000033da      0x124 build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_macro   0x000034fe       0x67 build/bootloader/obj/drivers/serial/stm32_usart.o
- .debug_macro   0x00003565      0x160 build/bootloader/obj/drivers/serial/stm32_usart.o
- .debug_macro   0x000036c5       0x57 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
- .debug_macro   0x0000371c       0x37 build/bootloader/obj/lib/crc/crc16.o
- .debug_macro   0x00003753       0x37 build/bootloader/obj/lib/crc/crc32.o
+ .debug_macro   0x000017c2       0x94 build/bootloader/obj/bootloader/src/app_handoff.o
+ .debug_macro   0x00001856       0x51 build/bootloader/obj/bootloader/src/boot_autoboot.o
+ .debug_macro   0x000018a7       0x69 build/bootloader/obj/bootloader/src/boot_console.o
+ .debug_macro   0x00001910       0x86 build/bootloader/obj/bootloader/src/boot_install.o
+ .debug_macro   0x00001996      0x190 build/bootloader/obj/bootloader/src/boot_install.o
+ .debug_macro   0x00001b26       0xc6 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_macro   0x00001bec       0x6a build/bootloader/obj/bootloader/src/boot_slot.o
+ .debug_macro   0x00001c56       0x5e build/bootloader/obj/bootloader/src/boot_time.o
+ .debug_macro   0x00001cb4       0x1c build/bootloader/obj/bootloader/src/boot_time.o
+ .debug_macro   0x00001cd0       0x52 build/bootloader/obj/bootloader/src/boot_time.o
+ .debug_macro   0x00001d22       0xea build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_macro   0x00001e0c       0x46 build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_macro   0x00001e52       0x10 build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_macro   0x00001e62       0x63 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+ .debug_macro   0x00001ec5       0x8b build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_macro   0x00001f50      0x112 build/bootloader/obj/bootloader/src/main.o
+ .debug_macro   0x00002062       0xdc build/bootloader/obj/bootloader/src/main.o
+ .debug_macro   0x0000213e      0x12a build/bootloader/obj/bootloader/src/main.o
+ .debug_macro   0x00002268       0x9a build/bootloader/obj/bootloader/src/main.o
+ .debug_macro   0x00002302       0x37 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_macro   0x00002339       0x72 build/bootloader/obj/bootloader/src/startup.o
+ .debug_macro   0x000023ab       0xb7 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_macro   0x00002462      0x244 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_macro   0x000026a6      0x512 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_macro   0x00002bb8       0xbe build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_macro   0x00002c76      0x196 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_macro   0x00002e0c      0x17e build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_macro   0x00002f8a       0x62 build/bootloader/obj/board/stm32f429i-disc1/console.o
+ .debug_macro   0x00002fec       0x9d build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_macro   0x00003089      0x12a build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_macro   0x000031b3       0x10 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_macro   0x000031c3       0x85 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_macro   0x00003248       0x82 build/bootloader/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x000032ca      0x190 build/bootloader/obj/drivers/flash/stm32_flash.o
+ .debug_macro   0x0000345a       0x90 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_macro   0x000034ea      0x124 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_macro   0x0000360e       0x67 build/bootloader/obj/drivers/serial/stm32_usart.o
+ .debug_macro   0x00003675      0x160 build/bootloader/obj/drivers/serial/stm32_usart.o
+ .debug_macro   0x000037d5       0x57 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+ .debug_macro   0x0000382c       0x37 build/bootloader/obj/lib/crc/crc16.o
+ .debug_macro   0x00003863       0x37 build/bootloader/obj/lib/crc/crc32.o
 
-.debug_line     0x00000000     0x3aac
+.debug_line     0x00000000     0x402d
  .debug_line    0x00000000      0x2e5 build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_line    0x000002e5      0x18a build/bootloader/obj/bootloader/src/boot_autoboot.o
- .debug_line    0x0000046f      0x1f5 build/bootloader/obj/bootloader/src/boot_console.o
- .debug_line    0x00000664      0x32e build/bootloader/obj/bootloader/src/boot_install.o
- .debug_line    0x00000992      0x1b1 build/bootloader/obj/bootloader/src/boot_slot.o
- .debug_line    0x00000b43      0x1bf build/bootloader/obj/bootloader/src/boot_time.o
- .debug_line    0x00000d02      0x343 build/bootloader/obj/bootloader/src/boot_update.o
- .debug_line    0x00001045      0x22d build/bootloader/obj/bootloader/src/boot_xmodem_io.o
- .debug_line    0x00001272      0x36b build/bootloader/obj/bootloader/src/image_loader.o
- .debug_line    0x000015dd      0x45f build/bootloader/obj/bootloader/src/main.o
- .debug_line    0x00001a3c      0x437 build/bootloader/obj/bootloader/src/memtest.o
- .debug_line    0x00001e73      0x1a6 build/bootloader/obj/bootloader/src/startup.o
- .debug_line    0x00002019      0x28f build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_line    0x000022a8      0x2c8 build/bootloader/obj/board/stm32f429i-disc1/console.o
- .debug_line    0x00002570      0x1fc build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_line    0x0000276c      0x2fa build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_line    0x00002a66      0x4ff build/bootloader/obj/drivers/flash/stm32_flash.o
- .debug_line    0x00002f65      0x301 build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_line    0x00003266      0x23a build/bootloader/obj/drivers/serial/stm32_usart.o
- .debug_line    0x000034a0      0x3c3 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
- .debug_line    0x00003863      0x123 build/bootloader/obj/lib/crc/crc16.o
- .debug_line    0x00003986      0x126 build/bootloader/obj/lib/crc/crc32.o
+ .debug_line    0x0000046f      0x245 build/bootloader/obj/bootloader/src/boot_console.o
+ .debug_line    0x000006b4      0x32e build/bootloader/obj/bootloader/src/boot_install.o
+ .debug_line    0x000009e2      0x464 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_line    0x00000e46      0x1b1 build/bootloader/obj/bootloader/src/boot_slot.o
+ .debug_line    0x00000ff7      0x1bf build/bootloader/obj/bootloader/src/boot_time.o
+ .debug_line    0x000011b6      0x3bb build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_line    0x00001571      0x22d build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+ .debug_line    0x0000179e      0x36b build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_line    0x00001b09      0x4b4 build/bootloader/obj/bootloader/src/main.o
+ .debug_line    0x00001fbd      0x437 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_line    0x000023f4      0x1a6 build/bootloader/obj/bootloader/src/startup.o
+ .debug_line    0x0000259a      0x28f build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_line    0x00002829      0x2c8 build/bootloader/obj/board/stm32f429i-disc1/console.o
+ .debug_line    0x00002af1      0x1fc build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_line    0x00002ced      0x2fa build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_line    0x00002fe7      0x4ff build/bootloader/obj/drivers/flash/stm32_flash.o
+ .debug_line    0x000034e6      0x301 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_line    0x000037e7      0x23a build/bootloader/obj/drivers/serial/stm32_usart.o
+ .debug_line    0x00003a21      0x3c3 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+ .debug_line    0x00003de4      0x123 build/bootloader/obj/lib/crc/crc16.o
+ .debug_line    0x00003f07      0x126 build/bootloader/obj/lib/crc/crc32.o
 
-.debug_str      0x00000000     0xba90
- .debug_str     0x00000000     0xba90 build/bootloader/obj/bootloader/src/app_handoff.o
-                               0x6422 (size before relaxing)
- .debug_str     0x0000ba90     0x39cd build/bootloader/obj/bootloader/src/boot_autoboot.o
- .debug_str     0x0000ba90     0x39eb build/bootloader/obj/bootloader/src/boot_console.o
- .debug_str     0x0000ba90     0x53a1 build/bootloader/obj/bootloader/src/boot_install.o
- .debug_str     0x0000ba90     0x4fe9 build/bootloader/obj/bootloader/src/boot_slot.o
- .debug_str     0x0000ba90     0x3ce3 build/bootloader/obj/bootloader/src/boot_time.o
- .debug_str     0x0000ba90     0x570c build/bootloader/obj/bootloader/src/boot_update.o
- .debug_str     0x0000ba90     0x3eb5 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
- .debug_str     0x0000ba90     0x51f4 build/bootloader/obj/bootloader/src/image_loader.o
- .debug_str     0x0000ba90     0x5a11 build/bootloader/obj/bootloader/src/main.o
- .debug_str     0x0000ba90     0x3a09 build/bootloader/obj/bootloader/src/memtest.o
- .debug_str     0x0000ba90     0x4e0c build/bootloader/obj/bootloader/src/startup.o
- .debug_str     0x0000ba90     0x7741 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_str     0x0000ba90     0x4a11 build/bootloader/obj/board/stm32f429i-disc1/console.o
- .debug_str     0x0000ba90     0x7238 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_str     0x0000ba90     0x6c1c build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_str     0x0000ba90     0x551b build/bootloader/obj/drivers/flash/stm32_flash.o
- .debug_str     0x0000ba90     0x4e6a build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_str     0x0000ba90     0x4c7e build/bootloader/obj/drivers/serial/stm32_usart.o
- .debug_str     0x0000ba90     0x4002 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
- .debug_str     0x0000ba90     0x3c53 build/bootloader/obj/lib/crc/crc16.o
- .debug_str     0x0000ba90     0x3c54 build/bootloader/obj/lib/crc/crc32.o
+.debug_str      0x00000000     0xbd44
+ .debug_str     0x00000000     0xbd44 build/bootloader/obj/bootloader/src/app_handoff.o
+                               0x6490 (size before relaxing)
+ .debug_str     0x0000bd44     0x39cd build/bootloader/obj/bootloader/src/boot_autoboot.o
+ .debug_str     0x0000bd44     0x3ac7 build/bootloader/obj/bootloader/src/boot_console.o
+ .debug_str     0x0000bd44     0x540f build/bootloader/obj/bootloader/src/boot_install.o
+ .debug_str     0x0000bd44     0x5440 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_str     0x0000bd44     0x5057 build/bootloader/obj/bootloader/src/boot_slot.o
+ .debug_str     0x0000bd44     0x3ce3 build/bootloader/obj/bootloader/src/boot_time.o
+ .debug_str     0x0000bd44     0x5815 build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_str     0x0000bd44     0x3eb5 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+ .debug_str     0x0000bd44     0x5262 build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_str     0x0000bd44     0x5a91 build/bootloader/obj/bootloader/src/main.o
+ .debug_str     0x0000bd44     0x3a09 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_str     0x0000bd44     0x4e0c build/bootloader/obj/bootloader/src/startup.o
+ .debug_str     0x0000bd44     0x7741 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_str     0x0000bd44     0x4a11 build/bootloader/obj/board/stm32f429i-disc1/console.o
+ .debug_str     0x0000bd44     0x7238 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_str     0x0000bd44     0x6c1c build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_str     0x0000bd44     0x551b build/bootloader/obj/drivers/flash/stm32_flash.o
+ .debug_str     0x0000bd44     0x4e6a build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_str     0x0000bd44     0x4c7e build/bootloader/obj/drivers/serial/stm32_usart.o
+ .debug_str     0x0000bd44     0x4002 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+ .debug_str     0x0000bd44     0x3c53 build/bootloader/obj/lib/crc/crc16.o
+ .debug_str     0x0000bd44     0x3c54 build/bootloader/obj/lib/crc/crc32.o
 
 .comment        0x00000000       0x45
  .comment       0x00000000       0x45 build/bootloader/obj/bootloader/src/app_handoff.o
@@ -1045,6 +1094,7 @@ LOAD linker stubs
  .comment       0x00000045       0x46 build/bootloader/obj/bootloader/src/boot_autoboot.o
  .comment       0x00000045       0x46 build/bootloader/obj/bootloader/src/boot_console.o
  .comment       0x00000045       0x46 build/bootloader/obj/bootloader/src/boot_install.o
+ .comment       0x00000045       0x46 build/bootloader/obj/bootloader/src/boot_metadata.o
  .comment       0x00000045       0x46 build/bootloader/obj/bootloader/src/boot_slot.o
  .comment       0x00000045       0x46 build/bootloader/obj/bootloader/src/boot_time.o
  .comment       0x00000045       0x46 build/bootloader/obj/bootloader/src/boot_update.o
@@ -1075,62 +1125,65 @@ LOAD linker stubs
  .ARM.attributes
                 0x0000008a       0x2e build/bootloader/obj/bootloader/src/boot_install.o
  .ARM.attributes
-                0x000000b8       0x2e build/bootloader/obj/bootloader/src/boot_slot.o
+                0x000000b8       0x2e build/bootloader/obj/bootloader/src/boot_metadata.o
  .ARM.attributes
-                0x000000e6       0x2e build/bootloader/obj/bootloader/src/boot_time.o
+                0x000000e6       0x2e build/bootloader/obj/bootloader/src/boot_slot.o
  .ARM.attributes
-                0x00000114       0x2e build/bootloader/obj/bootloader/src/boot_update.o
+                0x00000114       0x2e build/bootloader/obj/bootloader/src/boot_time.o
  .ARM.attributes
-                0x00000142       0x2e build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+                0x00000142       0x2e build/bootloader/obj/bootloader/src/boot_update.o
  .ARM.attributes
-                0x00000170       0x2e build/bootloader/obj/bootloader/src/image_loader.o
+                0x00000170       0x2e build/bootloader/obj/bootloader/src/boot_xmodem_io.o
  .ARM.attributes
-                0x0000019e       0x2e build/bootloader/obj/bootloader/src/main.o
+                0x0000019e       0x2e build/bootloader/obj/bootloader/src/image_loader.o
  .ARM.attributes
-                0x000001cc       0x2e build/bootloader/obj/bootloader/src/memtest.o
+                0x000001cc       0x2e build/bootloader/obj/bootloader/src/main.o
  .ARM.attributes
-                0x000001fa       0x2e build/bootloader/obj/bootloader/src/startup.o
+                0x000001fa       0x2e build/bootloader/obj/bootloader/src/memtest.o
  .ARM.attributes
-                0x00000228       0x2e build/bootloader/obj/board/stm32f429i-disc1/board.o
+                0x00000228       0x2e build/bootloader/obj/bootloader/src/startup.o
  .ARM.attributes
-                0x00000256       0x2e build/bootloader/obj/board/stm32f429i-disc1/console.o
+                0x00000256       0x2e build/bootloader/obj/board/stm32f429i-disc1/board.o
  .ARM.attributes
-                0x00000284       0x2e build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+                0x00000284       0x2e build/bootloader/obj/board/stm32f429i-disc1/console.o
  .ARM.attributes
-                0x000002b2       0x2e build/bootloader/obj/drivers/clk/stm32f4_clk.o
+                0x000002b2       0x2e build/bootloader/obj/board/stm32f429i-disc1/sdram.o
  .ARM.attributes
-                0x000002e0       0x2e build/bootloader/obj/drivers/flash/stm32_flash.o
+                0x000002e0       0x2e build/bootloader/obj/drivers/clk/stm32f4_clk.o
  .ARM.attributes
-                0x0000030e       0x2e build/bootloader/obj/drivers/ram/stm32_sdram.o
+                0x0000030e       0x2e build/bootloader/obj/drivers/flash/stm32_flash.o
  .ARM.attributes
-                0x0000033c       0x2e build/bootloader/obj/drivers/serial/stm32_usart.o
+                0x0000033c       0x2e build/bootloader/obj/drivers/ram/stm32_sdram.o
  .ARM.attributes
-                0x0000036a       0x2e build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+                0x0000036a       0x2e build/bootloader/obj/drivers/serial/stm32_usart.o
  .ARM.attributes
-                0x00000398       0x2e build/bootloader/obj/lib/crc/crc16.o
+                0x00000398       0x2e build/bootloader/obj/lib/protocol/xmodem/xmodem.o
  .ARM.attributes
-                0x000003c6       0x2e build/bootloader/obj/lib/crc/crc32.o
+                0x000003c6       0x2e build/bootloader/obj/lib/crc/crc16.o
+ .ARM.attributes
+                0x000003f4       0x2e build/bootloader/obj/lib/crc/crc32.o
 
-.debug_frame    0x00000000      0xf14
+.debug_frame    0x00000000     0x1080
  .debug_frame   0x00000000       0xcc build/bootloader/obj/bootloader/src/app_handoff.o
  .debug_frame   0x000000cc       0x34 build/bootloader/obj/bootloader/src/boot_autoboot.o
  .debug_frame   0x00000100       0x5c build/bootloader/obj/bootloader/src/boot_console.o
  .debug_frame   0x0000015c       0xf4 build/bootloader/obj/bootloader/src/boot_install.o
- .debug_frame   0x00000250       0x38 build/bootloader/obj/bootloader/src/boot_slot.o
- .debug_frame   0x00000288       0x78 build/bootloader/obj/bootloader/src/boot_time.o
- .debug_frame   0x00000300       0xa8 build/bootloader/obj/bootloader/src/boot_update.o
- .debug_frame   0x000003a8       0xa4 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
- .debug_frame   0x0000044c       0xdc build/bootloader/obj/bootloader/src/image_loader.o
- .debug_frame   0x00000528      0x15c build/bootloader/obj/bootloader/src/main.o
- .debug_frame   0x00000684      0x1b4 build/bootloader/obj/bootloader/src/memtest.o
- .debug_frame   0x00000838       0x48 build/bootloader/obj/bootloader/src/startup.o
- .debug_frame   0x00000880       0x78 build/bootloader/obj/board/stm32f429i-disc1/board.o
- .debug_frame   0x000008f8       0xfc build/bootloader/obj/board/stm32f429i-disc1/console.o
- .debug_frame   0x000009f4       0x50 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
- .debug_frame   0x00000a44       0x38 build/bootloader/obj/drivers/clk/stm32f4_clk.o
- .debug_frame   0x00000a7c      0x1e4 build/bootloader/obj/drivers/flash/stm32_flash.o
- .debug_frame   0x00000c60       0xa8 build/bootloader/obj/drivers/ram/stm32_sdram.o
- .debug_frame   0x00000d08       0xd4 build/bootloader/obj/drivers/serial/stm32_usart.o
- .debug_frame   0x00000ddc       0xc8 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
- .debug_frame   0x00000ea4       0x38 build/bootloader/obj/lib/crc/crc16.o
- .debug_frame   0x00000edc       0x38 build/bootloader/obj/lib/crc/crc32.o
+ .debug_frame   0x00000250      0x138 build/bootloader/obj/bootloader/src/boot_metadata.o
+ .debug_frame   0x00000388       0x38 build/bootloader/obj/bootloader/src/boot_slot.o
+ .debug_frame   0x000003c0       0x78 build/bootloader/obj/bootloader/src/boot_time.o
+ .debug_frame   0x00000438       0xcc build/bootloader/obj/bootloader/src/boot_update.o
+ .debug_frame   0x00000504       0xa4 build/bootloader/obj/bootloader/src/boot_xmodem_io.o
+ .debug_frame   0x000005a8       0xec build/bootloader/obj/bootloader/src/image_loader.o
+ .debug_frame   0x00000694      0x15c build/bootloader/obj/bootloader/src/main.o
+ .debug_frame   0x000007f0      0x1b4 build/bootloader/obj/bootloader/src/memtest.o
+ .debug_frame   0x000009a4       0x48 build/bootloader/obj/bootloader/src/startup.o
+ .debug_frame   0x000009ec       0x78 build/bootloader/obj/board/stm32f429i-disc1/board.o
+ .debug_frame   0x00000a64       0xfc build/bootloader/obj/board/stm32f429i-disc1/console.o
+ .debug_frame   0x00000b60       0x50 build/bootloader/obj/board/stm32f429i-disc1/sdram.o
+ .debug_frame   0x00000bb0       0x38 build/bootloader/obj/drivers/clk/stm32f4_clk.o
+ .debug_frame   0x00000be8      0x1e4 build/bootloader/obj/drivers/flash/stm32_flash.o
+ .debug_frame   0x00000dcc       0xa8 build/bootloader/obj/drivers/ram/stm32_sdram.o
+ .debug_frame   0x00000e74       0xd4 build/bootloader/obj/drivers/serial/stm32_usart.o
+ .debug_frame   0x00000f48       0xc8 build/bootloader/obj/lib/protocol/xmodem/xmodem.o
+ .debug_frame   0x00001010       0x38 build/bootloader/obj/lib/crc/crc16.o
+ .debug_frame   0x00001048       0x38 build/bootloader/obj/lib/crc/crc32.o

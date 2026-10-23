@@ -4,6 +4,8 @@
 #include "board/stm32f429i-disc1/console.h"
 
 #include "boot_console.h"
+#include "boot_metadata.h"
+#include "boot_slot.h"
 #include "boot_update.h"
 
 
@@ -61,6 +63,36 @@ boot_console_action_t boot_console_run(void)
         else if (str_equals(line, "update"))
         {
             (void)boot_update_receive();
+        }
+        else if (str_equals(line, "setslot a"))
+        {
+            boot_meta_status_t status = boot_meta_select(BOOT_SLOT_A);
+
+            if (status == BOOT_META_OK)
+            {
+                console_puts("Slot A selected. Reset to boot it.\n");
+            }
+            else
+            {
+                console_puts("Failed to select Slot A.\n");
+                console_puthex((uint32_t)status);
+                console_puts("\n");
+            }
+        }
+        else if (str_equals(line, "setslot b"))
+        {
+            boot_meta_status_t status = boot_meta_select(BOOT_SLOT_B);
+
+            if (status == BOOT_META_OK)
+            {
+                console_puts("Slot B selected. Reset to boot it.\n");
+            }
+            else
+            {
+                console_puts("Failed to select Slot B.\n");
+                console_puthex((uint32_t)status);
+                console_puts("\n");
+            }
         }
         else if (str_equals(line, ""))
         {
