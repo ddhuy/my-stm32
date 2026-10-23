@@ -1,0 +1,3 @@
+[submodule "uclinux/u-boot"]
+	path = uclinux/u-boot
+	url = https://source.denx.de/u-boot/u-boot.git
