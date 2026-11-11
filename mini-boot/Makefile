@@ -41,23 +41,29 @@ all: $(TARGET).bin
 
 $(TARGET).bin: $(TARGET).elf
 	$(OBJCOPY) -O binary $< $@
+	@echo ""
 
 $(TARGET).elf: $(OBJS) $(LDSCRIPT) board/$(BOARD)/memory.ld
 	$(CC) $(LDFLAGS) $(OBJS) -lgcc -o $@
+	@echo ""
 
 $(BUILD)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+	@echo ""
 
 $(BUILD)/%.o: %.S
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+	@echo ""
 
 flash: $(TARGET).elf
 	openocd -f $(OPENOCDCFG) -c "program $< verify reset exit"
+	@echo ""
 
 disasm: $(TARGET).elf
 	$(OBJDUMP) -d $<
+	@echo ""
 
 clean:
 	rm -rf build
