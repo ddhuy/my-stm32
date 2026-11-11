@@ -1,0 +1,6 @@
+#ifndef MACH_STM32F4_IRQS_H
+#define MACH_STM32F4_IRQS_H
+
+#define NR_IRQS 91
+
+#endif // MACH_STM32F4_IRQS_H

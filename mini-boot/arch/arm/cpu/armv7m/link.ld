@@ -1,0 +1,41 @@
+INCLUDE "memory.ld"
+
+
+ENTRY(reset_handler)
+
+
+_estack = ORIGIN(RAM) + LENGTH(RAM);
+_sidata = LOADADDR(.data);
+
+
+SECTIONS
+{
+    .isr_vector :
+    {
+        KEEP(*(.isr_vector))
+    } > FLASH
+
+    .text : ALIGN(4)
+    {
+        *(.text*)
+        *(.rodata*)
+        . = ALIGN(4);
+    } > FLASH
+
+    .data : ALIGN(4)
+    {
+        _sdata = .;
+        *(.data*)
+        . = ALIGN(4);
+        _edata = .;
+    } > RAM AT> FLASH
+
+    .bss : ALIGN(4)
+    {
+        _sbss = .;
+        *(.bss*)
+        *(COMMON)
+        . = ALIGN(4);
+        _ebss = .;
+    } > RAM
+}
