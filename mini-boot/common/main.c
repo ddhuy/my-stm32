@@ -1,4 +1,5 @@
 #include <init.h>
+#include <console.h>
 #include <types.h>
 
 
@@ -14,7 +15,17 @@ int main(void)
 {
     board_init();
 
-    for (;;) {
+    puts("\n""+-------------------------------+\n");
+    puts(    "| MINI-BOOT                     |\n");
+    puts(    "| - Board: STM32F429I-DISC1.    |\n");
+    puts(    "| - Console clock: 16000000 Hz. |\n");
+    puts(    "+-------------------------------+\n");
+
+    for (;;)
+    {
+        if (tstc())
+            putc(getc());
+
         board_led_toggle();
         delay(500000);
     }

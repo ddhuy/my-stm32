@@ -10,6 +10,7 @@ TARGET := $(BUILD)/mini-boot
 
 # Generic sources; the fragments below append their own with +=
 SRCS := common/main.c
+SRCS += common/console.c
 
 
 include board/$(BOARD)/board.mk
