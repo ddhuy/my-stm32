@@ -1,5 +1,7 @@
 #include <init.h>
 #include <console.h>
+#include <printf.h>
+#include <string.h>
 #include <types.h>
 
 
@@ -15,11 +17,13 @@ int main(void)
 {
     board_init();
 
-    puts("\n""+-------------------------------+\n");
-    puts(    "| MINI-BOOT                     |\n");
-    puts(    "| - Board: STM32F429I-DISC1.    |\n");
-    puts(    "| - Console clock: 16000000 Hz. |\n");
-    puts(    "+-------------------------------+\n");
+    board_print_info();
+
+    printf("strlen=%u strcmp=%d %d strncmp=%d\n",
+        (u32)strlen("hello"), strcmp("abc", "abc"),
+        strcmp("abc", "abd") < 0, strncmp("abc", "abd", 2));
+    printf("printf: %d %u %x [%08x] [%5d] [%05d] %p\n",
+        -42, 42U, 0xbeefU, 0xbeefU, -7, -7, (void *)main);
 
     for (;;)
     {

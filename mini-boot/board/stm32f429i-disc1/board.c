@@ -3,6 +3,7 @@
 #include <clock.h>
 #include <gpio.h>
 #include <init.h>
+#include <printf.h>
 #include <serial.h>
 
 
@@ -51,4 +52,16 @@ void board_led_toggle(void)
 {
     gpio_set_value(LED_GPIO_BASE, LED_GREEN_PIN,
                    !gpio_get_value(LED_GPIO_BASE, LED_GREEN_PIN));
+}
+
+/**
+ * 
+ */
+void board_print_info(void)
+{
+    printf("\n""+-------------------------------+\n");
+    printf(    "| MINI-BOOT                     |\n");
+    printf(    "| - Board: STM32F429I-DISC1.    |\n");
+    printf(    "| - Console clock: %u Hz. |\n", clock_get_rate(CONSOLE_UART_CLK));
+    printf(    "+-------------------------------+\n");
 }

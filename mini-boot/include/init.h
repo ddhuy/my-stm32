@@ -6,9 +6,16 @@
  */
 void board_init(void);
 
+
 /**
  * 
  */
 void board_led_toggle(void);
+
+
+/**
+ * 
+ */
+void board_print_info(void);
 
 #endif /* MINIBOOT_INIT_H */
