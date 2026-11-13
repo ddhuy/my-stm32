@@ -67,6 +67,7 @@ reset_handler:
 /*
  * HardFault: hand the exception frame to C. Bit 2 of the EXC_RETURN value
  * in lr tells which stack the core pushed the frame on.
+ */
     .global hardfault_handler
     .type   hardfault_handler, %function
     .thumb_func
@@ -76,7 +77,6 @@ hardfault_handler:
     mrseq   r0, msp
     mrsne   r0, psp
     b       hardfault_report
- */
 
 /* Unexpected exception: park here so the debugger shows where we are */
     .type   default_handler, %function
@@ -91,7 +91,6 @@ default_handler:
     .endm
 
     weak_handler nmi_handler
-    weak_handler hardfault_handler
     weak_handler memmanage_handler
     weak_handler busfault_handler
     weak_handler usagefault_handler

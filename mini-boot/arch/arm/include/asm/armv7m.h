@@ -1,0 +1,9 @@
+#ifndef MINIBOOT_ARCH_ARMV7M_H
+#define MINIBOOT_ARCH_ARMV7M_H
+
+
+#define SCB_BASE  (0xE000ED00)
+#define SCB_CFSR  (0x28)
+#define SCB_HFSR  (0x2C)
+
+#endif /* MINIBOOT_ARCH_ARMV7M_H */

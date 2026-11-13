@@ -65,3 +65,11 @@ void board_print_info(void)
     printf(    "| - Console clock: %u Hz. |\n", clock_get_rate(CONSOLE_UART_CLK));
     printf(    "+-------------------------------+\n");
 }
+
+/**
+ * 
+ */
+void board_panic(void)
+{
+    gpio_set_value(LED_GPIO_BASE, LED_RED_PIN, 1);
+}
