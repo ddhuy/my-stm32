@@ -2,6 +2,7 @@
 #include <serial.h>
 
 
+/* STM32 USART register layout */
 #define USART_SR     0x00
 #define USART_DR     0x04
 #define USART_BRR    0x08
@@ -16,7 +17,9 @@
 
 
 /**
- * 
+ * Program the baud divider, then enable the UART with its transmitter and
+ * receiver. Word length, parity and stop bits stay at their reset values,
+ * which give 8N1.
  */
 void serial_init(
     uintptr_t base,
@@ -33,7 +36,8 @@ void serial_init(
 
 
 /**
- * 
+ * Wait until the transmit data register is empty, then write the character
+ * to it.
  */
 void serial_putc(
     uintptr_t base,
@@ -47,7 +51,7 @@ void serial_putc(
 
 
 /**
- * 
+ * Wait for a received byte and read it. Reading DR also clears RXNE.
  */
 int serial_getc(
     uintptr_t base
@@ -60,7 +64,7 @@ int serial_getc(
 
 
 /**
- * 
+ * RXNE is set while a received byte is waiting in DR.
  */
 int serial_tstc(
     uintptr_t base

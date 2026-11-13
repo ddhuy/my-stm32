@@ -8,7 +8,9 @@
 
 
 /**
- * 
+ * Route the console pins to the UART, start the UART, and hand it to the
+ * console layer. The order matters: each clock before the registers it
+ * feeds, and serial_init() before console_init().
  */
 static void console_setup(void)
 {
@@ -27,7 +29,7 @@ static void console_setup(void)
 
 
 /**
- * 
+ * Both user LEDs as outputs, switched off.
  */
 static void led_init(void)
 {
@@ -37,7 +39,8 @@ static void led_init(void)
 }
 
 /**
- * 
+ * See init.h. The console comes last, so everything after this call can
+ * print.
  */
 void board_init(void)
 {
@@ -46,7 +49,7 @@ void board_init(void)
 }
 
 /**
- * 
+ * Heartbeat on the green LED.
  */
 void board_led_toggle(void)
 {
@@ -55,7 +58,8 @@ void board_led_toggle(void)
 }
 
 /**
- * 
+ * Boot banner. The board prints it because only the board knows which clock
+ * feeds the console.
  */
 void board_print_info(void)
 {
@@ -67,7 +71,7 @@ void board_print_info(void)
 }
 
 /**
- * 
+ * Red LED on, and it stays on: panic() never returns.
  */
 void board_panic(void)
 {

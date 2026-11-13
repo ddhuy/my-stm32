@@ -4,7 +4,7 @@
 
 
 /**
- * 
+ * Last resort: report, light the error LED through the board hook, and halt.
  */
 void panic(const char *msg)
 {

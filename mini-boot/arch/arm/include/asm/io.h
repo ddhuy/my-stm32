@@ -18,7 +18,7 @@ static inline u32 readl(uintptr_t addr)
 }
 
 /**
- * 
+ * Write a 32-bit value to a device register.
  */
 static inline void writel(u32 val, uintptr_t addr)
 {
@@ -34,7 +34,7 @@ static inline void clrsetbits(uintptr_t addr, u32 clr, u32 set)
 }
 
 /**
- * 
+ * Set the bits in 'set' and leave the others unchanged.
  */
 static inline void setbits(uintptr_t addr, u32 set)
 {
@@ -42,7 +42,7 @@ static inline void setbits(uintptr_t addr, u32 set)
 }
 
 /**
- * 
+ * Clear the bits in 'clr' and leave the others unchanged.
  */
 static inline void clrbits(uintptr_t addr, u32 clr)
 {

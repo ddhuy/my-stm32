@@ -8,7 +8,8 @@
 
 
 /**
- * 
+ * Output 'count' copies of 'pad'; nothing if 'count' is zero or negative.
+ * Returns the number of characters written.
  */
 static int print_pad(
     char pad,
@@ -24,7 +25,8 @@ static int print_pad(
 
 
 /**
- * 
+ * Output a string, right-aligned in 'width' columns. Returns the number of
+ * characters written.
  */
 static int print_str(
     const char *s,
@@ -40,7 +42,9 @@ static int print_str(
 
 
 /**
- * 
+ * Output 'val' in the given base, right-aligned in 'width' columns and
+ * padded with 'pad'. For a negative number the caller passes the magnitude
+ * in 'val' and sets 'negative'. Returns the number of characters written.
  */
 static int print_num(
     u32 val,
@@ -81,7 +85,7 @@ static int print_num(
 
 
 /**
- * 
+ * See printf.h for the supported conversions.
  */
 int printf(
     const char *fmt,

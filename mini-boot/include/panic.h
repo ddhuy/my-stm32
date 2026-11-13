@@ -3,7 +3,8 @@
 
 
 /**
- * 
+ * Print the message, signal the error on the board, and stop for good. Never
+ * returns.
  */
 void panic(
     const char *msg

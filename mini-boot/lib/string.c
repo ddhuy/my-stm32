@@ -2,7 +2,8 @@
 
 
 /**
- * 
+ * The compiler may emit calls to this on its own (to zero a struct, for
+ * example), so it must keep the standard name and signature.
  */
 void  *memset(
     void *dst, 
@@ -20,7 +21,7 @@ void  *memset(
 
 
 /**
- * 
+ * As with memset(), the compiler may call this itself, for struct copies.
  */
 void  *memcpy(
     void *dst, 
@@ -39,7 +40,7 @@ void  *memcpy(
 
 
 /**
- * 
+ * Count characters up to the terminating zero.
  */
 size_t strlen(
     const char *s
@@ -55,7 +56,8 @@ size_t strlen(
 
 
 /**
- * 
+ * Stops at the first difference or at the end of 'a'. Bytes are compared as
+ * unsigned, so the result does not depend on whether char is signed.
  */
 int strcmp(
     const char *a, 
@@ -73,7 +75,8 @@ int strcmp(
 
 
 /**
- * 
+ * As strcmp(), stopping after 'n' characters. Reaching the limit means the
+ * strings are equal as far as asked.
  */
 int strncmp(
     const char *a, 

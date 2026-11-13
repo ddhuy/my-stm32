@@ -5,7 +5,7 @@
 
 
 /**
- * 
+ * Fill the first 'n' bytes of 'dst' with the byte 'c'. Returns 'dst'.
  */
 void  *memset(
     void *dst, 
@@ -15,7 +15,8 @@ void  *memset(
 
 
 /**
- * 
+ * Copy 'n' bytes from 'src' to 'dst'. The two areas must not overlap.
+ * Returns 'dst'.
  */
 void  *memcpy(
     void *dst, 
@@ -25,7 +26,7 @@ void  *memcpy(
 
 
 /**
- * 
+ * Length of the string 's', not counting the terminating zero.
  */
 size_t strlen(
     const char *s
@@ -33,7 +34,8 @@ size_t strlen(
 
 
 /**
- * 
+ * Compare two strings. Returns 0 if they are equal, a negative value if 'a'
+ * sorts before 'b', a positive value if it sorts after.
  */
 int strcmp(
     const char *a, 
@@ -42,7 +44,7 @@ int strcmp(
 
 
 /**
- * 
+ * Like strcmp(), but compares at most 'n' characters.
  */
 int strncmp(
     const char *a, 

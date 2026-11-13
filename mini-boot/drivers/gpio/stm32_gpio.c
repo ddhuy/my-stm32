@@ -44,7 +44,7 @@
 #define GPIO_AFR_AF(pin, af)    ((u32)(af) << GPIO_AFR_SHIFT(pin))
 
 /**
- * 
+ * Drive the pin high or low.
  */
 void gpio_set_value(
     uintptr_t base,
@@ -57,7 +57,8 @@ void gpio_set_value(
 }
 
 /**
- * 
+ * Read the level from the input data register. This works for an output pin
+ * too, which is how a caller can toggle one.
  */
 int gpio_get_value(
     uintptr_t base,
@@ -67,7 +68,7 @@ int gpio_get_value(
 }
 
 /**
- * 
+ * Switch the pin to output mode with a defined starting level.
  */
 void gpio_direction_output(
     uintptr_t base,
@@ -82,7 +83,8 @@ void gpio_direction_output(
 }
 
 /**
- * 
+ * Connect the pin to an on-chip peripheral (UART, SPI, ...) instead of
+ * driving it as a plain GPIO.
  */
 void gpio_set_alternative(
     uintptr_t base,
