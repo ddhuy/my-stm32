@@ -1,5 +1,6 @@
 #include <init.h>
 #include <console.h>
+#include <malloc.h>
 #include <printf.h>
 #include <string.h>
 #include <types.h>
@@ -24,6 +25,11 @@ int main(void)
         strcmp("abc", "abd") < 0, strncmp("abc", "abd", 2));
     printf("printf: %d %u %x [%08x] [%5d] [%05d] %p\n",
         -42, 42U, 0xbeefU, 0xbeefU, -7, -7, (void *)main);
+
+    u32 *a = malloc(sizeof(*a));
+    u32 *b = calloc(4, sizeof(*b));
+    printf("malloc: a=%p b=%p b[3]=%u big=%p\n",
+        (void *)a, (void *)b, b[3], malloc(1024 * 1024));
 
     for (;;)
     {

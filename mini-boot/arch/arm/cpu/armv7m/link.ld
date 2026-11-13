@@ -38,4 +38,18 @@ SECTIONS
         . = ALIGN(4);
         _ebss = .;
     } > RAM
+
+    /*
+     * malloc() area: no contents in the image (NOLOAD). The size comes from
+     * the board's memory.ld. The stack grows down from _estack towards it.
+     */
+    .heap (NOLOAD) : ALIGN(8)
+    {
+        _sheap = .;
+        . += _heap_size;
+        _eheap = .;
+    } > RAM
 }
+
+/* Fail the link if the heap and the reserved stack do not both fit in RAM */
+ASSERT(_eheap <= _estack - _stack_size, "RAM too small for heap & stack");
