@@ -24,11 +24,16 @@ void *malloc(
 )
 {
     u8 *ptr = heap_next;
+    size_t avail = (size_t) (_eheap - heap_next);
+
+    /* Reject a huge size before rounding: the addition below would wrap */
+    if ( size > avail )
+        return NULL;
 
     /* Round up the size to the nearest multiple of MALLOC_ALIGN */
     size = (size + MALLOC_ALIGN - 1) & ~(MALLOC_ALIGN - 1);
     /* Not enough room left in the heap */
-    if ( size > (size_t) (_eheap - heap_next) )
+    if ( size > avail )
         return NULL;
 
     heap_next = heap_next + size;
