@@ -1,5 +1,6 @@
 #include <asm/io.h>
 #include <serial.h>
+#include <dm/driver.h>
 
 
 /* STM32 USART register layout */
@@ -72,3 +73,14 @@ int serial_tstc(
 {
     return (readl(base + USART_SR) & USART_SR_RXNE) != 0;
 }
+
+
+/**
+ * Driver model entry. Only the name and the uclass so far; probe and the
+ * ops table come when the functions above are converted.
+ */
+DM_DRIVER(stm32_serial) = {
+    .name = "stm32_serial",
+    .id   = UCLASS_SERIAL,
+    .priv_auto = 16,
+};

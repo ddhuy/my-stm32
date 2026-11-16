@@ -13,6 +13,12 @@ SRCS := common/main.c
 
 SRCS += common/console.c
 SRCS += common/panic.c
+
+SRCS += drivers/core/device.c
+SRCS += drivers/core/driver.c
+SRCS += drivers/core/root.c
+SRCS += drivers/core/uclass.c
+
 SRCS += lib/malloc.c
 SRCS += lib/printf.c
 SRCS += lib/string.c

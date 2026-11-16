@@ -1,9 +1,9 @@
 #include <init.h>
-#include <console.h>
-#include <malloc.h>
 #include <printf.h>
-#include <string.h>
 #include <types.h>
+#include <dm/driver.h>
+#include <dm/root.h>
+#include <dm/uclass.h>
 
 
 /* Crude delay; replaced once there is a timer */
@@ -20,22 +20,23 @@ int main(void)
 
     board_print_info();
 
-    printf("strlen=%u strcmp=%d %d strncmp=%d\n",
-        (u32)strlen("hello"), strcmp("abc", "abc"),
-        strcmp("abc", "abd") < 0, strncmp("abc", "abd", 2));
-    printf("printf: %d %u %x [%08x] [%5d] [%05d] %p\n",
-        -42, 42U, 0xbeefU, 0xbeefU, -7, -7, (void *)main);
+    driver_print_list();
 
-    u32 *a = malloc(sizeof(*a));
-    u32 *b = calloc(4, sizeof(*b));
-    printf("malloc: a=%p b=%p b[3]=%u big=%p\n",
-        (void *)a, (void *)b, b[3], malloc(1024 * 1024));
+    printf("find STM32 GPIO: %p\n",
+        (void *) driver_find("stm32_gpio")
+    );
+    printf("find STM32 SERIAL: %p\n",
+        (void *) driver_find("stm32_serial")
+    );
+    printf("find STM32 SPI: %p\n",
+        (void *) driver_find("stm32_spi")
+    );
+
+    printf("dm: %d devices bound\n", dm_init());
+    uclass_print_device();
 
     for (;;)
     {
-        if (tstc())
-            putc(getc());
-
         board_led_toggle();
         delay(500000);
     }

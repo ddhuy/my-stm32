@@ -1,5 +1,7 @@
-#include <gpio.h>
 #include <asm/io.h>
+#include <gpio.h>
+#include <dm/driver.h>
+
 
 /* STM32 GPIO port register layout */
 #define GPIO_MODER      0x00
@@ -99,3 +101,14 @@ void gpio_set_alternative(
                GPIO_MODER_MASK(pin),
                GPIO_MODER_MODE(pin, GPIO_MODE_ALTERNATE));
 }
+
+
+/**
+ * Driver model entry. Only the name and the uclass so far; probe and the
+ * ops table come when the functions above are converted.
+ */
+DM_DRIVER(stm32_gpio) = {
+    .name = "stm32_gpio",
+    .id   = UCLASS_GPIO,
+    .priv_auto = 16,
+};

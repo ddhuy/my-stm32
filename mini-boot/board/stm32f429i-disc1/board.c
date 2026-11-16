@@ -5,6 +5,9 @@
 #include <init.h>
 #include <printf.h>
 #include <serial.h>
+#include <dm/device.h>
+#include <platdata/stm32_gpio.h>
+#include <platdata/stm32_serial.h>
 
 
 /**
@@ -77,3 +80,54 @@ void board_panic(void)
 {
     gpio_set_value(LED_GPIO_BASE, LED_RED_PIN, 1);
 }
+
+
+/*
+ * The devices on this board, for the driver model. dm_init() binds each
+ * DM_DEVICE entry to the driver it names.
+ */
+
+/**
+ * GPIO port G: the two user LEDs.
+ */
+static const struct stm32_gpio_plat gpiog_plat = {
+    .base = LED_GPIO_BASE,
+    .clk_id = LED_GPIO_CLK
+};
+
+DM_DEVICE(gpiog) = {
+    .name = "gpiog",
+    .driver = "stm32_gpio",
+    .plat = &gpiog_plat,
+};
+
+
+/**
+ * GPIO port A: the GPIO for USART1.
+ */
+static const struct stm32_gpio_plat gpioa_plat = {
+    .base = CONSOLE_GPIO_BASE,
+    .clk_id = CONSOLE_GPIO_CLK
+};
+
+DM_DEVICE(gpioa) = {
+    .name = "gpioa",
+    .driver = "stm32_gpio",
+    .plat = &gpioa_plat,
+};
+
+
+/**
+ * USART1: the console, through the ST-LINK virtual COM port.
+ */
+static const struct stm32_serial_plat usart1_plat = {
+    .base = CONSOLE_UART_BASE,
+    .baudrate = CONSOLE_BAUDRATE,
+    .clk_id = CONSOLE_UART_CLK,
+};
+
+DM_DEVICE(usart1) = {
+    .name = "usart1",
+    .driver = "stm32_serial",
+    .plat = &usart1_plat,
+};

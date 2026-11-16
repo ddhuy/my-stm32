@@ -19,7 +19,21 @@ SECTIONS
     {
         *(.text*)
         *(.rodata*)
+
         . = ALIGN(4);
+
+        _sdm_drivers = .;
+        KEEP(*(.dm_drivers))
+        _edm_drivers = .;
+
+        . = ALIGN(4);
+
+        _sdm_devices = .;
+        KEEP(*(.dm_devices))
+        _edm_devices = .;
+
+        . = ALIGN(4);
+
     } > FLASH
 
     .data : ALIGN(4)
