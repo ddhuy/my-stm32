@@ -11,12 +11,15 @@ and boards can be added. The purpose is learning.
   must contain and why, the function signatures, the traps, and a list of
   checks with expected results. Then Claude reviews what I wrote.
 - Claude does not write or edit source files unless I explicitly ask
-  ("help me fix ...").
-- Go slowly. Theory first, minimal code, one step per session if needed.
+  ("help me fix ...", "add the comments"). A review is read-only: build,
+  run the checks, report; do not fix.
+- Go slowly. Theory first, minimal code, one part per message. Do not move
+  to the next part until I say so.
 - No bare numbers in code: field widths, shifts and offsets get names.
-- `../mini-boot.old/` is an earlier flat-layout version that Claude wrote,
-  complete up to printf/malloc/fault handler and tested on the board. Use it
-  as a reference, not as something to copy wholesale.
+- I leave empty `/** */` blocks while coding and ask Claude to fill them
+  when a step is finished. A comment pass changes comment lines only.
+- I commit myself. Claude helps with the commit message when asked.
+- board_print_info() in board.c prints the whole banner box; keep it so.
 
 ## Background
 I have already done bare-metal work on this board as single-file main.c
@@ -31,7 +34,7 @@ mini-boot/
 ├── Makefile                      make BOARD=<board>; output in build/<board>/
 ├── arch/arm/                     true for every ARM chip
 │   ├── arch.mk                   default CROSS_COMPILE
-│   ├── include/asm/              io.h (readl/writel), armv7m.h
+│   ├── include/asm/              io.h (readl/writel), armv7m.h (SCB)
 │   ├── cpu/armv7m/               true for every Cortex-M3/M4/M7
 │   │   ├── cpu.mk                adds its sources, names the linker script
 │   │   └── start.S, fault.c, link.ld (sections only, INCLUDE memory.ld)
@@ -41,13 +44,22 @@ mini-boot/
 │                                 clock_ids.h (CLK_*), irqs.h (NR_IRQS)
 ├── board/stm32f429i-disc1/       what is soldered on one board
 │   ├── board.mk                  ARCH, CPU, MACH, CPUFLAGS, OpenOCD config,
-│   │                             and which drivers this board uses
-│   └── board.c, board.h, memory.ld (FLASH/RAM sizes)
-├── drivers/core/ gpio/ serial/ spi/
-├── include/                      generic APIs: types.h, init.h, clock.h,
-│                                 gpio.h, serial.h, ...
+│   │                             and which hardware drivers this board uses
+│   └── board.c (hooks + device table), board.h, memory.ld (FLASH/RAM,
+│                                 heap and stack sizes)
+├── drivers/
+│   ├── core/                     driver.c, device.c, uclass.c, root.c
+│   ├── serial/                   serial-uclass.c (generic), stm32_serial.c
+│   └── gpio/                     stm32_gpio.c
+├── include/                      generic APIs: types.h, errno.h, init.h,
+│   │                             clock.h, gpio.h, serial.h, console.h,
+│   │                             printf.h, string.h, malloc.h, panic.h
+│   ├── dm/                       uclass-id.h, driver.h, device.h, uclass.h,
+│   │                             root.h
+│   └── platdata/                 stm32_serial.h, stm32_gpio.h: what a board
+│                                 tells a driver about one instance
 ├── lib/                          printf, string, malloc (no hardware access)
-└── common/                       main.c, console.c
+└── common/                       main.c, console.c, panic.c
 
 Adding a board on the same SoC = a new board/<name>/. A new SoC family = a
 new arch/arm/mach-<name>/. A new architecture = a new arch/<name>/.
@@ -57,53 +69,93 @@ different SoC and UART), not started.
 ## Build
 - `make` (default BOARD=stm32f429i-disc1), `make flash` (OpenOCD),
   `make disasm`, `make clean` (removes all of build/).
-- The top Makefile sets the generic SRCS, then includes board.mk, arch.mk,
-  cpu.mk, mach.mk in that order; each fragment appends with `SRCS +=`.
+- The top Makefile sets the generic SRCS (common/, lib/, drivers/core/,
+  uclass files), then includes board.mk, arch.mk, cpu.mk, mach.mk in that
+  order; each fragment appends with `SRCS +=`.
 - Include flags: -Iinclude -Iarch/$(ARCH)/include
   -Iarch/$(ARCH)/mach-$(MACH)/include -Iboard/$(BOARD).
-- Always look at the `size` output: a successful make with text = 0 means a
-  source file fell out of SRCS.
+- Always look at the `size` output. text = 0 means a source file fell out
+  of SRCS; an unexpected drop means the compiler deleted code it proved
+  unreachable (an inverted check).
+- Console: /dev/ttyACM0 at 115200 (ST-LINK VCP, USART1 on PA9/PA10 AF7).
+  LEDs: PG13 green (heartbeat), PG14 red (panic). Clock: 16 MHz HSI.
 
 ## Layering rules
 - common/, lib/, drivers/ and include/ never include <mach/...> or board.h.
-  Check: `grep -rn "mach/\|board.h" common drivers include lib` prints
-  nothing.
+  Check: `grep -rn "mach/\|board\.h" common drivers include lib` prints
+  nothing. (Escape the dot: "board.h" also matches the words "board hook".)
 - Drivers never hardcode an instance, pins or baud rate; they receive base
-  address, clock rate and config from the board, and access registers via
-  readl/writel(base + offset) from <asm/io.h>.
+  address, clock ID and config from the board's platform data, and access
+  registers via readl/writel(base + offset) from <asm/io.h>.
 - A register layout is private to the one .c file that drives the block
   (RCC in mach-stm32f4/clock.c, GPIO in drivers/gpio/stm32_gpio.c).
   mach/stm32f429.h holds base addresses only.
 - include/clock.h is the contract every SoC implements (clock_enable,
-  clock_get_rate); what a clock ID means is in mach/clock_ids.h.
-- A board chooses its drivers in board.mk. board.c contains no addresses and
-  no register offsets; everything comes from board.h.
+  clock_get_rate); what a clock ID means is in mach/clock_ids.h. A driver
+  passes the ID on as an opaque number.
+- A board chooses its hardware drivers in board.mk. board.c contains no
+  addresses and no register offsets; everything comes from board.h.
 - u32 is `unsigned int` (not uint32_t) so it matches printf %u / %x.
-- Functions return 0 or -Exxx once include/errno.h exists.
+- Functions return 0 (SUCCESS) or -Exxx from include/errno.h. A pointer
+  result fails as NULL (`if (!ptr)`); an error code fails as non-zero
+  (`if (ret)`). A yes/no function such as tstc never returns an error code.
+- A header that only uses `struct x *` forward-declares it instead of
+  including its header (dm/driver.h and dm/device.h must not include each
+  other).
+- Linker-script symbols are addresses: declare them as arrays
+  (`extern const struct driver _sdm_drivers[];`), never as pointers.
 
-## Status (2026-11-11)
-Steps 1-3 done and tested on the board: the green LED blinks.
-- Step 1: start.S, link.ld, memory.ld, irqs.h. Vector table 107 words.
-- Step 2: Makefile and the four .mk fragments.
-- Step 3: types.h, asm/io.h, mach headers, clock.c, stm32_gpio.c, board.c,
-  init.h, main.c (LED heartbeat on the 16 MHz HSI). clock_get_rate() and the
-  GPIO alternate-function code (gpio_set_alternative) are already written,
-  ahead of step 4.
+## Driver model (as built)
+Decisions: drivers and devices are collected by the linker (KEEP sections
+.dm_drivers and .dm_devices in link.ld); the board/driver contract is
+include/platdata/*.h; each uclass stores its devices in a fixed array
+(UCLASS_MAX_DEVICES), to become a linked list later.
 
-Empty placeholders: fault.c, asm/armv7m.h, include/serial.h, include/spi.h.
+- DM_DRIVER(name) = { .name, .id, .probe, .ops, .priv_auto } in the driver's
+  .c file. DM_DEVICE(name) = { .name, .driver, .plat } in board.c.
+- dm_init() binds every DM_DEVICE: driver_find() by name, calloc a
+  struct udevice, add it to the driver's uclass. No hardware is touched.
+  A failed row is reported and skipped.
+- uclass_find_device(id, index) only looks up. uclass_get_device() also
+  calls device_probe(): allocate priv (priv_auto bytes), call the driver's
+  probe, set `probed` last. Probe runs once per device, on first use.
+- plat is the board's constant data in flash; priv is the driver's own data
+  on the heap.
+- A uclass defines an ops table (struct serial_ops in serial.h) and generic
+  functions (serial-uclass.c) that dispatch through dev->driver->ops.
+- Boot order in main(): board_init() (LEDs, console pins), dm_init(),
+  console_init() (gets serial device 0, which probes it), then the first
+  print. panic("No console!") lights the red LED if that fails.
+- The order of entries in a linker section is not guaranteed; never assume
+  an index means a particular device (gpioa came out as GPIO device 0).
+
+## Status (2026-11-15)
+Steps 1-7 done, tested on the board and committed (last commit 22048bb).
+- Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
+  LED heartbeat.
+- Step 4: polled USART driver and console; banner and echo.
+- Step 5: lib/string.c, lib/printf.c (%c %s %d %u %x %p %%, width, zero pad).
+- Step 6: bump allocator (8-byte alignment, heap after .bss, 16K), errno.h,
+  HardFault report (pc, lr, CFSR, HFSR) and panic().
+- Step 7: driver model core; three devices bound (gpioa, gpiog, usart1);
+  the serial driver fully converted (probe + ops); the console runs on a
+  serial device.
+
+Known limitations:
+- free() does nothing, so a device that fails after allocation is leaked.
+- "Serial device 0" is the console; no way yet to choose among several.
+- Bind errors printed before console_init() are lost.
+- serial-uclass.c checks for a missing ops table, not for a missing entry.
+- The echo in main.c is polled once per blink period.
+- The GPIO driver has a DM_DRIVER entry but still works through
+  base-address functions (include/gpio.h); board.c calls them directly for
+  the LEDs and the console pins.
+- include/spi.h is an empty placeholder.
 
 ## Roadmap
-4. Serial console: polled USART driver (drivers/serial/stm32_serial.c behind
-   include/serial.h), common/console.c (putc/puts; which UART is the console
-   is one static variable), board.c wires clock + pin mux + UART. Check: a
-   banner on /dev/ttyACM0 at 115200.
-5. lib/string.c and lib/printf.c.
-6. lib/malloc.c (bump allocator, heap after .bss in link.ld),
-   include/errno.h, HardFault report in fault.c + panic().
-7. Driver model: theory, then drivers/core/. Decisions to make first:
-   - driver registration: linker-generated array (needs a KEEP section in
-     link.ld because of --gc-sections) or a table in board.c;
-   - board/driver contract: proposed include/platdata/stm32_serial.h etc.;
-   - uclass device storage: fixed array or linked list.
-8. Convert the GPIO and serial drivers to the driver model.
-Later: second target (QEMU lm3s6965evb), 168 MHz PLL, SDRAM, SPI.
+8. Convert the GPIO driver to the driver model: an ops table and a GPIO
+   uclass, the LEDs and the console pins driven through devices, and
+   board.c loses its last direct driver calls (board_led_toggle is
+   temporary).
+Later: second target (QEMU lm3s6965evb), a timer to replace the delay loop,
+168 MHz PLL, SDRAM, SPI, linked-list uclass storage.
