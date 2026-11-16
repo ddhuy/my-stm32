@@ -17,12 +17,15 @@ static void delay(u32 count)
 
 int main(void)
 {
-    board_init();
-
     int bound = dm_init();
 
+    /* Both are silent: the console is not up. The red LED comes on if the
+     * board got as far as finding its LED port. */
+    if (board_init())
+        panic("Board init failed!");
+
     if (console_init())
-        panic("No console!"); /* silent, but the red LED comes on */
+        panic("No console!");
 
     board_print_info();
 

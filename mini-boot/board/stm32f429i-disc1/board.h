@@ -16,6 +16,7 @@
 #define CONSOLE_UART_BASE   USART1_BASE
 #define CONSOLE_UART_CLK    CLK_USART1
 #define CONSOLE_BAUDRATE    115200
+#define CONSOLE_GPIO_NAME   "gpioa"
 #define CONSOLE_GPIO_BASE   GPIOA_BASE
 #define CONSOLE_GPIO_CLK    CLK_GPIOA
 #define CONSOLE_TX_PIN      9
@@ -23,6 +24,7 @@
 #define CONSOLE_PIN_AF      7
 
 /* User LEDs, active high */
+#define LED_GPIO_NAME       "gpiog"
 #define LED_GPIO_BASE       GPIOG_BASE
 #define LED_GPIO_CLK        CLK_GPIOG
 #define LED_GREEN_PIN       13  /* LD3 */

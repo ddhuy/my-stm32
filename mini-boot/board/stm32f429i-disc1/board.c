@@ -4,51 +4,86 @@
 #include <init.h>
 #include <printf.h>
 #include <dm/device.h>
+#include <dm/uclass.h>
 #include <platdata/stm32_gpio.h>
 #include <platdata/stm32_serial.h>
 
 
+/*
+ * The GPIO port that carries the LEDs; NULL until led_init() has found it.
+ */
+static struct udevice *led_port;
+
+
 /**
  * Route the console pins to the UART. The UART itself is started by its
- * driver when console_init() probes it. The port's clock comes before the
- * registers it feeds.
+ * driver when console_init() probes it. Getting the port probes it, which
+ * turns its clock on.
  */
-static void console_setup(void)
+static int console_pins_setup(void)
 {
-    /* Setup GPIOA clock & PA9 & PA10 as alternative function */
-    clock_enable(CONSOLE_GPIO_CLK);
-    gpio_set_alternative(CONSOLE_GPIO_BASE, CONSOLE_TX_PIN, CONSOLE_PIN_AF);
-    gpio_set_alternative(CONSOLE_GPIO_BASE, CONSOLE_RX_PIN, CONSOLE_PIN_AF);
+    struct udevice *port;
+    int ret;
+
+    ret = uclass_get_device_by_name(UCLASS_GPIO, CONSOLE_GPIO_NAME, &port);
+    if (ret)
+        return ret;
+
+    ret = gpio_set_alternative(port, CONSOLE_TX_PIN, CONSOLE_PIN_AF);
+    if (ret)
+        return ret;
+
+    return gpio_set_alternative(port, CONSOLE_RX_PIN, CONSOLE_PIN_AF);
 }
 
 
 /**
- * Both user LEDs as outputs, switched off.
+ * Both user LEDs as outputs, switched off. The port is remembered as soon
+ * as it is found, so board_panic() can use it even if a later step fails.
  */
-static void led_init(void)
+static int led_init(void)
 {
-    clock_enable(LED_GPIO_CLK);
-    gpio_direction_output(LED_GPIO_BASE, LED_GREEN_PIN, 0);
-    gpio_direction_output(LED_GPIO_BASE, LED_RED_PIN, 0);
+    struct udevice *port;
+    int ret;
+
+    ret = uclass_get_device_by_name(UCLASS_GPIO, LED_GPIO_NAME, &port);
+    if (ret)
+        return ret;
+
+    led_port = port;
+
+    ret = gpio_direction_output(led_port, LED_GREEN_PIN, 0);
+    if (ret)
+        return ret;
+
+    return gpio_direction_output(led_port, LED_RED_PIN, 0);
 }
 
 /**
- * See init.h. Nothing can print yet: the console starts later, in
+ * See init.h. The LEDs come first, so the red one can report a failure of
+ * the console pins. Nothing can print yet: the console starts later, in
  * console_init().
  */
-void board_init(void)
+int board_init(void)
 {
-    led_init();
-    console_setup();
+    int ret = led_init();
+
+    if (ret)
+        return ret;
+
+    return console_pins_setup();
 }
 
 /**
- * Heartbeat on the green LED.
+ * Heartbeat on the green LED. Does nothing if the LED port was not found.
  */
 void board_led_toggle(void)
 {
-    gpio_set_value(LED_GPIO_BASE, LED_GREEN_PIN,
-                   !gpio_get_value(LED_GPIO_BASE, LED_GREEN_PIN));
+    if (!led_port)
+        return;
+
+    gpio_set_value(led_port, LED_GREEN_PIN,
+                   !gpio_get_value(led_port, LED_GREEN_PIN));
 }
 
 /**
@@ -65,11 +100,15 @@ void board_print_info(void)
 }
 
 /**
- * Red LED on, and it stays on: panic() never returns.
+ * Red LED on, and it stays on: panic() never returns. If the LED port was
+ * never found there is no way left to signal anything.
  */
 void board_panic(void)
 {
-    gpio_set_value(LED_GPIO_BASE, LED_RED_PIN, 1);
+    if (!led_port)
+        return;
+
+    gpio_set_value(led_port, LED_RED_PIN, 1);
 }
 
 
@@ -87,14 +126,14 @@ static const struct stm32_gpio_plat gpiog_plat = {
 };
 
 DM_DEVICE(gpiog) = {
-    .name = "gpiog",
+    .name = LED_GPIO_NAME,
     .driver = "stm32_gpio",
     .plat = &gpiog_plat,
 };
 
 
 /**
- * GPIO port A: the GPIO for USART1.
+ * GPIO port A: the console pins, PA9 and PA10.
  */
 static const struct stm32_gpio_plat gpioa_plat = {
     .base = CONSOLE_GPIO_BASE,
@@ -102,7 +141,7 @@ static const struct stm32_gpio_plat gpioa_plat = {
 };
 
 DM_DEVICE(gpioa) = {
-    .name = "gpioa",
+    .name = CONSOLE_GPIO_NAME,
     .driver = "stm32_gpio",
     .plat = &gpioa_plat,
 };

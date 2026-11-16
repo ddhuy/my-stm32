@@ -19,6 +19,7 @@ SRCS += drivers/core/driver.c
 SRCS += drivers/core/root.c
 SRCS += drivers/core/uclass.c
 
+SRCS += drivers/gpio/gpio-uclass.c
 SRCS += drivers/serial/serial-uclass.c
 
 SRCS += lib/malloc.c
@@ -41,9 +42,11 @@ SIZE	:= $(CROSS_COMPILE)size
 OBJS = $(patsubst %,$(BUILD)/%.o,$(basename $(SRCS)))
 
 
-CFLAGS   = $(CPUFLAGS) -ffreestanding -Wall -Wextra -g -Os \
+CFLAGS   = $(CPUFLAGS) -ffreestanding -Wall -Wextra -Wmissing-prototypes \
+		   -g -Os \
 		   -ffunction-sections -fdata-sections \
-		   -Iinclude -Iarch/$(ARCH)/include -Iarch/$(ARCH)/mach-$(MACH)/include -Iboard/$(BOARD) \
+		   -Iinclude -Iarch/$(ARCH)/include \
+		   -Iarch/$(ARCH)/mach-$(MACH)/include -Iboard/$(BOARD) \
 		   -MMD -MP
 LDFLAGS  = $(CPUFLAGS) -nostdlib -T $(LDSCRIPT) -L board/$(BOARD) \
 		   -Wl,--gc-sections -Wl,-Map=$(TARGET).map

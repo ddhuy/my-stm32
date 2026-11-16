@@ -7,15 +7,18 @@
  */
 
 /**
- * Bring up the board: LEDs and the console pins. Called first thing in
- * main(), before the driver model and the console.
+ * Bring up the board: LEDs and the console pins. Called after dm_init(),
+ * because the board reaches its pins through GPIO devices, and before
+ * console_init().
+ *
+ * Returns 0, or the error from looking up a GPIO port or configuring a pin.
  */
-void board_init(void);
+int board_init(void);
 
 
 /**
- * Toggle the heartbeat LED. Temporary: goes away once main() can look up a
- * GPIO device.
+ * Toggle the heartbeat LED. A board hook because which pin carries the LED
+ * is a board fact.
  */
 void board_led_toggle(void);
 

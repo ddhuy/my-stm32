@@ -20,7 +20,7 @@ int console_init(void)
 {
     int ret;
     struct udevice *dev;
-    
+
     ret = uclass_get_device(UCLASS_SERIAL, 0, &dev);
     if (ret)
         return ret;
@@ -79,6 +79,6 @@ int tstc(void)
 {
     if (!console_dev)
         return 0;
-    
+
     return serial_tstc(console_dev);
 }

@@ -30,7 +30,7 @@ struct serial_ops {
 /**
  * Send one character. Blocks until the transmitter accepts it.
  *
- * Returns 0, or -ENOSYS if the driver has no operations.
+ * Returns 0, or -ENOSYS if the driver does not provide the operation.
  */
 int serial_putc(
     struct udevice *dev,
@@ -39,8 +39,8 @@ int serial_putc(
 
 
 /**
- * Wait for a character and return it (0-255), or -ENOSYS if the driver has
- * no operations.
+ * Wait for a character and return it (0-255), or -ENOSYS if the driver does
+ * not provide the operation.
  */
 int serial_getc(
     struct udevice *dev

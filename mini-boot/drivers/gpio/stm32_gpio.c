@@ -1,6 +1,14 @@
 #include <asm/io.h>
+#include <clock.h>
+#include <errno.h>
 #include <gpio.h>
+#include <dm/device.h>
 #include <dm/driver.h>
+#include <platdata/stm32_gpio.h>
+
+
+/* Every STM32 GPIO port has pins 0-15 */
+#define GPIO_PINS_PER_PORT      16
 
 
 /* STM32 GPIO port register layout */
@@ -46,68 +54,134 @@
 #define GPIO_AFR_AF(pin, af)    ((u32)(af) << GPIO_AFR_SHIFT(pin))
 
 /**
+ * A port needs only its clock: its registers are ignored until the clock
+ * runs. The pins keep their reset state until somebody configures them.
+ */
+static int stm32_gpio_probe(
+    struct udevice *dev
+)
+{
+    const struct stm32_gpio_plat *plat = dev->plat;
+
+    clock_enable(plat->clk_id);
+
+    return SUCCESS;
+}
+
+
+/**
  * Drive the pin high or low.
  */
-void gpio_set_value(
-    uintptr_t base,
+static int stm32_gpio_set_value(
+    struct udevice *dev,
     unsigned int pin,
-    int value)
+    int value
+)
 {
+    const struct stm32_gpio_plat *plat = dev->plat;
+
+    if (pin >= GPIO_PINS_PER_PORT)
+        return -EINVAL;
+
     /* BSRR changes one pin without a read-modify-write of ODR */
     writel(value ? GPIO_BSRR_SET(pin) : GPIO_BSRR_RESET(pin),
-           base + GPIO_BSRR);
+           plat->base + GPIO_BSRR);
+
+    return SUCCESS;
 }
+
 
 /**
  * Read the level from the input data register. This works for an output pin
  * too, which is how a caller can toggle one.
  */
-int gpio_get_value(
-    uintptr_t base,
-    unsigned int pin)
+static int stm32_gpio_get_value(
+    struct udevice *dev,
+    unsigned int pin
+)
 {
-    return (readl(base + GPIO_IDR) >> pin) & 1;
+    const struct stm32_gpio_plat *plat = dev->plat;
+
+    if (pin >= GPIO_PINS_PER_PORT)
+        return -EINVAL;
+
+    return (readl(plat->base + GPIO_IDR) >> pin) & 1;
 }
+
 
 /**
  * Switch the pin to output mode with a defined starting level.
  */
-void gpio_direction_output(
-    uintptr_t base,
+static int stm32_gpio_direction_output(
+    struct udevice *dev,
     unsigned int pin,
-    int value)
+    int value
+)
 {
-    /* set the level first so the pin does not glitch when it turns output */
-    gpio_set_value(base, pin, value);
-    clrsetbits(base + GPIO_MODER,
+    const struct stm32_gpio_plat *plat = dev->plat;
+
+    /* set the level first so the pin does not glitch when it turns output;
+     * this call also rejects a pin the port does not have */
+    int ret = stm32_gpio_set_value(dev, pin, value);
+
+    if (ret)
+        return ret;
+
+    clrsetbits(plat->base + GPIO_MODER,
                GPIO_MODER_MASK(pin),
                GPIO_MODER_MODE(pin, GPIO_MODE_OUTPUT));
+
+    return SUCCESS;
 }
+
 
 /**
  * Connect the pin to an on-chip peripheral (UART, SPI, ...) instead of
  * driving it as a plain GPIO.
  */
-void gpio_set_alternative(
-    uintptr_t base,
+static int stm32_gpio_set_alternative(
+    struct udevice *dev,
     unsigned int pin,
-    unsigned int af)
+    unsigned int af
+)
 {
+    const struct stm32_gpio_plat *plat = dev->plat;
+
+    if (pin >= GPIO_PINS_PER_PORT)
+        return -EINVAL;
+
     /* choose the function first, then switch the pin over to it */
-    clrsetbits(base + GPIO_AFR(pin),
+    clrsetbits(plat->base + GPIO_AFR(pin),
                GPIO_AFR_MASK(pin),
                GPIO_AFR_AF(pin, af));
-    clrsetbits(base + GPIO_MODER,
+    clrsetbits(plat->base + GPIO_MODER,
                GPIO_MODER_MASK(pin),
                GPIO_MODER_MODE(pin, GPIO_MODE_ALTERNATE));
+
+    return SUCCESS;
 }
 
 
 /**
- * Driver model entry. Only the name and the uclass so far; probe and the
- * ops table come when the functions above are converted.
+ * This driver's implementation of the GPIO uclass operations.
+ */
+static const struct gpio_ops stm32_gpio_ops = {
+    .direction_output = stm32_gpio_direction_output,
+    .set_alternative  = stm32_gpio_set_alternative,
+    .set_value        = stm32_gpio_set_value,
+    .get_value        = stm32_gpio_get_value,
+};
+
+
+/**
+ * Driver model entry. No private data: everything the driver needs is in
+ * the device's platform data.
  */
 DM_DRIVER(stm32_gpio) = {
     .name = "stm32_gpio",
     .id   = UCLASS_GPIO,
+
+    .probe = stm32_gpio_probe,
+
+    .ops = &stm32_gpio_ops,
 };

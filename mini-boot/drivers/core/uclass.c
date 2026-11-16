@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <printf.h>
+#include <string.h>
 #include <dm/uclass.h>
 
 
@@ -105,6 +106,63 @@ int uclass_get_device(
     struct udevice *dev;
     
     int ret = uclass_find_device(id, index, &dev);
+
+    if (ret)
+        return ret;
+
+    ret = device_probe(dev);
+
+    if (ret)
+        return ret;
+
+    *devp = dev;
+
+    return SUCCESS;
+}
+
+
+/**
+ * Only the devices of one uclass are searched, so a name has to be unique
+ * within its uclass, not across the system. The loop stops at the number of
+ * devices bound: the slots after that are NULL.
+ */
+int uclass_find_device_by_name(
+    enum uclass_id id,
+    const char *name,
+    struct udevice **devp
+)
+{
+    if (id == UCLASS_INVALID || id >= UCLASS_COUNT)
+        return -EINVAL;
+
+    for (int i = 0; i < uc_devices[id].count; ++i)
+    {
+        struct udevice *dev = uc_devices[id].devps[i];
+
+        if ( !strcmp(dev->name, name) )
+        {
+            *devp = dev;
+            return SUCCESS;
+        }
+    }
+
+    return -ENODEV;
+}
+
+
+/**
+ * Same shape as uclass_get_device(): look up into a local variable, probe,
+ * and hand the device out only if both worked.
+ */
+int uclass_get_device_by_name(
+    enum uclass_id id,
+    const char *name,
+    struct udevice **devp
+)
+{
+    struct udevice *dev;
+
+    int ret = uclass_find_device_by_name(id, name, &dev);
 
     if (ret)
         return ret;

@@ -52,4 +52,32 @@ int uclass_get_device(
     struct udevice **devp
 );
 
+
+/**
+ * Get the device called 'name' in a uclass. The device is not probed. Use
+ * this, not an index, when a uclass can hold more than one device: the
+ * order in which devices are bound is not guaranteed.
+ *
+ * Returns 0 and stores the device in '*devp', or -EINVAL if 'id' is not
+ * valid, -ENODEV if the uclass has no device of that name.
+ */
+int uclass_find_device_by_name(
+    enum uclass_id id,
+    const char *name,
+    struct udevice **devp
+);
+
+
+/**
+ * Like uclass_find_device_by_name(), and also probe the device.
+ *
+ * Returns 0 and stores the device in '*devp', or the error from the lookup
+ * or from the probe. '*devp' is left alone on failure.
+ */
+int uclass_get_device_by_name(
+    enum uclass_id id,
+    const char *name,
+    struct udevice **devp
+);
+
 #endif /* MINIBOOT_DM_UCLASS_H */

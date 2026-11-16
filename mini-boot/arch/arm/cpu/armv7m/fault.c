@@ -5,6 +5,16 @@
 #include <types.h>
 
 
+/*
+ * Called only from start.S, so no header declares it. The prototype is here
+ * for -Wmissing-prototypes; the compiler cannot check it against the
+ * assembly caller.
+ */
+void hardfault_report(
+    const u32 *frame
+);
+
+
 /**
  * Registers the core pushes on the interrupted stack at exception entry,
  * lowest address first.
@@ -22,9 +32,13 @@ enum {
 
 
 /**
- * Called from hardfault_handler in start.S with the exception frame
+ * Called from hardfault_handler in start.S, which passes the address of the
+ * exception frame in r0 (the main or the process stack, whichever was in
+ * use when the fault happened).
  */
-void hardfault_report(const u32 *frame)
+void hardfault_report(
+    const u32 *frame
+)
 {
     printf("\nHardFault\n");
     printf("  pc   = %08x\n", frame[FRAME_PC]);

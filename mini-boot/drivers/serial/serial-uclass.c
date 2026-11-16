@@ -7,10 +7,12 @@
  * The serial uclass: the generic half of every UART driver. Each function
  * finds the driver's table of operations through the device and calls the
  * matching entry, so callers never know which chip they are talking to.
+ * Both the table and the entry are checked, so a driver may leave out an
+ * operation it cannot do (a transmit-only UART, for example).
  */
 
 /**
- * A driver without an ops table cannot send.
+ * A driver that does not provide the operation cannot send.
  */
 int serial_putc(
     struct udevice *dev,
@@ -19,7 +21,7 @@ int serial_putc(
 {
     const struct serial_ops *ops = dev->driver->ops;
 
-    if (!ops)
+    if (!ops || !ops->putc)
         return -ENOSYS;
 
     return ops->putc(dev, ch);
@@ -27,7 +29,7 @@ int serial_putc(
 
 
 /**
- * A driver without an ops table cannot receive.
+ * A driver that does not provide the operation cannot receive.
  */
 int serial_getc(
     struct udevice *dev
@@ -35,16 +37,16 @@ int serial_getc(
 {
     const struct serial_ops *ops = dev->driver->ops;
 
-    if (!ops)
+    if (!ops || !ops->getc)
         return -ENOSYS;
-    
+
     return ops->getc(dev);
 }
 
 
 /**
  * The answer is a yes or no, so there is no room for an error code: a
- * driver without an ops table never has a character waiting.
+ * driver that does not provide the operation never has a character waiting.
  */
 int serial_tstc(
     struct udevice *dev
@@ -52,7 +54,7 @@ int serial_tstc(
 {
     const struct serial_ops *ops = dev->driver->ops;
 
-    if (!ops)
+    if (!ops || !ops->tstc)
         return 0;
 
     return ops->tstc(dev);

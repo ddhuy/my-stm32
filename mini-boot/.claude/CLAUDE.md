@@ -50,7 +50,7 @@ mini-boot/
 ├── drivers/
 │   ├── core/                     driver.c, device.c, uclass.c, root.c
 │   ├── serial/                   serial-uclass.c (generic), stm32_serial.c
-│   └── gpio/                     stm32_gpio.c
+│   └── gpio/                     gpio-uclass.c (generic), stm32_gpio.c
 ├── include/                      generic APIs: types.h, errno.h, init.h,
 │   │                             clock.h, gpio.h, serial.h, console.h,
 │   │                             printf.h, string.h, malloc.h, panic.h
@@ -74,6 +74,10 @@ different SoC and UART), not started.
   order; each fragment appends with `SRCS +=`.
 - Include flags: -Iinclude -Iarch/$(ARCH)/include
   -Iarch/$(ARCH)/mach-$(MACH)/include -Iboard/$(BOARD).
+- Warnings: -Wall -Wextra -Wmissing-prototypes; the build must stay at 0.
+  A .c file includes the header that declares what it defines, so the
+  compiler compares the two. A C function called only from assembly
+  (hardfault_report) gets a prototype in its own file.
 - Always look at the `size` output. text = 0 means a source file fell out
   of SRCS; an unexpected drop means the compiler deleted code it proved
   unreachable (an inverted check).
@@ -119,18 +123,30 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
 - uclass_find_device(id, index) only looks up. uclass_get_device() also
   calls device_probe(): allocate priv (priv_auto bytes), call the driver's
   probe, set `probed` last. Probe runs once per device, on first use.
+  uclass_find_device_by_name() / uclass_get_device_by_name() do the same by
+  name; a name is unique within its uclass.
 - plat is the board's constant data in flash; priv is the driver's own data
   on the heap.
-- A uclass defines an ops table (struct serial_ops in serial.h) and generic
-  functions (serial-uclass.c) that dispatch through dev->driver->ops.
-- Boot order in main(): board_init() (LEDs, console pins), dm_init(),
-  console_init() (gets serial device 0, which probes it), then the first
-  print. panic("No console!") lights the red LED if that fails.
+- A uclass defines an ops table (struct serial_ops in serial.h, struct
+  gpio_ops in gpio.h) and generic functions (serial-uclass.c,
+  gpio-uclass.c) that dispatch through dev->driver->ops and return -ENOSYS
+  for a missing operation.
+- GPIO: one device is one port, a pin is a number within it. Probe turns on
+  the port clock. Pin multiplexing is a GPIO operation (set_alternative);
+  there is no pinctrl uclass. The board, not the serial driver, sets up the
+  console pins.
+- Boot order in main(): dm_init(), board_init() (gets its GPIO ports by
+  name: LEDs, then console pins), console_init() (gets serial device 0,
+  which probes it), then the first print. A failure before the console is
+  up is silent; panic() lights the red LED if the LED port was found.
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
+  Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
+  CONSOLE_GPIO_NAME).
 
-## Status (2026-11-15)
-Steps 1-7 done, tested on the board and committed (last commit 22048bb).
+## Status (2026-11-16)
+Steps 1-8 done and tested on the board. Step 8 is not committed yet (last
+commit 22048bb is step 7).
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -140,22 +156,21 @@ Steps 1-7 done, tested on the board and committed (last commit 22048bb).
 - Step 7: driver model core; three devices bound (gpioa, gpiog, usart1);
   the serial driver fully converted (probe + ops); the console runs on a
   serial device.
+- Step 8: lookup by name; the GPIO driver fully converted (probe + ops);
+  board.c reaches the LEDs and the console pins through GPIO devices and no
+  longer calls a driver with a base address.
 
 Known limitations:
 - free() does nothing, so a device that fails after allocation is leaked.
 - "Serial device 0" is the console; no way yet to choose among several.
 - Bind errors printed before console_init() are lost.
-- serial-uclass.c checks for a missing ops table, not for a missing entry.
 - The echo in main.c is polled once per blink period.
-- The GPIO driver has a DM_DRIVER entry but still works through
-  base-address functions (include/gpio.h); board.c calls them directly for
-  the LEDs and the console pins.
+- gpio_get_value() can return a negative error; board_led_toggle() does not
+  test for it.
+- The two uclass "get" functions duplicate their probe-and-return tail.
 - include/spi.h is an empty placeholder.
 
 ## Roadmap
-8. Convert the GPIO driver to the driver model: an ops table and a GPIO
-   uclass, the LEDs and the console pins driven through devices, and
-   board.c loses its last direct driver calls (board_led_toggle is
-   temporary).
-Later: second target (QEMU lm3s6965evb), a timer to replace the delay loop,
-168 MHz PLL, SDRAM, SPI, linked-list uclass storage.
+The driver model is complete for GPIO and serial. Next, in no fixed order:
+second target (QEMU lm3s6965evb) to prove the four-level split, a timer to
+replace the delay loop, 168 MHz PLL, SDRAM, SPI, linked-list uclass storage.
