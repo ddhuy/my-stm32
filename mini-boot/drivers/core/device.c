@@ -40,7 +40,9 @@ int device_bind(
 
 
 /**
- * 
+ * The flag is set last, so a device whose probe failed is never marked
+ * ready. Its private data is kept for the retry: the heap cannot free, and
+ * allocating again would leak a block per attempt.
  */
 int device_probe(
     struct udevice *dev

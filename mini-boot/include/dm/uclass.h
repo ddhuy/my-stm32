@@ -40,7 +40,11 @@ void uclass_print_devices(void);
 
 
 /**
- * 
+ * Like uclass_find_device(), and also probe the device, so what comes back
+ * is ready for use. This is the call drivers' users make.
+ *
+ * Returns 0 and stores the device in '*devp', or the error from the lookup
+ * or from the probe. '*devp' is left alone on failure.
  */
 int uclass_get_device(
     enum uclass_id id,

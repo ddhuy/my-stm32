@@ -4,7 +4,8 @@
 
 /**
  * Bind every device the board declared with DM_DEVICE. A device that fails
- * is reported on the console and skipped. Needs the console and the heap.
+ * is skipped; the report is lost if the console is not up yet. Needs the
+ * heap.
  *
  * Returns the number of devices bound.
  */

@@ -32,13 +32,16 @@ struct device_info
  * name:   copied from the device_info
  * driver: the driver that operates this device
  * plat:   the board's platform data; its type is known only to the driver
+ * priv:   the driver's own data, allocated by device_probe(); NULL if the
+ *         driver asks for none
+ * probed: true once device_probe() has succeeded
  */
 struct udevice
 {
     const char *name;
     const struct driver *driver;
     const void *plat;
-    const void *priv;
+    void *priv;
     bool probed;
 };
 
@@ -58,7 +61,13 @@ int device_bind(
 
 
 /**
- * 
+ * Make a bound device ready for use: allocate its private data, zeroed, and
+ * call the driver's probe function. Does nothing if the device is already
+ * probed.
+ *
+ * Returns 0, or -ENOMEM if the heap is full, or the error the driver's
+ * probe returned. After a failure the device stays unprobed and the next
+ * call tries again.
  */
 int device_probe(
     struct udevice *dev

@@ -1,16 +1,14 @@
 #ifndef MINIBOOT_CONSOLE_H
 #define MINIBOOT_CONSOLE_H
 
-#include <types.h>
-
 
 /**
- * Select the UART that carries the console. It must already be set up with
- * serial_init().
+ * Start the console on the first serial device. Call it after dm_init().
+ *
+ * Returns 0, or -ENODEV if the board has no serial device, or the error
+ * from probing it.
  */
-void console_init(
-    uintptr_t uart_base
-);
+int console_init(void);
 
 
 /**

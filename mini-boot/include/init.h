@@ -7,7 +7,8 @@
  */
 
 /**
- * Bring up the board: LEDs and the console. Called first thing in main().
+ * Bring up the board: LEDs and the console pins. Called first thing in
+ * main(), before the driver model and the console.
  */
 void board_init(void);
 

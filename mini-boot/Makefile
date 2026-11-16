@@ -19,6 +19,8 @@ SRCS += drivers/core/driver.c
 SRCS += drivers/core/root.c
 SRCS += drivers/core/uclass.c
 
+SRCS += drivers/serial/serial-uclass.c
+
 SRCS += lib/malloc.c
 SRCS += lib/printf.c
 SRCS += lib/string.c

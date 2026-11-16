@@ -1,6 +1,10 @@
 #include <asm/io.h>
+#include <clock.h>
+#include <errno.h>
 #include <serial.h>
+#include <dm/device.h>
 #include <dm/driver.h>
+#include <platdata/stm32_serial.h>
 
 
 /* STM32 USART register layout */
@@ -18,21 +22,33 @@
 
 
 /**
- * Program the baud divider, then enable the UART with its transmitter and
- * receiver. Word length, parity and stop bits stay at their reset values,
- * which give 8N1.
+ * Turn on the UART's clock, program the baud divider, then enable the UART
+ * with its transmitter and receiver. Word length, parity and stop bits stay
+ * at their reset values, which give 8N1. A baud rate of 0 is rejected
+ * because the divider calculation would divide by zero.
  */
-void serial_init(
-    uintptr_t base,
-    u32 clk_rate,
-    u32 baudrate
+static int stm32_serial_probe(
+    struct udevice *dev
 )
 {
+    const struct stm32_serial_plat *plat = dev->plat;
+
+    if (plat->baudrate == 0)
+        return -EINVAL;
+
+    clock_enable(plat->clk_id);
+
+    uintptr_t base = plat->base;
+    u32 clk_rate = clock_get_rate(plat->clk_id);
+    u32 baudrate = plat->baudrate;
+
     /* With 16x oversampling (the reset default) BRR is simply the clock
      * divider, clk_rate / baudrate, rounded to the nearest integer.
      */
     writel((clk_rate + baudrate / 2) / baudrate, base + USART_BRR);
     writel(USART_CR1_UE | USART_CR1_TE | USART_CR1_RE, base + USART_CR1);
+
+    return SUCCESS;
 }
 
 
@@ -40,47 +56,68 @@ void serial_init(
  * Wait until the transmit data register is empty, then write the character
  * to it.
  */
-void serial_putc(
-    uintptr_t base,
+static int stm32_serial_putc(
+    struct udevice *dev,
     char ch
 )
 {
-    while ( !(readl(base + USART_SR) & USART_SR_TXE) )
-        ;
-    writel((u8)ch, base + USART_DR);
-}
+    const struct stm32_serial_plat *plat = dev->plat;
 
-
-/**
- * Wait for a received byte and read it. Reading DR also clears RXNE.
- */
-int serial_getc(
-    uintptr_t base
-)
-{
-    while ( !serial_tstc(base) )
+    while ( !(readl(plat->base + USART_SR) & USART_SR_TXE) )
         ;
-    return (u8)readl(base + USART_DR);
+    writel((u8)ch, plat->base + USART_DR);
+
+    return SUCCESS;
 }
 
 
 /**
  * RXNE is set while a received byte is waiting in DR.
  */
-int serial_tstc(
-    uintptr_t base
+static int stm32_serial_tstc(
+    struct udevice *dev
 )
 {
-    return (readl(base + USART_SR) & USART_SR_RXNE) != 0;
+    const struct stm32_serial_plat *plat = dev->plat;
+    
+    return (readl(plat->base + USART_SR) & USART_SR_RXNE) != 0;
 }
 
 
 /**
- * Driver model entry. Only the name and the uclass so far; probe and the
- * ops table come when the functions above are converted.
+ * Wait for a received byte and read it. Reading DR also clears RXNE.
+ */
+static int stm32_serial_getc(
+    struct udevice *dev
+)
+{
+    const struct stm32_serial_plat *plat = dev->plat;
+    
+    while ( !stm32_serial_tstc(dev) )
+        ;
+    return (u8)readl(plat->base + USART_DR);
+}
+
+
+/**
+ * This driver's implementation of the serial uclass operations.
+ */
+static const struct serial_ops stm32_serial_ops = {
+    .putc = &stm32_serial_putc,
+    .getc = &stm32_serial_getc,
+    .tstc = &stm32_serial_tstc
+};
+
+
+/**
+ * Driver model entry. No private data: everything the driver needs is in
+ * the device's platform data.
  */
 DM_DRIVER(stm32_serial) = {
     .name = "stm32_serial",
     .id   = UCLASS_SERIAL,
-    .priv_auto = 16,
+
+    .probe = &stm32_serial_probe,
+
+    .ops = &stm32_serial_ops,
 };

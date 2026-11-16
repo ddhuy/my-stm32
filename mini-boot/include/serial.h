@@ -3,37 +3,47 @@
 
 #include <types.h>
 
-/*
- * Generic serial API. A UART is identified by its base address for now;
- * with the driver model this becomes a struct udevice pointer.
- */
+
+struct udevice;
 
 
 /**
- * Set up the UART for 8 data bits, no parity, 1 stop bit, polled. 'clk_rate'
- * is the frequency of the UART's bus clock in Hz.
+ * The operations every serial driver implements. A driver fills in one
+ * constant table and points its 'ops' field at it.
+ *
+ * putc: send one character, waiting for room; returns 0 or -Exxx
+ * getc: wait for a character and return it (0-255)
+ * tstc: non-zero if a received character is waiting; never blocks
  */
-void serial_init(
-    uintptr_t base,
-    u32 clk_rate,
-    u32 baudrate
-);
+struct serial_ops {
+    int (*putc) (struct udevice *dev, char ch);
+    int (*getc) (struct udevice *dev);
+    int (*tstc) (struct udevice *dev);
+};
 
+
+/*
+ * Generic serial API. 'dev' is a probed device of UCLASS_SERIAL, as returned
+ * by uclass_get_device(); probing is what sets the UART up.
+ */
 
 /**
  * Send one character. Blocks until the transmitter accepts it.
+ *
+ * Returns 0, or -ENOSYS if the driver has no operations.
  */
-void serial_putc(
-    uintptr_t base,
+int serial_putc(
+    struct udevice *dev,
     char ch
 );
 
 
 /**
- * Wait for a character and return it (0-255).
+ * Wait for a character and return it (0-255), or -ENOSYS if the driver has
+ * no operations.
  */
 int serial_getc(
-    uintptr_t base
+    struct udevice *dev
 );
 
 
@@ -41,7 +51,7 @@ int serial_getc(
  * Non-zero if a received character is waiting. Never blocks.
  */
 int serial_tstc(
-    uintptr_t base
+    struct udevice *dev
 );
 
 #endif /* MINIBOOT_SERIAL_H */

@@ -1,19 +1,17 @@
 #include <board.h>
-#include <console.h>
 #include <clock.h>
 #include <gpio.h>
 #include <init.h>
 #include <printf.h>
-#include <serial.h>
 #include <dm/device.h>
 #include <platdata/stm32_gpio.h>
 #include <platdata/stm32_serial.h>
 
 
 /**
- * Route the console pins to the UART, start the UART, and hand it to the
- * console layer. The order matters: each clock before the registers it
- * feeds, and serial_init() before console_init().
+ * Route the console pins to the UART. The UART itself is started by its
+ * driver when console_init() probes it. The port's clock comes before the
+ * registers it feeds.
  */
 static void console_setup(void)
 {
@@ -21,13 +19,6 @@ static void console_setup(void)
     clock_enable(CONSOLE_GPIO_CLK);
     gpio_set_alternative(CONSOLE_GPIO_BASE, CONSOLE_TX_PIN, CONSOLE_PIN_AF);
     gpio_set_alternative(CONSOLE_GPIO_BASE, CONSOLE_RX_PIN, CONSOLE_PIN_AF);
-
-    /* Setup UART clock & baudrate */
-    clock_enable(CONSOLE_UART_CLK);
-    serial_init(CONSOLE_UART_BASE, clock_get_rate(CONSOLE_UART_CLK), CONSOLE_BAUDRATE);
-
-    /* Inititiate the console */
-    console_init(CONSOLE_UART_BASE);
 }
 
 
@@ -42,8 +33,8 @@ static void led_init(void)
 }
 
 /**
- * See init.h. The console comes last, so everything after this call can
- * print.
+ * See init.h. Nothing can print yet: the console starts later, in
+ * console_init().
  */
 void board_init(void)
 {

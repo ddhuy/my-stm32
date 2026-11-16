@@ -76,13 +76,45 @@ void uclass_print_devices(void)
 
         for (int j = 0; j < dev_count; ++j)
         {
-            struct udevice *devp = uc_devices[i].devps[j];
-            printf("\t[%d] Name: \"%s\". Drv: \"%s\". Plat: %p.\n",
+            struct udevice *dev = uc_devices[i].devps[j];
+            printf("  [%d] Name: \"%s\". Probed: %d\n",
                 j,
-                devp->name,
-                devp->driver->name,
-                devp->plat
+                dev->name,
+                dev->probed
+            );
+            printf("      Drv: \"%s\". Plat: %p. Priv: %p\n",
+                dev->driver->name,
+                dev->plat,
+                dev->priv
             );
         }
     }
+}
+
+
+/**
+ * The device is handed out only after its probe succeeded, so the lookup
+ * goes into a local variable first.
+ */
+int uclass_get_device(
+    enum uclass_id id,
+    int index,
+    struct udevice **devp
+)
+{
+    struct udevice *dev;
+    
+    int ret = uclass_find_device(id, index, &dev);
+
+    if (ret)
+        return ret;
+
+    ret = device_probe(dev);
+
+    if (ret)
+        return ret;
+
+    *devp = dev;
+
+    return SUCCESS;
 }

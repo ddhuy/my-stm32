@@ -110,5 +110,4 @@ void gpio_set_alternative(
 DM_DRIVER(stm32_gpio) = {
     .name = "stm32_gpio",
     .id   = UCLASS_GPIO,
-    .priv_auto = 16,
 };

@@ -1,22 +1,33 @@
+#include <errno.h>
 #include <console.h>
 #include <serial.h>
+#include <dm/uclass.h>
 
 
 /*
- * Base address of the console UART; 0 until console_init() is called.
- * The driver model will replace this with a lookup of a serial device.
+ * The serial device that carries the console; NULL until console_init()
+ * has succeeded.
  */
-static uintptr_t console_base;
+static struct udevice *console_dev;
 
 
 /**
- * Remember which UART to use.
+ * The first serial device is the console. Asking for it probes it, which is
+ * what starts the UART. The variable is set only on success, so a failed
+ * call leaves the console off.
  */
-void console_init(
-    uintptr_t uart_base
-)
+int console_init(void)
 {
-    console_base = uart_base;
+    int ret;
+    struct udevice *dev;
+    
+    ret = uclass_get_device(UCLASS_SERIAL, 0, &dev);
+    if (ret)
+        return ret;
+
+    console_dev = dev;
+    
+    return SUCCESS;
 }
 
 
@@ -27,13 +38,13 @@ void putc(
     char ch
 )
 {
-    if (!console_base)
+    if (!console_dev)
         return;
 
     if (ch == '\n')
-        serial_putc(console_base, '\r');
+        serial_putc(console_dev, '\r');
 
-    serial_putc(console_base, ch);
+    serial_putc(console_dev, ch);
 }
 
 
@@ -54,10 +65,10 @@ void puts(
  */
 int getc(void)
 {
-    if (!console_base)
+    if (!console_dev)
         return -1;
 
-    return serial_getc(console_base);
+    return serial_getc(console_dev);
 }
 
 
@@ -66,8 +77,8 @@ int getc(void)
  */
 int tstc(void)
 {
-    if (!console_base)
+    if (!console_dev)
         return 0;
     
-    return serial_tstc(console_base);
+    return serial_tstc(console_dev);
 }
