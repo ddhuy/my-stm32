@@ -6,6 +6,8 @@
 #include <dm/root.h>
 #include <dm/uclass.h>
 
+#include <timer.h>
+
 
 /* Crude delay; replaced once there is a timer */
 static void delay(u32 count)
@@ -32,6 +34,14 @@ int main(void)
     printf("DM: %d devices bound\n", bound);
 
     uclass_print_devices();
+
+    struct udevice *tmr;
+    int ret = uclass_get_device(UCLASS_TIMER, 0, &tmr);
+    if (ret)
+        printf("Error %d. Timer\n", ret);
+    else
+        printf("Timer: %d  priv %p  ms %u\n",
+            ret, tmr->priv, timer_get_ms(tmr));
 
     for (;;)
     {

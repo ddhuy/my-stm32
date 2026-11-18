@@ -1,4 +1,5 @@
 #include <asm/io.h>
+#include <mach/clock_ids.h>
 #include <mach/stm32f429.h>
 #include <clock.h>
 
@@ -18,6 +19,10 @@
  */
 void clock_enable(u32 clk_id)
 {
+    /* Core clocks have no enable bit; RCC_ENR() of that bus is reserved */
+    if (clk_id / 32 == CLK_BUS_CORE)
+        return;
+
     uintptr_t enr = RCC_BASE + RCC_ENR(clk_id / 32);
 
     setbits(enr, BIT(clk_id % 32));

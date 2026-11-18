@@ -12,6 +12,7 @@ enum uclass_id
     UCLASS_INVALID = 0,
     UCLASS_GPIO,
     UCLASS_SERIAL,
+    UCLASS_TIMER,
 
     UCLASS_COUNT
 };

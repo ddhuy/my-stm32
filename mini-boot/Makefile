@@ -21,6 +21,7 @@ SRCS += drivers/core/uclass.c
 
 SRCS += drivers/gpio/gpio-uclass.c
 SRCS += drivers/serial/serial-uclass.c
+SRCS += drivers/timer/timer-uclass.c
 
 SRCS += lib/malloc.c
 SRCS += lib/printf.c

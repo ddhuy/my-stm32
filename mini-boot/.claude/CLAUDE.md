@@ -39,7 +39,10 @@ mini-boot/
 │   │   ├── cpu.mk                adds its sources, names the linker script
 │   │   └── start.S, fault.c, link.ld (sections only, INCLUDE memory.ld)
 │   └── mach-stm32f4/             true for one SoC family
-│       ├── mach.mk, clock.c
+│       ├── mach.mk               adds clock.c, devices.c and the drivers
+│       │                         of the in-chip devices (SysTick)
+│       ├── clock.c, devices.c    devices.c: DM_DEVICE rows for blocks
+│       │                         every board on this SoC has
 │       └── include/mach/         stm32f429.h (base addresses only),
 │                                 clock_ids.h (CLK_*), irqs.h (NR_IRQS)
 ├── board/stm32f429i-disc1/       what is soldered on one board
@@ -50,13 +53,16 @@ mini-boot/
 ├── drivers/
 │   ├── core/                     driver.c, device.c, uclass.c, root.c
 │   ├── serial/                   serial-uclass.c (generic), stm32_serial.c
-│   └── gpio/                     gpio-uclass.c (generic), stm32_gpio.c
+│   ├── gpio/                     gpio-uclass.c (generic), stm32_gpio.c
+│   └── timer/                    timer-uclass.c (generic), armv7m_systick.c
 ├── include/                      generic APIs: types.h, errno.h, init.h,
-│   │                             clock.h, gpio.h, serial.h, console.h,
+│   │                             clock.h, gpio.h, serial.h, timer.h,
+│   │                             console.h,
 │   │                             printf.h, string.h, malloc.h, panic.h
 │   ├── dm/                       uclass-id.h, driver.h, device.h, uclass.h,
 │   │                             root.h
-│   └── platdata/                 stm32_serial.h, stm32_gpio.h: what a board
+│   └── platdata/                 stm32_serial.h, stm32_gpio.h,
+│                                 armv7m_systick.h: what a board (or SoC)
 │                                 tells a driver about one instance
 ├── lib/                          printf, string, malloc (no hardware access)
 └── common/                       main.c, console.c, panic.c
@@ -139,14 +145,25 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   name: LEDs, then console pins), console_init() (gets serial device 0,
   which probes it), then the first print. A failure before the console is
   up is silent; panic() lights the red LED if the LED port was found.
+- Timer (step 9): SysTick is a CPU block present on every board of the
+  SoC, so its DM_DEVICE row is in mach-stm32f4/devices.c, and mach.mk (not
+  board.mk) adds its driver. Its base (SYSTICK_BASE) is in asm/armv7m.h;
+  its register layout is private to drivers/timer/armv7m_systick.c. Its
+  clock is CLK_HCLK (bus CLK_BUS_CORE, not an RCC bus); clock_enable()
+  ignores it and clock_get_rate() gives the frequency. The timer uclass
+  has one operation, get_ms (no error code; a missing table gives 0). The
+  tick counter lives in priv: the first driver that uses priv.
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
   CONSOLE_GPIO_NAME).
 
-## Status (2026-11-16)
-Steps 1-8 done and tested on the board. Step 8 is not committed yet (last
-commit 22048bb is step 7).
+## Status (2026-11-17)
+Steps 1-8 done, tested on the board and committed (a2cb885 is step 8).
+Step 9 (timer) in progress: Part A (bind and probe SysTick, counter
+running, no interrupt, ops table commented out) done and tested on the
+board; Part B (interrupt + tick counter) and Part C (mdelay / get_timer,
+new main loop) not started.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -169,8 +186,22 @@ Known limitations:
   test for it.
 - The two uclass "get" functions duplicate their probe-and-return tail.
 - include/spi.h is an empty placeholder.
+- A NULL dereference does not fault: address 0 aliases flash, a read
+  returns the vector table, a write is dropped and sets FLASH_SR PGSERR /
+  PGPERR (seen in step 9, priv_auto removed). A driver using dev->priv must
+  declare .priv_auto; nothing checks it. An MPU no-access region at 0 would
+  catch it.
 
 ## Roadmap
-The driver model is complete for GPIO and serial. Next, in no fixed order:
-second target (QEMU lm3s6965evb) to prove the four-level split, a timer to
-replace the delay loop, 168 MHz PLL, SDRAM, SPI, linked-list uclass storage.
+The main purpose is learning the driver model. Agreed order:
+1. Timer (SysTick): device row at the SoC level, ops table get_ms only.
+   Part A bind/probe, Part B interrupt + tick counter (a static device
+   pointer set in probe, since the handler gets no dev), Part C mdelay() /
+   get_timer() and a main loop with a continuous echo and a timed blink.
+2. Second target on QEMU (lm3s6965evb) to prove the four-level split.
+3. Clock uclass, with the 168 MHz PLL from HSE as its first real use.
+4. SPI, with the L3GD20 gyroscope as a child device (parent/child).
+5. Command shell, including a `dm` command.
+6. Booting an application.
+7. SDRAM (FMC at 0xD0000000), firm, likely with a pinctrl uclass.
+Linked-list uclass storage when the fixed array gets in the way.
