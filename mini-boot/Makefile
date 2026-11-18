@@ -13,6 +13,7 @@ SRCS := common/main.c
 
 SRCS += common/console.c
 SRCS += common/panic.c
+SRCS += common/time.c
 
 SRCS += drivers/core/device.c
 SRCS += drivers/core/driver.c
