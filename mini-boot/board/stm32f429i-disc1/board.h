@@ -12,7 +12,9 @@
 /* 8 MHz crystal on OSC_IN / OSC_OUT */
 #define HSE_HZ              8000000
 
-/* Console: USART1 on PA9 (TX) / PA10 (RX), wired to the ST-LINK virtual COM port */
+/* Console: USART1 on PA9 (TX) / PA10 (RX),
+ * wired to the ST-LINK virtual COM port
+ */
 #define CONSOLE_UART_BASE   USART1_BASE
 #define CONSOLE_UART_CLK    CLK_USART1
 #define CONSOLE_BAUDRATE    115200

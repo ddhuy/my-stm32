@@ -95,7 +95,8 @@ void board_print_info(void)
     printf("\n""+-------------------------------+\n");
     printf(    "| MINI-BOOT                     |\n");
     printf(    "| - Board: STM32F429I-DISC1.    |\n");
-    printf(    "| - Console clock: %u Hz. |\n", clock_get_rate(CONSOLE_UART_CLK));
+    printf(    "| - Console clock: %u Hz. |\n",
+        clock_get_rate(CONSOLE_UART_CLK));
     printf(    "+-------------------------------+\n");
 }
 
