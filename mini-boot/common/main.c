@@ -2,7 +2,7 @@
 #include <init.h>
 #include <panic.h>
 #include <printf.h>
-#include <time.h>
+#include <systime.h>
 #include <types.h>
 #include <dm/root.h>
 #include <dm/uclass.h>
@@ -30,8 +30,8 @@ int main(void)
     if (console_init())
         panic("No console!");
 
-    /* get_timer() and mdelay() work only from here on */
-    if (timer_init())
+    /* systime_elapsed_ms() and systime_mdelay() work only from here on */
+    if (systime_init())
         panic("No Timer!");
 
     board_print_info();
@@ -41,15 +41,15 @@ int main(void)
     uclass_print_devices();
 
     /* Boot-time self-check of the timer: expect 1000 (1001 at most) */
-    u32 t = get_timer(0);
-    mdelay(1000);
-    printf("mdelay(1000): %u ms\n", get_timer(t));
+    u32 t = systime_elapsed_ms(0);
+    systime_mdelay(1000);
+    printf("systime_mdelay(1000): %u ms\n", systime_elapsed_ms(t));
 
     /*
      * Start the blink schedule now, not at 0: the counter has been running
      * since probe, and starting behind would make the first toggles burst.
      */
-    u32 last = get_timer(0);
+    u32 last = systime_elapsed_ms(0);
 
     /*
      * Nothing in the loop blocks, so the echo is polled continuously and a
@@ -66,7 +66,7 @@ int main(void)
          * more (seen in step 9). 'last +=' keeps the toggles on a 500 ms grid
          * instead of drifting with the loop's lateness.
          */
-        if (get_timer(last) >= BLINK_MS)
+        if (systime_elapsed_ms(last) >= BLINK_MS)
         {
             board_led_toggle();
             last += BLINK_MS;

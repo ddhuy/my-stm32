@@ -1,5 +1,5 @@
 #include <errno.h>
-#include <time.h>
+#include <systime.h>
 #include <timer.h>
 #include <dm/uclass.h>
 
@@ -10,8 +10,8 @@
  */
 
 /**
- * The timer device behind get_timer() and mdelay(); NULL until
- * timer_init() has succeeded.
+ * The timer device behind systime_elapsed_ms() and systime_mdelay(); NULL
+ * until systime_init() has succeeded.
  */
 static struct udevice *timer_dev;
 
@@ -21,7 +21,7 @@ static struct udevice *timer_dev;
  * SoC's name for it. Asking for it probes it, which starts the counter. The
  * variable is set only on success, so a failed call leaves time stopped.
  */
-int timer_init(void)
+int systime_init(void)
 {
     int ret;
     struct udevice *dev;
@@ -41,7 +41,7 @@ int timer_init(void)
  * Without a timer, no time passes: 0, whatever 'base' is. Calling
  * timer_get_ms(NULL) would follow a NULL device, which does not fault here.
  */
-u32 get_timer(
+u32 systime_elapsed_ms(
     u32 base
 )
 {
@@ -53,15 +53,15 @@ u32 get_timer(
 
 
 /**
- * Busy wait. Built on get_timer(), so it is wrap-safe; it never returns if
- * there is no timer.
+ * Busy wait. Built on systime_elapsed_ms(), so it is wrap-safe; it never
+ * returns if there is no timer.
  */
-void mdelay(
+void systime_mdelay(
     u32 ms
 )
 {
-    u32 start = get_timer(0);
+    u32 start = systime_elapsed_ms(0);
 
-    while (get_timer(start) < ms)
+    while (systime_elapsed_ms(start) < ms)
         ;
 }

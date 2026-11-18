@@ -13,7 +13,7 @@ SRCS := common/main.c
 
 SRCS += common/console.c
 SRCS += common/panic.c
-SRCS += common/time.c
+SRCS += common/systime.c
 
 SRCS += drivers/core/device.c
 SRCS += drivers/core/driver.c
@@ -44,14 +44,15 @@ SIZE	:= $(CROSS_COMPILE)size
 OBJS = $(patsubst %,$(BUILD)/%.o,$(basename $(SRCS)))
 
 
-CFLAGS   = $(CPUFLAGS) -ffreestanding -Wall -Wextra -Wmissing-prototypes \
+CFLAGS   = $(CPUFLAGS) -ffreestanding \
+		   -Wall -Werror -Wextra -Wmissing-prototypes \
 		   -g -Os \
 		   -ffunction-sections -fdata-sections \
 		   -Iinclude -Iarch/$(ARCH)/include \
 		   -Iarch/$(ARCH)/mach-$(MACH)/include -Iboard/$(BOARD) \
 		   -MMD -MP
 LDFLAGS  = $(CPUFLAGS) -nostdlib -T $(LDSCRIPT) -L board/$(BOARD) \
-		   -Wl,--gc-sections -Wl,-Map=$(TARGET).map
+		   -Wl,--gc-sections -Wl,--fatal-warnings -Wl,-Map=$(TARGET).map
 
 .PHONY: all flash disasm clean
 

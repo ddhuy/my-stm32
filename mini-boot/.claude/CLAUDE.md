@@ -20,6 +20,7 @@ and boards can be added. The purpose is learning.
   when a step is finished. A comment pass changes comment lines only.
 - I commit myself. Claude helps with the commit message when asked.
 - board_print_info() in board.c prints the whole banner box; keep it so.
+- Always review my work; don't expect me to get everything right.
 
 ## Background
 I have already done bare-metal work on this board as single-file main.c
@@ -57,7 +58,7 @@ mini-boot/
 │   └── timer/                    timer-uclass.c (generic), armv7m_systick.c
 ├── include/                      generic APIs: types.h, errno.h, init.h,
 │   │                             clock.h, gpio.h, serial.h, timer.h,
-│   │                             console.h, time.h,
+│   │                             console.h, systime.h,
 │   │                             printf.h, string.h, malloc.h, panic.h
 │   ├── dm/                       uclass-id.h, driver.h, device.h, uclass.h,
 │   │                             root.h
@@ -65,7 +66,7 @@ mini-boot/
 │                                 armv7m_systick.h: what a board (or SoC)
 │                                 tells a driver about one instance
 ├── lib/                          printf, string, malloc (no hardware access)
-└── common/                       main.c, console.c, panic.c, time.c
+└── common/                       main.c, console.c, panic.c, systime.c
 
 Adding a board on the same SoC = a new board/<name>/. A new SoC family = a
 new arch/arm/mach-<name>/. A new architecture = a new arch/<name>/.
@@ -80,7 +81,9 @@ different SoC and UART), not started.
   order; each fragment appends with `SRCS +=`.
 - Include flags: -Iinclude -Iarch/$(ARCH)/include
   -Iarch/$(ARCH)/mach-$(MACH)/include -Iboard/$(BOARD).
-- Warnings: -Wall -Wextra -Wmissing-prototypes; the build must stay at 0.
+- Warnings: -Wall -Wextra -Wmissing-prototypes, all errors (-Werror);
+  linker warnings too (-Wl,--fatal-warnings). For an experiment that
+  needs a warning, drop -Werror for that one build.
   A .c file includes the header that declares what it defines, so the
   compiler compares the two. A C function called only from assembly
   (hardfault_report) gets a prototype in its own file.
@@ -143,10 +146,10 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   console pins.
 - Boot order in main(): dm_init(), board_init() (gets its GPIO ports by
   name: LEDs, then console pins), console_init() (gets serial device 0,
-  which probes it), timer_init() (timer device 0), then the first print.
+  which probes it), systime_init() (timer device 0), then the first print.
   The main loop never blocks: continuous echo, LED toggled every BLINK_MS
-  by get_timer(). A failure before the console is up is silent; panic()
-  lights the red LED if the LED port was found.
+  by systime_elapsed_ms(). A failure before the console is up is silent;
+  panic() lights the red LED if the LED port was found.
 - Timer (step 9): SysTick is a CPU block present on every board of the
   SoC, so its DM_DEVICE row is in mach-stm32f4/devices.c, and mach.mk (not
   board.mk) adds its driver. Its base (SYSTICK_BASE) is in asm/armv7m.h;
@@ -157,21 +160,23 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   tick counter lives in priv: the first driver that uses priv. The
   handler gets no dev, so the driver keeps one static device pointer, set
   in probe before TICKINT; a second SysTick device gets -EBUSY.
-- System time (common/time.c, include/time.h) sits on the timer uclass as
-  console.c sits on the serial uclass: timer_init() takes timer device 0;
-  get_timer(base) and mdelay(ms) need no dev. Time values are u32; compare
-  elapsed times (get_timer(start) >= timeout), never now >= start +
-  timeout (tested across the 2^32 wrap in step 9: the wrong form bursts,
-  then freezes). get_timer() returns 0 before timer_init(), so mdelay()
-  before timer_init() never returns.
+- System time (common/systime.c, include/systime.h) sits on the timer
+  uclass as console.c sits on the serial uclass: systime_init() takes
+  timer device 0; systime_elapsed_ms(base) and systime_mdelay(ms) need no
+  dev. Not named time.h: one letter from timer.h, and it would shadow the
+  C library's <time.h>. Time values are u32; compare elapsed times
+  (systime_elapsed_ms(start) >= timeout), never now >= start + timeout
+  (tested across the 2^32 wrap in step 9: the wrong form bursts, then
+  freezes). systime_elapsed_ms() returns 0 before systime_init(), so
+  systime_mdelay() before systime_init() never returns.
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
   CONSOLE_GPIO_NAME).
 
 ## Status (2026-11-18)
-Steps 1-9 done and tested on the board. Step 9 parts A and B are
-committed (bb0fa77, 539fa0c); part C is not committed yet.
+Steps 1-9 done, tested on the board and committed (step 9: bb0fa77,
+539fa0c, a0649bc). The rename time.* -> systime.* is not committed yet.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -185,9 +190,9 @@ committed (bb0fa77, 539fa0c); part C is not committed yet.
   board.c reaches the LEDs and the console pins through GPIO devices and no
   longer calls a driver with a base address.
 - Step 9: timer uclass and SysTick driver (row at the SoC level,
-  interrupt, ms counter in priv; 60 006 ms over 60 s); get_timer() and
-  mdelay(); the delay loop (delay(500000) was 408 ms) replaced by a
-  non-blocking main loop; a pasted line echoes back whole.
+  interrupt, ms counter in priv; 60 006 ms over 60 s); systime_elapsed_ms()
+  and systime_mdelay(); the delay loop (delay(500000) was 408 ms) replaced
+  by a non-blocking main loop; a pasted line echoes back whole.
 
 Known limitations:
 - free() does nothing, so a device that fails after allocation is leaked.
