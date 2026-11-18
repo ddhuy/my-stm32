@@ -36,7 +36,7 @@ int main(void)
     uclass_print_devices();
 
     struct udevice *tmr;
-    int ret = uclass_get_device(UCLASS_TIMER, 0, &tmr);
+    int ret = uclass_get_device_by_name(UCLASS_TIMER, "systick", &tmr);
     if (ret)
         printf("Error %d. Timer\n", ret);
     else
@@ -50,5 +50,8 @@ int main(void)
         
         board_led_toggle();
         delay(500000);
+
+        if (!ret)
+            printf("Timer: %u\n", timer_get_ms(tmr));
     }
 }

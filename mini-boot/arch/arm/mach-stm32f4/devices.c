@@ -20,7 +20,7 @@ static const struct armv7m_systick_plat systick_plat = {
 
 
 DM_DEVICE(systick) = {
-    .name   = "armv7m_systick",
+    .name   = "systick",
     .driver = "armv7m_systick",
     .plat   = &systick_plat,
 };

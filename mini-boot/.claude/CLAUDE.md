@@ -160,10 +160,11 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
 
 ## Status (2026-11-17)
 Steps 1-8 done, tested on the board and committed (a2cb885 is step 8).
-Step 9 (timer) in progress: Part A (bind and probe SysTick, counter
-running, no interrupt, ops table commented out) done and tested on the
-board; Part B (interrupt + tick counter) and Part C (mdelay / get_timer,
-new main loop) not started.
+Step 9 (timer) in progress: Part A (bind and probe SysTick) and Part B
+(interrupt, tick counter in priv, get_ms; 60 006 ms counted over 60 s;
+a second SysTick row gets -EBUSY) done and tested on the board. Part C
+(mdelay / get_timer, new main loop) not started. delay(500000) measured
+at 408 ms.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.

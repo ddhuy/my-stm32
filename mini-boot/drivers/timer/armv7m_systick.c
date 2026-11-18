@@ -24,6 +24,24 @@
 #define SYSTICK_CTRL_CLKSOURCE  BIT(2)
 
 
+/*
+ * Called only from the vector table (slot 15 in start.S), so no header
+ * declares it. The prototype is here for -Wmissing-prototypes. The name
+ * must match start.S exactly: a different one (CMSIS SysTick_Handler)
+ * builds cleanly but leaves the weak default_handler in the table.
+ */
+void systick_handler(void);
+
+
+/**
+ * The device the interrupt counts for. The hardware calls the handler with
+ * no arguments, so it cannot be given a device; this pointer is the only
+ * way back. One SysTick per CPU makes one pointer enough, and probe refuses
+ * a second device rather than take the interrupt away from the first.
+ */
+static struct udevice *systick_dev = NULL;
+
+
 /**
  * Per-device data the driver changes at run time, so it lives on the heap
  * (priv_auto) rather than in the constant platform data.
@@ -36,13 +54,18 @@ struct armv7m_systick_priv
 
 
 /**
- * Start the counter at SYSTICK_TICKS_PER_SEC wraps per second. The core has
- * already allocated priv. The interrupt stays off until there is a handler.
+ * Start the counter at SYSTICK_TICKS_PER_SEC wraps per second, with an
+ * interrupt at each wrap. The core has already allocated priv (zeroed, so
+ * ticks starts at 0). Returns -EBUSY if another device owns the interrupt.
  */
 static int armv7m_systick_probe (
     struct udevice *dev
 )
 {
+    /* Checked before any register is touched, so a refusal changes nothing */
+    if (systick_dev)
+        return -EBUSY;
+
     const struct armv7m_systick_plat *plat = dev->plat;
 
     /* The rate comes from the SoC's clock code, never a hardcoded value */
@@ -55,49 +78,67 @@ static int armv7m_systick_probe (
     if (reload > SYSTICK_LOAD_MAX)
         return -EINVAL;
 
+    /* Remember the input clock the reload was computed from */
+    struct armv7m_systick_priv *priv = dev->priv;
+    priv->rate = rate;
+
+    /*
+     * Everything the handler uses must be ready before TICKINT is set: from
+     * then on it can run at any moment. So it needs no NULL check.
+     */
+    systick_dev = dev;
+
     /*
      * LOAD first, then clear VAL (any write does) so the first period is a
      * full one, then CTRL last to start. CLKSOURCE = 1: count the processor
      * clock, which plat->clk_id names (see platdata/armv7m_systick.h).
+     * TICKINT = 1: SysTick is a system exception, so no NVIC enable is
+     * needed.
      */
     writel(reload, plat->base + SYSTICK_LOAD);
     writel(0, plat->base + SYSTICK_VAL);
-    writel(SYSTICK_CTRL_CLKSOURCE | SYSTICK_CTRL_ENABLE,
+    writel(SYSTICK_CTRL_CLKSOURCE | SYSTICK_CTRL_TICKINT | SYSTICK_CTRL_ENABLE,
         plat->base + SYSTICK_CTRL);
-    
-    /* Remember the input clock: it can change at run time once the PLL is in */
-    struct armv7m_systick_priv *priv = dev->priv;
-    priv->rate = rate;
 
     return SUCCESS;
 }
 
 
 /**
- * Milliseconds since probe: one tick is one millisecond. Enabled in Part B,
- * when the interrupt starts counting.
+ * One tick per wrap, every millisecond. Kept to one increment: anything slow
+ * here (a printf) would take longer than the time between two ticks.
  */
-// static u32 armv7m_systick_get_ms (
-//     struct udevice *dev
-// )
-// {
-//     struct armv7m_systick_priv *priv = dev->priv;
+void systick_handler(void)
+{
+    struct armv7m_systick_priv *priv = systick_dev->priv;
+    priv->ticks++;
+}
 
-//     return priv->ticks;
-// }
+
+/**
+ * Milliseconds since probe: one tick is one millisecond. ticks is volatile
+ * and one aligned 32-bit word, so this read is never torn by the handler.
+ */
+static u32 armv7m_systick_get_ms (
+    struct udevice *dev
+)
+{
+    struct armv7m_systick_priv *priv = dev->priv;
+
+    return priv->ticks;
+}
 
 
 /**
  * The timer operations this driver provides.
  */
-// static const struct timer_ops armv7m_systick_ops = {
-//     .get_ms = armv7m_systick_get_ms
-// };
+static const struct timer_ops armv7m_systick_ops = {
+    .get_ms = armv7m_systick_get_ms
+};
 
 
 /**
- * Generic for any ARMv7-M core, so the name carries no SoC prefix. Without
- * .ops (until Part B) timer_get_ms() returns 0.
+ * Generic for any ARMv7-M core, so the name carries no SoC prefix.
  */
 DM_DRIVER(armv7m_systick) = {
     .name = "armv7m_systick",
@@ -107,5 +148,5 @@ DM_DRIVER(armv7m_systick) = {
 
     .priv_auto = sizeof(struct armv7m_systick_priv),
 
-    // .ops = &armv7m_systick_ops,
+    .ops = &armv7m_systick_ops,
 };
