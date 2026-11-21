@@ -1,5 +1,5 @@
 #include <asm/io.h>
-#include <clock.h>
+#include <clk.h>
 #include <errno.h>
 #include <timer.h>
 #include <dm/device.h>
@@ -56,7 +56,11 @@ struct armv7m_systick_priv
 /**
  * Start the counter at SYSTICK_TICKS_PER_SEC wraps per second, with an
  * interrupt at each wrap. The core has already allocated priv (zeroed, so
- * ticks starts at 0). Returns -EBUSY if another device owns the interrupt.
+ * ticks starts at 0).
+ *
+ * Returns 0; -EBUSY if another device owns the interrupt; the clock
+ * provider's error (-ENODEV: no provider of that name); -EINVAL if the
+ * rate is 0 or too high for the 24-bit reload.
  */
 static int armv7m_systick_probe (
     struct udevice *dev
@@ -67,9 +71,19 @@ static int armv7m_systick_probe (
         return -EBUSY;
 
     const struct armv7m_systick_plat *plat = dev->plat;
+    struct clk clk;
+    int ret;
 
-    /* The rate comes from the SoC's clock code, never a hardcoded value */
-    u32 rate = clock_get_rate(plat->clk_id);
+    ret = clk_get_by_name(plat->clk_dev, plat->clk_id, &clk);
+    if (ret)
+        return ret;
+
+    ret = clk_enable(&clk);
+    if (ret)
+        return ret;
+
+    /* The rate comes from the provider, never a hardcoded value */
+    u32 rate = clk_get_rate(&clk);
     if (!rate)
         return -EINVAL;
 

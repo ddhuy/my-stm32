@@ -1,4 +1,3 @@
-SRCS += arch/$(ARCH)/mach-$(MACH)/clock.c
 SRCS += arch/$(ARCH)/mach-$(MACH)/devices.c
 
 SRCS += drivers/clk/stm32f4_rcc.c

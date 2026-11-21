@@ -1,5 +1,5 @@
 #include <board.h>
-#include <clock.h>
+#include <clk.h>
 #include <errno.h>
 #include <init.h>
 #include <printf.h>
@@ -27,15 +27,22 @@ void board_led_toggle(void)
 
 
 /**
- * Print the boot banner with the board's name and facts.
+ * Print the boot banner with the board's name and facts. The console clock
+ * is looked up with the same two names as the uart0 row (board.h); a failed
+ * lookup prints 0, since the banner only informs.
  */
 void board_print_info(void)
 {
+    struct clk clk;
+    u32 rate = 0;
+
+    if (!clk_get_by_name(CONSOLE_UART_CLK_DEV, CONSOLE_UART_CLK, &clk))
+        rate = clk_get_rate(&clk);
+
     printf("\n""+---------------------------------+\n");
     printf(    "| MINI-BOOT                       |\n");
     printf(    "| - Board: LM3S6965EVB (QEMU).    |\n");
-    printf(    "| - Console clock: %u Hz.   |\n",
-        clock_get_rate(CONSOLE_UART_CLK));
+    printf(    "| - Console clock: %u Hz.   |\n", rate);
     printf(    "+---------------------------------+\n");
 }
 
@@ -77,7 +84,7 @@ DM_DEVICE(sysctl) = {
 static const struct pl011_serial_plat uart0_plat = {
     .base = CONSOLE_UART_BASE,
     .baudrate = CONSOLE_BAUDRATE,
-    .clk_dev = LM3S_SYSCTL_NAME,
+    .clk_dev = CONSOLE_UART_CLK_DEV,
     .clk_id = CONSOLE_UART_CLK,
 };
 

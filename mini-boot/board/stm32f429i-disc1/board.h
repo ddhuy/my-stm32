@@ -15,15 +15,16 @@
 /* Console: USART1 on PA9 (TX) / PA10 (RX),
  * wired to the ST-LINK virtual COM port
  */
-#define CONSOLE_UART_BASE   USART1_BASE
-#define CONSOLE_UART_CLK    STM32F4_CLK_USART1
-#define CONSOLE_BAUDRATE    115200
-#define CONSOLE_GPIO_NAME   "gpioa"
-#define CONSOLE_GPIO_BASE   GPIOA_BASE
-#define CONSOLE_GPIO_CLK    STM32F4_CLK_GPIOA
-#define CONSOLE_TX_PIN      9
-#define CONSOLE_RX_PIN      10
-#define CONSOLE_PIN_AF      7
+#define CONSOLE_UART_BASE    USART1_BASE
+#define CONSOLE_UART_CLK_DEV STM32F4_RCC_NAME
+#define CONSOLE_UART_CLK     STM32F4_CLK_USART1
+#define CONSOLE_BAUDRATE     115200
+#define CONSOLE_GPIO_NAME    "gpioa"
+#define CONSOLE_GPIO_BASE    GPIOA_BASE
+#define CONSOLE_GPIO_CLK     STM32F4_CLK_GPIOA
+#define CONSOLE_TX_PIN       9
+#define CONSOLE_RX_PIN       10
+#define CONSOLE_PIN_AF       7
 
 /* User LEDs, active high */
 #define LED_GPIO_NAME       "gpiog"
