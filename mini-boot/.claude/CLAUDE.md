@@ -58,7 +58,8 @@ mini-boot/
 │                                 files; board.mk sets QEMU_MACHINE
 ├── drivers/
 │   ├── core/                     driver.c, device.c, uclass.c, root.c
-│   ├── serial/                   serial-uclass.c (generic), stm32_serial.c
+│   ├── serial/                   serial-uclass.c (generic), stm32_serial.c,
+│   │                             pl011_serial.c
 │   ├── gpio/                     gpio-uclass.c (generic), stm32_gpio.c
 │   └── timer/                    timer-uclass.c (generic), armv7m_systick.c
 ├── include/                      generic APIs: types.h, errno.h, init.h,
@@ -68,8 +69,9 @@ mini-boot/
 │   ├── dm/                       uclass-id.h, driver.h, device.h, uclass.h,
 │   │                             root.h
 │   └── platdata/                 stm32_serial.h, stm32_gpio.h,
-│                                 armv7m_systick.h: what a board (or SoC)
-│                                 tells a driver about one instance
+│                                 armv7m_systick.h, pl011_serial.h: what a
+│                                 board (or SoC) tells a driver about one
+│                                 instance
 ├── lib/                          printf, string, malloc (no hardware access)
 └── common/                       main.c, console.c, panic.c, systime.c
 
@@ -119,7 +121,11 @@ devices.c (the in-chip rows, such as SysTick) and mach.mk.
   gives a 12.5 MHz system clock (its own model, not the real chip's);
   SysTick counts only the CPU clock; RCGC gating is stored, not enforced,
   so a missing clock_enable() is invisible in QEMU (check RCGC in gdb).
-  No GPIO and no LED on this target.
+  QEMU's PL011 sends and receives even with UARTEN/TXE/RXE clear (it
+  only logs "PL011 data written to disabled UART" with -d guest_errors)
+  and ignores the baud divisor: working output proves the DM wiring, not
+  the register code; check IBRD/FBRD/LCR_H/CR in gdb. No GPIO and no LED
+  on this target.
 
 ## Layering rules
 - common/, lib/, drivers/ and include/ never include <mach/...> or board.h.
@@ -212,13 +218,18 @@ Steps 1-9 done, tested on the board and committed (step 9: bb0fa77,
 539fa0c, a0649bc; rename to systime.* and -Werror: 5b66684). The
 systime/-Werror build is not yet flashed to the board.
 Roadmap item 2 (QEMU lm3s6965evb), in parts:
-- Part A done: mach-lm3s and board/lm3s6965evb skeleton, run/debug
-  targets. Checked in gdb: vector table at 0 (SP 0x20010000), dm_init()
-  binds 1 device (systick, not probed), board_init() 0, console_init()
-  -ENODEV, panic("No console!") silent. STM32 build unchanged (text 3740).
-- Next: Part B, PL011 serial driver (drivers/serial/pl011_serial.c,
+- Part A done (a8655df): mach-lm3s and board/lm3s6965evb skeleton,
+  run/debug targets. Checked in gdb: vector table at 0 (SP 0x20010000),
+  dm_init() binds 1 device (systick, not probed), board_init() 0,
+  console_init() -ENODEV, panic("No console!") silent.
+- Part B done: PL011 serial driver (drivers/serial/pl011_serial.c,
   include/platdata/pl011_serial.h), named after the IP block, not the
-  SoC; first real use of the lm3s clock_enable() (check RCGC1 bit 0).
+  SoC; row uart0 in board.c, driver chosen in board.mk. Full boot in
+  QEMU: banner, 2 devices bound, systime_mdelay(1000) 1000 ms, echo. In
+  gdb: RCGC1 0x1, IBRD 6, FBRD 50, LCR_H 0x70, CR 0x301; no guest_errors.
+  No generic file changed: a second driver in an existing uclass needed
+  nothing from console.c, serial-uclass.c or main.c. STM32 build
+  unchanged (text 3740).
 - Then: Part C, SysTick on the M3 and the clock rate computed from RCC
   instead of the 12.5 MHz constant; Part D, audit of every file outside
   the two new directories that had to change (so far: Makefile run/debug,
@@ -256,12 +267,14 @@ Known limitations:
   declare .priv_auto; nothing checks it. An MPU no-access region at 0 would
   catch it.
 - lm3s: clock_get_rate() returns a constant (QEMU's 12.5 MHz) until Part C.
+- lm3s: UART0's pins (PA0/PA1) are not set up; fine in QEMU, needed on a
+  real LM3S6965 (GPIO on lm3s skipped).
 
 ## Roadmap
 The main purpose is learning the driver model. Agreed order:
 1. Timer (SysTick): done (step 9).
 2. Second target on QEMU (lm3s6965evb) to prove the four-level split:
-   in progress (Part A done).
+   in progress (Parts A and B done).
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use.
 4. SPI, with the L3GD20 gyroscope as a child device (parent/child).
 5. Command shell, including a `dm` command.

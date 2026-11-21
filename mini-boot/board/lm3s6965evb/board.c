@@ -3,6 +3,8 @@
 #include <errno.h>
 #include <init.h>
 #include <printf.h>
+#include <dm/device.h>
+#include <platdata/pl011_serial.h>
 
 
 /**
@@ -42,3 +44,24 @@ void board_print_info(void)
  */
 void board_panic(void)
 {}
+
+
+/*
+ * The devices on this board, for the driver model. dm_init() binds each
+ * DM_DEVICE entry to the driver it names.
+ */
+
+/**
+ * UART0: the console. QEMU connects it to the terminal (-nographic).
+ */
+static const struct pl011_serial_plat uart0_plat = {
+    .base = CONSOLE_UART_BASE,
+    .baudrate = CONSOLE_BAUDRATE,
+    .clk_id = CONSOLE_UART_CLK,
+};
+
+DM_DEVICE(uart0) = {
+    .name = "uart0",
+    .driver = "pl011_serial",
+    .plat = &uart0_plat,
+};
