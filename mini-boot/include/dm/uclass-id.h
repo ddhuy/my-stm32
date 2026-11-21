@@ -13,6 +13,7 @@ enum uclass_id
     UCLASS_GPIO,
     UCLASS_SERIAL,
     UCLASS_TIMER,
+    UCLASS_CLK,
 
     UCLASS_COUNT
 };

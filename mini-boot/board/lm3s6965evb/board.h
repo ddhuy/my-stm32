@@ -5,9 +5,8 @@
  * Board facts: QEMU machine lm3s6965evb. Included by board.c only; drivers
  * never see this file.
  */
-
-#include <mach/clock_ids.h>
 #include <mach/lm3s6965.h>
+#include <platdata/lm3s_sysctl.h>
 
 
 /* 8 MHz crystal on the main oscillator; run at the chip's maximum, 50 MHz */
@@ -19,7 +18,7 @@
  * setup; QEMU models no pins.
  */
 #define CONSOLE_UART_BASE (UART0_BASE)
-#define CONSOLE_UART_CLK  (CLK_UART0)
+#define CONSOLE_UART_CLK  (LM3S_CLK_UART0)
 #define CONSOLE_BAUDRATE  115200
 
 #endif /* MINIBOOT_BOARD_LM3S6965EVB_H */

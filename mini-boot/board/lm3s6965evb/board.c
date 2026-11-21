@@ -4,19 +4,18 @@
 #include <init.h>
 #include <printf.h>
 #include <dm/device.h>
-#include <mach/sysctl.h>
+#include <platdata/lm3s_sysctl.h>
 #include <platdata/pl011_serial.h>
 
 
 /**
- * Bring up the board: the system clock, before any driver reads a rate.
- * GPIO is skipped on this target, and QEMU's UART needs no pin setup.
- *
- * Returns 0, or the error from lm3s_clock_init().
+ * Bring up the board. Nothing to do: the system clock is set up by the
+ * sysctl device's probe, on first use; GPIO is skipped on this target,
+ * and QEMU's UART needs no pin setup. Always returns 0.
  */
 int board_init(void)
 {
-    return lm3s_clock_init(BOARD_XTAL_HZ, BOARD_SYSCLK_HZ);
+    return SUCCESS;
 }
 
 
@@ -55,11 +54,30 @@ void board_panic(void)
  */
 
 /**
+ * System Control: the clock provider. Its row is here, not in the SoC's
+ * devices.c, because its settings are board facts: the crystal and the
+ * chosen speed.
+ */
+static const struct lm3s_sysctl_plat sysctl_plat = {
+    .base      = SYSCTL_BASE,
+    .xtal_hz   = BOARD_XTAL_HZ,
+    .sysclk_hz = BOARD_SYSCLK_HZ,
+};
+
+DM_DEVICE(sysctl) = {
+    .name   = LM3S_SYSCTL_NAME,
+    .driver = "lm3s_sysctl",
+    .plat   = &sysctl_plat,
+};
+
+
+/**
  * UART0: the console. QEMU connects it to the terminal (-nographic).
  */
 static const struct pl011_serial_plat uart0_plat = {
     .base = CONSOLE_UART_BASE,
     .baudrate = CONSOLE_BAUDRATE,
+    .clk_dev = LM3S_SYSCTL_NAME,
     .clk_id = CONSOLE_UART_CLK,
 };
 

@@ -20,6 +20,7 @@ SRCS += drivers/core/driver.c
 SRCS += drivers/core/root.c
 SRCS += drivers/core/uclass.c
 
+SRCS += drivers/clk/clk-uclass.c
 SRCS += drivers/gpio/gpio-uclass.c
 SRCS += drivers/serial/serial-uclass.c
 SRCS += drivers/timer/timer-uclass.c

@@ -1,6 +1,6 @@
 #include <asm/armv7m.h>
 #include <dm/device.h>
-#include <mach/clock_ids.h>
+#include <platdata/lm3s_sysctl.h>
 #include <platdata/armv7m_systick.h>
 
 
@@ -15,7 +15,7 @@
  */
 static const struct armv7m_systick_plat systick_plat = {
     .base   = SYSTICK_BASE,
-    .clk_id = CLK_SYSCLK
+    .clk_id = LM3S_CLK_SYSCLK
 };
 
 

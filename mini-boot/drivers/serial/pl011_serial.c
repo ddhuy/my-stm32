@@ -1,5 +1,5 @@
 #include <asm/io.h>
-#include <clock.h>
+#include <clk.h>
 #include <errno.h>
 #include <serial.h>
 #include <dm/device.h>
@@ -38,24 +38,34 @@
 
 
 /**
- * Turn on the UART's clock, then program it in the order the TRM requires:
- * disable, write the divisor, write LCR_H (the write that latches IBRD and
- * FBRD), enable. 8 data bits, no parity, 1 stop bit, FIFOs on. A baud rate
- * or a clock rate of 0 is rejected.
+ * Get the UART's clock from its provider (which probes the provider on
+ * first use), turn it on, then program the UART in the order the TRM
+ * requires: disable, write the divisor, write LCR_H (the write that
+ * latches IBRD and FBRD), enable. 8 data bits, no parity, 1 stop bit,
+ * FIFOs on. A baud rate or a clock rate of 0 is rejected; an error from
+ * the clock provider is passed on.
  */
 static int pl011_serial_probe(
     struct udevice *dev
 )
 {
     const struct pl011_serial_plat *plat = dev->plat;
+    struct clk clk;
+    int ret;
 
     if (plat->baudrate == 0)
         return -EINVAL;
 
-    clock_enable(plat->clk_id);
+    ret = clk_get_by_name(plat->clk_dev, plat->clk_id, &clk);
+    if (ret)
+        return ret;
+
+    ret = clk_enable(&clk);
+    if (ret)
+        return ret;
 
     uintptr_t base = plat->base;
-    u32 clk_rate = clock_get_rate(plat->clk_id);
+    u32 clk_rate = clk_get_rate(&clk);
     u32 baudrate = plat->baudrate;
 
     if (clk_rate == 0)
