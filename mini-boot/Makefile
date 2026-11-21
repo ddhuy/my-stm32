@@ -54,7 +54,15 @@ CFLAGS   = $(CPUFLAGS) -ffreestanding \
 LDFLAGS  = $(CPUFLAGS) -nostdlib -T $(LDSCRIPT) -L board/$(BOARD) \
 		   -Wl,--gc-sections -Wl,--fatal-warnings -Wl,-Map=$(TARGET).map
 
-.PHONY: all flash disasm clean run debug
+# make check: every board in board/, so a new board joins automatically
+BOARDS := $(notdir $(wildcard board/*))
+
+# Boot test: the line main() prints just before the main loop (1000 or 1001)
+QEMU_BOOT_SECS := 5
+QEMU_BOOT_OK   := systime_mdelay(1000): 100
+
+
+.PHONY: all flash disasm clean run debug check boot-test
 
 all: $(TARGET).bin
 	$(SIZE) $(TARGET).elf
@@ -90,6 +98,30 @@ run: $(TARGET).elf
 
 debug: $(TARGET).elf
 	qemu-system-arm -M $(QEMU_MACHINE) -nographic -kernel $< -s -S
+
+# Everything that must stay true for every board. Not tied to one BOARD:
+# it runs make again for each one, and stops at the first failure.
+check:
+	@echo "check: layering"
+	@! grep -rn "mach/\|board\.h" common drivers include lib
+	@for b in $(BOARDS); do \
+		$(MAKE) --no-print-directory BOARD=$$b all boot-test || exit 1; \
+	done
+	@echo "check: all boards passed"
+
+# Boot this board in QEMU and look for the line printed just before the
+# main loop: DM, board, console and timer all came up. timeout's own exit
+# status (124) is ignored; grep's decides. stdin closed so that QEMU does
+# not take over the terminal.
+boot-test: $(TARGET).elf
+ifeq ($(QEMU_MACHINE),)
+	@echo "boot-test: $(BOARD) has no QEMU machine, skipped"
+else
+	@timeout $(QEMU_BOOT_SECS) qemu-system-arm -M $(QEMU_MACHINE) \
+		-nographic -kernel $< < /dev/null 2>&1 | grep -q '$(QEMU_BOOT_OK)' \
+		&& echo "boot-test: $(BOARD) boots in QEMU" \
+		|| { echo "boot-test: $(BOARD) did not reach the main loop"; exit 1; }
+endif
 
 clean:
 	rm -rf build

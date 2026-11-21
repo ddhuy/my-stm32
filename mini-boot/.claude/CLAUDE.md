@@ -78,8 +78,10 @@ mini-boot/
 
 Adding a board on the same SoC = a new board/<name>/. A new SoC family = a
 new arch/arm/mach-<name>/. A new architecture = a new arch/<name>/.
-Second target to prove the split: QEMU lm3s6965evb (Cortex-M3, different
-SoC and UART), in progress (roadmap item 2).
+Second target, which proved the split: QEMU lm3s6965evb (Cortex-M3,
+different SoC and UART; roadmap item 2, done). QEMU 10.2 has no STM32F429
+machine; the closest is the STM32F405 (netduinoplus2, olimex-stm32-h405),
+a possible third board on mach-stm32f4 (own memory.ld: 128K RAM).
 
 Every mach-<soc>/ provides: include/mach/<soc>.h (base addresses),
 clock_ids.h (CLK_* IDs for its clock.c), irqs.h (NR_IRQS, used by
@@ -89,6 +91,13 @@ devices.c (the in-chip rows, such as SysTick) and mach.mk.
 ## Build
 - `make` (default BOARD=stm32f429i-disc1), `make flash` (OpenOCD),
   `make disasm`, `make clean` (removes all of build/).
+- `make check`: the layering grep, then for every board in board/ (by
+  directory name, so a new board joins by itself) `all` and
+  `boot-test`. boot-test runs QEMU for QEMU_BOOT_SECS (5) and greps for
+  QEMU_BOOT_OK ("systime_mdelay(1000): 100", printed just before the main
+  loop); a board without QEMU_MACHINE is skipped (the STM32). Stops at the
+  first failure. Run it after every change to generic code. Tested to
+  fail on a layering break, a silent boot (baud 0) and a compile error.
 - Pass BOARD= on every command for the other target:
   `make BOARD=lm3s6965evb run` (QEMU, -nographic) and
   `make BOARD=lm3s6965evb debug` (adds -s -S: gdb server on :1234, CPU
@@ -222,6 +231,20 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   (tested across the 2^32 wrap in step 9: the wrong form bursts, then
   freezes). systime_elapsed_ms() returns 0 before systime_init(), so
   systime_mdelay() before systime_init() never returns.
+- Decided in step 2 (Part D):
+  - The SysTick row stays per SoC (mach-<soc>/devices.c, driver line in
+    mach.mk), though both copies differ only in the clock ID: which
+    clock feeds SysTick is a SoC fact (some SoCs feed a divided
+    reference), and moving it to cpu/armv7m would need every mach to
+    export one agreed clock name. Linux does the same (SysTick in each
+    SoC's device tree). The logic is shared; only ~20 lines of data are
+    duplicated.
+  - One platdata struct per driver (stm32_serial_plat, pl011_serial_plat)
+    even with identical fields: each is one driver's contract with its
+    boards and they will diverge (flow control, FIFOs, oversampling);
+    U-Boot does the same.
+  - Clock setup is asymmetric (lm3s programs its PLL from board_init(),
+    the STM32 runs on HSI): left for the clock uclass (roadmap item 3).
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
@@ -229,38 +252,32 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
 
 ## Status (2026-11-20)
 Steps 1-9 done, tested on the board and committed (step 9: bb0fa77,
-539fa0c, a0649bc; rename to systime.* and -Werror: 5b66684). The
-systime/-Werror build is not yet flashed to the board.
-Roadmap item 2 (QEMU lm3s6965evb), in parts:
-- Part A done (a8655df): mach-lm3s and board/lm3s6965evb skeleton,
-  run/debug targets. Checked in gdb: vector table at 0 (SP 0x20010000),
-  dm_init() binds 1 device (systick, not probed), board_init() 0,
-  console_init() -ENODEV, panic("No console!") silent.
-- Part B done (361e7d5): PL011 serial driver
-  (drivers/serial/pl011_serial.c, include/platdata/pl011_serial.h), named
-  after the IP block, not the SoC; row uart0 in board.c, driver chosen in
-  board.mk. Full boot in QEMU: banner, 2 devices bound,
-  systime_mdelay(1000) 1000 ms, echo. In
-  gdb: RCGC1 0x1, IBRD 6, FBRD 50, LCR_H 0x70, CR 0x301; no guest_errors.
-  No generic file changed: a second driver in an existing uclass needed
-  nothing from console.c, serial-uclass.c or main.c. STM32 build
-  unchanged (text 3740).
-- Part C done: lm3s_clock_init() (mach/sysctl.h) runs the PLL at 50 MHz
-  in the datasheet / driverlib order (bypass, XTAL + PWRDN/OEN clear,
-  SYSDIV + USESYSDIV, wait for RIS PLLLRIS with a bounded loop, clear
-  BYPASS); rejects crystals not in the XTAL table and rates that are not
-  a whole divider. Checked: RCC 0x01CE0380, IBRD 27 / FBRD 8, SysTick
-  LOAD 49999, mdelay(1000) = 1.000 s of host time.
-  Also fixed for both boards: Enter did not start a new line (the echo
-  sent a bare '\r'); first generic change of step 2 (common/main.c),
-  STM32 text 3740 -> 3744, not yet run on the board.
-- Next: Part D, audit of every file outside the two new directories that
-  had to change (so far: Makefile run/debug, header guards, and the
-  Enter fix, which is a shared bug, not a cost of the second target);
-  whether the duplicated SysTick row belongs at the cpu level; whether
-  stm32_serial_plat and pl011_serial_plat (same fields) should be one;
-  the asymmetry (lm3s programs its PLL in board_init(), the STM32 still
-  runs on HSI), which leads into roadmap item 3. GPIO on lm3s skipped.
+539fa0c, a0649bc; rename to systime.* and -Werror: 5b66684).
+Roadmap item 2 (QEMU lm3s6965evb) done: a8655df (skeleton), 361e7d5
+(PL011), 72d6388 (PLL at 50 MHz, rate from RCC, Enter fix), then Part D
+(audit, make check). Next: flash the STM32 once (not run on the board
+since 5b66684: systime, -Werror, guards, Enter fix), then roadmap item 3.
+- Part A: mach-lm3s and board/lm3s6965evb skeleton, run/debug targets.
+  In gdb: vector table at 0 (SP 0x20010000), 1 device bound (systick,
+  not probed), console_init() -ENODEV, silent panic("No console!").
+- Part B: PL011 serial driver, row uart0 in board.c, driver chosen in
+  board.mk. In gdb: RCGC1 0x1, IBRD 6, FBRD 50, LCR_H 0x70, CR 0x301; no
+  guest_errors. No generic file changed for a second driver in an
+  existing uclass.
+- Part C: lm3s_clock_init() in the datasheet / driverlib order (bypass,
+  XTAL + PWRDN/OEN clear, SYSDIV + USESYSDIV, wait for RIS PLLLRIS with a
+  bounded loop, clear BYPASS). Checked: RCC 0x01CE0380, IBRD 27 / FBRD 8,
+  SysTick LOAD 49999, mdelay(1000) = 1.000 s of host time. Enter fix in
+  common/main.c (both boards; STM32 text 3740 -> 3744).
+- Part D, the audit. Outside the two new directories step 2 changed: the
+  new driver (pl011_serial.c, platdata/pl011_serial.h, as designed), the
+  Makefile (run, debug, check: tooling), header guards renamed (shared
+  names found by the second target), whitespace, and the Enter fix (a
+  shared bug, not a porting cost). Zero lines of generic C changed for
+  the port: drivers/core, the uclasses, console.c, systime.c, lib/,
+  start.S, fault.c and link.ld took a new SoC as they were, and
+  armv7m_systick.c runs on both SoCs unchanged (only its data row
+  differs). The four-level split held.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -302,7 +319,7 @@ Known limitations:
 The main purpose is learning the driver model. Agreed order:
 1. Timer (SysTick): done (step 9).
 2. Second target on QEMU (lm3s6965evb) to prove the four-level split:
-   in progress (Parts A, B and C done).
+   done (make check keeps both targets building).
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use.
 4. SPI, with the L3GD20 gyroscope as a child device (parent/child).
 5. Command shell, including a `dm` command.
