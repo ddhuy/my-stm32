@@ -1,5 +1,5 @@
 #include <asm/io.h>
-#include <clock.h>
+#include <clk.h>
 #include <errno.h>
 #include <serial.h>
 #include <dm/device.h>
@@ -32,14 +32,22 @@ static int stm32_serial_probe(
 )
 {
     const struct stm32_serial_plat *plat = dev->plat;
+    struct clk clk;
+    int ret;
 
     if (plat->baudrate == 0)
         return -EINVAL;
 
-    clock_enable(plat->clk_id);
+    ret = clk_get_by_name(plat->clk_dev, plat->clk_id, &clk);
+    if (ret)
+        return ret;
+
+    ret = clk_enable(&clk);
+    if (ret)
+        return ret;
 
     uintptr_t base = plat->base;
-    u32 clk_rate = clock_get_rate(plat->clk_id);
+    u32 clk_rate = clk_get_rate(&clk);
     u32 baudrate = plat->baudrate;
 
     /* With 16x oversampling (the reset default) BRR is simply the clock

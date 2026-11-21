@@ -41,11 +41,12 @@ mini-boot/
 │   │   └── start.S, fault.c, link.ld (sections only, INCLUDE memory.ld)
 │   ├── mach-stm32f4/             true for one SoC family
 │   │   ├── mach.mk               adds clock.c, devices.c and the drivers
-│   │   │                         of the in-chip devices (SysTick)
+│   │   │                         of the in-chip devices (SysTick, RCC)
 │   │   ├── clock.c, devices.c    devices.c: DM_DEVICE rows for blocks
-│   │   │                         every board on this SoC has
+│   │   │                         every board on this SoC has; clock.c
+│   │   │                         is a shim until item 3 Part C
 │   │   └── include/mach/         stm32f429.h (base addresses only),
-│   │                             clock_ids.h (CLK_*), irqs.h (NR_IRQS)
+│   │                             irqs.h (NR_IRQS)
 │   └── mach-lm3s/                the same files for TI Stellaris LM3S:
 │                                 lm3s6965.h, irqs.h, devices.c, mach.mk;
 │                                 clock.c is a shim (clock.h on top of
@@ -59,7 +60,8 @@ mini-boot/
 │                                 files; board.mk sets QEMU_MACHINE
 ├── drivers/
 │   ├── core/                     driver.c, device.c, uclass.c, root.c
-│   ├── clk/                      clk-uclass.c (generic), lm3s_sysctl.c
+│   ├── clk/                      clk-uclass.c (generic), lm3s_sysctl.c,
+│   │                             stm32f4_rcc.c
 │   ├── serial/                   serial-uclass.c (generic), stm32_serial.c,
 │   │                             pl011_serial.c
 │   ├── gpio/                     gpio-uclass.c (generic), stm32_gpio.c
@@ -73,10 +75,10 @@ mini-boot/
 │   │                             root.h
 │   └── platdata/                 stm32_serial.h, stm32_gpio.h,
 │                                 armv7m_systick.h, pl011_serial.h,
-│                                 lm3s_sysctl.h: what a board (or SoC)
-│                                 tells a driver about one instance; a
-│                                 clock provider's header also holds its
-│                                 device name and clock IDs
+│                                 lm3s_sysctl.h, stm32f4_rcc.h: what a
+│                                 board (or SoC) tells a driver about one
+│                                 instance; a clock provider's header
+│                                 also holds its device name and IDs
 ├── lib/                          printf, string, malloc (no hardware access)
 └── common/                       main.c, console.c, panic.c, systime.c
 
@@ -91,8 +93,8 @@ Every mach-<soc>/ provides: include/mach/<soc>.h (base addresses),
 irqs.h (NR_IRQS, used by start.S for the vector table length),
 devices.c (the in-chip rows, such as SysTick) and mach.mk (which also
 adds the SoC's clock provider driver). Until item 3 Part C also
-clock.c (include/clock.h; a shim on lm3s) and, on stm32f4 only,
-mach/clock_ids.h.
+clock.c: a shim implementing the old include/clock.h on the clock
+uclass.
 
 ## Build
 - `make` (default BOARD=stm32f429i-disc1), `make flash` (OpenOCD),
@@ -160,16 +162,16 @@ mach/clock_ids.h.
   address, clock ID and config from the board's platform data, and access
   registers via readl/writel(base + offset) from <asm/io.h>.
 - A register layout is private to the one .c file that drives the block
-  (RCC in mach-stm32f4/clock.c, System Control in
+  (RCC in drivers/clk/stm32f4_rcc.c, System Control in
   drivers/clk/lm3s_sysctl.c, GPIO in drivers/gpio/stm32_gpio.c).
   mach/stm32f429.h holds base addresses only.
 - Clocks come from a clock provider device (include/clk.h); a driver
   passes the clock ID on as an opaque number. What an ID means is in the
-  provider's platdata header (platdata/lm3s_sysctl.h), prefixed with the
-  provider (LM3S_CLK_*) because a board may include several providers'
-  headers. The old include/clock.h (clock_enable, clock_get_rate per
-  SoC, IDs in mach/clock_ids.h) remains for the STM32 and SysTick until
-  item 3 Part C.
+  provider's platdata header (platdata/lm3s_sysctl.h,
+  platdata/stm32f4_rcc.h), prefixed with the provider (LM3S_CLK_*,
+  STM32F4_CLK_*) because a board may include several providers'
+  headers. The old include/clock.h remains, as a shim per SoC, for
+  SysTick and the banners until item 3 Part C.
 - A board chooses its hardware drivers in board.mk. board.c contains no
   addresses and no register offsets; everything comes from board.h.
 - u32 is `unsigned int` (not uint32_t) so it matches printf %u / %x.
@@ -227,9 +229,10 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   SoC, so its DM_DEVICE row is in mach-<soc>/devices.c, and mach.mk (not
   board.mk) adds its driver. Its base (SYSTICK_BASE) is in asm/armv7m.h;
   its register layout is private to drivers/timer/armv7m_systick.c. Its
-  clock is the SoC's CPU clock: CLK_HCLK on stm32f4, LM3S_CLK_SYSCLK on lm3s
-  (both in group CLK_BUS_CORE, not a gate register); clock_enable()
-  ignores it and clock_get_rate() gives the frequency. The timer uclass
+  clock is the SoC's CPU clock: STM32F4_CLK_HCLK on stm32f4,
+  LM3S_CLK_SYSCLK on lm3s (both in the core group, not a gate register);
+  enable does nothing for it and get_rate gives the frequency (through
+  the clock.h shim until item 3 Part C). The timer uclass
   has one operation, get_ms (no error code; a missing table gives 0). The
   tick counter lives in priv: the first driver that uses priv. The
   handler gets no dev, so the driver keeps one static device pointer, set
@@ -258,7 +261,7 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   - Clock setup is asymmetric (lm3s programs its PLL from board_init(),
     the STM32 runs on HSI): left for the clock uclass (roadmap item 3).
 - Clock uclass (item 3, decided in its theory): a provider (UCLASS_CLK:
-  lm3s_sysctl, later stm32f4_rcc) owns the registers, does its setup
+  lm3s_sysctl, stm32f4_rcc) owns the registers, does its setup
   (PLL) in probe and implements struct clk_ops { enable, get_rate }. A
   consumer's platdata names the provider (clk_dev) and the clock
   (clk_id); its probe fills a local struct clk { dev, id } with
@@ -268,10 +271,17 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   lm3s_sysctl_probe under pl011_serial_probe under console_init); probe
   nests, and an error comes back up the chain. The provider's row is in
   board.c (crystal and speed are board facts); its name is a define in
-  its platdata header (LM3S_SYSCTL_NAME), used by the row and every
-  consumer. A provider must never call the clk API (or the shim) on
-  itself: probed is set last, so the lookup would probe it again and
-  recurse until the stack overflows.
+  its platdata header (LM3S_SYSCTL_NAME, STM32F4_RCC_NAME), used by the
+  row and every consumer. A provider must never call the clk API (or the
+  shim) on itself: probed is set last, so the lookup would probe it again
+  and recurse until the stack overflows. A provider without a probe
+  (stm32f4_rcc at HSI) is simply marked probed on first use. Core clocks
+  (the CPU clock) have no gate: enable returns 0 for them. On the STM32
+  the first consumer is the LED port, so an RCC lookup failure (a
+  missing row, a misspelt clk_dev) fails board_init() with no LED left
+  to show it: completely silent; the same mistake in the usart1 row
+  still lights the red LED. Neither builds wrong, and the STM32 has no
+  QEMU boot test: only flashing finds them.
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
@@ -284,18 +294,6 @@ Roadmap item 2 (QEMU lm3s6965evb) done: a8655df (skeleton), 361e7d5
 (PL011), 72d6388 (PLL at 50 MHz, rate from RCC, Enter fix), then Part D
 (audit, make check: 54e22f7). The STM32 build at 54e22f7 was flashed and
 passed on the board (banner, blink, echo, Enter starts a new line).
-Roadmap item 3 (clock uclass), in parts:
-- Part A done: UCLASS_CLK, clk.h, clk-uclass.c; the lm3s_sysctl
-  provider (Part C's PLL code moved into probe); pl011_serial is the
-  first consumer; mach-lm3s/clock.c is a shim for SysTick and the
-  banner; lm3s board_init() empty again. 3 devices bound, RCC
-  0x01CE0380, RCGC1 0x1. LM3S text 3332 -> 3648; STM32 text unchanged
-  (3744; bss +36, one uclass slot).
-- Next: Part B, stm32f4_rcc provider at HSI 16 MHz (same output),
-  stm32_serial and stm32_gpio converted; Part C, SysTick converted,
-  clock.h, both clock.c and the STM32 clock_ids.h deleted; Part D, 168
-  MHz from HSE in the RCC probe (voltage scale, 5 flash wait states,
-  APB1 /4, APB2 /2, per-bus get_rate).
 - Part A: mach-lm3s and board/lm3s6965evb skeleton, run/debug targets.
   In gdb: vector table at 0 (SP 0x20010000), 1 device bound (systick,
   not probed), console_init() -ENODEV, silent panic("No console!").
@@ -317,6 +315,22 @@ Roadmap item 3 (clock uclass), in parts:
   start.S, fault.c and link.ld took a new SoC as they were, and
   armv7m_systick.c runs on both SoCs unchanged (only its data row
   differs). The four-level split held.
+Roadmap item 3 (clock uclass), in parts:
+- Part A done (110ff6a): UCLASS_CLK, clk.h, clk-uclass.c; the lm3s_sysctl
+  provider (item 2 Part C's PLL code moved into probe); pl011_serial is
+  the first consumer; mach-lm3s/clock.c is a shim for SysTick and the
+  banner; lm3s board_init() empty again. 3 devices bound, RCC
+  0x01CE0380, RCGC1 0x1. LM3S text 3332 -> 3648.
+- Part B done, tested on the board: the stm32f4_rcc provider at HSI 16
+  MHz (no probe yet; enable refuses buses 3, 6 and > 7, the reserved
+  words); stm32_gpio and stm32_serial converted; rcc row in board.c;
+  mach-stm32f4/clock.c is a shim; mach/clock_ids.h deleted. Same output
+  as before plus the rcc device: 5 devices bound. STM32 text 3744 ->
+  3972. The first clock request comes from the LED port in board_init(),
+  not the UART.
+- Next: Part C, SysTick and both banners converted; clock.h and both
+  shims deleted. Part D, 168 MHz from HSE in the RCC probe (voltage
+  scale, 5 flash wait states, APB1 /4, APB2 /2, per-bus get_rate).
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -350,7 +364,7 @@ Known limitations:
   catch it.
 - lm3s: get_rate knows only the PLL-through-SYSDIV state (0 otherwise).
 - Two clock APIs side by side until item 3 Part C (clk.h and the old
-  clock.h; on lm3s the old one is a shim on the new).
+  clock.h, a shim on the new one on both SoCs).
 - lm3s: UART0's pins (PA0/PA1) are not set up; fine in QEMU, needed on a
   real LM3S6965 (GPIO on lm3s skipped).
 
@@ -360,7 +374,7 @@ The main purpose is learning the driver model. Agreed order:
 2. Second target on QEMU (lm3s6965evb) to prove the four-level split:
    done (make check keeps both targets building).
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use:
-   in progress (Part A done).
+   in progress (Parts A and B done).
 4. SPI, with the L3GD20 gyroscope as a child device (parent/child).
 5. Command shell, including a `dm` command.
 6. Booting an application.

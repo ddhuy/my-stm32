@@ -1,7 +1,7 @@
 #include <asm/armv7m.h>
 #include <dm/device.h>
-#include <mach/clock_ids.h>
 #include <platdata/armv7m_systick.h>
+#include <platdata/stm32f4_rcc.h>
 
 
 /*
@@ -15,7 +15,7 @@
  */
 static const struct armv7m_systick_plat systick_plat = {
     .base   = SYSTICK_BASE,
-    .clk_id = CLK_HCLK
+    .clk_id = STM32F4_CLK_HCLK
 };
 
 

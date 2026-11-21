@@ -8,12 +8,14 @@
  * What a board tells the stm32_serial driver about one UART.
  *
  * base:     address of the UART's registers
- * clk_id:   the UART's clock, as understood by clock_enable() and
- *           clock_get_rate()
+ * clk_dev:  name of the clock provider device that feeds the UART
+ * clk_id:   the UART's clock within that provider (the provider's
+ *           platdata header defines the ids)
  * baudrate: line speed in bits per second
  */
 struct stm32_serial_plat {
     uintptr_t base;
+    const char *clk_dev;
     u32 clk_id;
     u32 baudrate;
 };

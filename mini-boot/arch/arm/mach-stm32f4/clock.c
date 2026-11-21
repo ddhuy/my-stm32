@@ -1,45 +1,32 @@
-#include <asm/io.h>
-#include <mach/clock_ids.h>
-#include <mach/stm32f429.h>
+#include <clk.h>
 #include <clock.h>
+#include <platdata/stm32f4_rcc.h>
 
-
-/*
- * RCC register layout. The enable registers are consecutive, one per bus,
- * in the order of the CLK_BUS_* numbers in mach/clock_ids.h.
- */
-#define RCC_AHB1ENR     0x30
-#define RCC_ENR(bus)    (RCC_AHB1ENR + 4 * (bus))
-
-/* Internal RC oscillator: the system clock after reset */
-#define HSI_HZ          16000000
 
 /**
  * Turn on the clock of one peripheral
  */
 void clock_enable(u32 clk_id)
 {
-    /* Core clocks have no enable bit; RCC_ENR() of that bus is reserved */
-    if (clk_id / 32 == CLK_BUS_CORE)
+    struct clk clk;
+
+    if (clk_get_by_name(STM32F4_RCC_NAME, clk_id, &clk))
         return;
 
-    uintptr_t enr = RCC_BASE + RCC_ENR(clk_id / 32);
-
-    setbits(enr, BIT(clk_id % 32));
-    /* the clock needs two cycles before the peripheral can be accessed */
-    (void)readl(enr);
+    (void)clk_enable(&clk);
 }
 
+
 /**
- * Frequency in Hz of the clock feeding one peripheral
+ * Frequency in Hz of the clock feeding one peripheral; 0 if the provider
+ * cannot be found or probed
  */
 u32 clock_get_rate(u32 clk_id)
 {
-    /*
-     * No PLL setup yet: the system runs on HSI and every bus prescaler is
-     * at its reset value of 1, so all peripherals see the same clock.
-     */
-    (void)clk_id;
+    struct clk clk;
 
-    return HSI_HZ;
+    if (clk_get_by_name(STM32F4_RCC_NAME, clk_id, &clk))
+        return 0;
+
+    return clk_get_rate(&clk);
 }

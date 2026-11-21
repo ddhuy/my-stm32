@@ -7,6 +7,7 @@
 #include <dm/uclass.h>
 #include <platdata/stm32_gpio.h>
 #include <platdata/stm32_serial.h>
+#include <platdata/stm32f4_rcc.h>
 
 
 /*
@@ -123,6 +124,7 @@ void board_panic(void)
  */
 static const struct stm32_gpio_plat gpiog_plat = {
     .base = LED_GPIO_BASE,
+    .clk_dev = STM32F4_RCC_NAME,
     .clk_id = LED_GPIO_CLK
 };
 
@@ -138,6 +140,7 @@ DM_DEVICE(gpiog) = {
  */
 static const struct stm32_gpio_plat gpioa_plat = {
     .base = CONSOLE_GPIO_BASE,
+    .clk_dev = STM32F4_RCC_NAME,
     .clk_id = CONSOLE_GPIO_CLK
 };
 
@@ -154,6 +157,7 @@ DM_DEVICE(gpioa) = {
 static const struct stm32_serial_plat usart1_plat = {
     .base = CONSOLE_UART_BASE,
     .baudrate = CONSOLE_BAUDRATE,
+    .clk_dev = STM32F4_RCC_NAME,
     .clk_id = CONSOLE_UART_CLK,
 };
 
@@ -161,4 +165,20 @@ DM_DEVICE(usart1) = {
     .name = "usart1",
     .driver = "stm32_serial",
     .plat = &usart1_plat,
+};
+
+
+/**
+ * RCC: the clock provider every other device here names in its clk_dev.
+ * Its row is here, not in the SoC's devices.c, because its settings (the
+ * crystal and the chosen speed, from item 3 Part D) are board facts.
+ */
+static const struct stm32f4_rcc_plat rcc_plat = {
+    .base = RCC_BASE
+};
+
+DM_DEVICE(rcc) = {
+    .name = STM32F4_RCC_NAME,
+    .driver = "stm32f4_rcc",
+    .plat = &rcc_plat,
 };

@@ -1,5 +1,5 @@
 #include <asm/io.h>
-#include <clock.h>
+#include <clk.h>
 #include <errno.h>
 #include <gpio.h>
 #include <dm/device.h>
@@ -62,8 +62,16 @@ static int stm32_gpio_probe(
 )
 {
     const struct stm32_gpio_plat *plat = dev->plat;
+    struct clk clk;
+    int ret;
 
-    clock_enable(plat->clk_id);
+    ret = clk_get_by_name(plat->clk_dev, plat->clk_id, &clk);
+    if (ret)
+        return ret;
+
+    ret = clk_enable(&clk);
+    if (ret)
+        return ret;
 
     return SUCCESS;
 }
