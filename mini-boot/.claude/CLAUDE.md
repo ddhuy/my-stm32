@@ -255,8 +255,9 @@ Steps 1-9 done, tested on the board and committed (step 9: bb0fa77,
 539fa0c, a0649bc; rename to systime.* and -Werror: 5b66684).
 Roadmap item 2 (QEMU lm3s6965evb) done: a8655df (skeleton), 361e7d5
 (PL011), 72d6388 (PLL at 50 MHz, rate from RCC, Enter fix), then Part D
-(audit, make check). Next: flash the STM32 once (not run on the board
-since 5b66684: systime, -Werror, guards, Enter fix), then roadmap item 3.
+(audit, make check: 54e22f7). The STM32 build at 54e22f7 was flashed and
+passed on the board (banner, blink, echo, Enter starts a new line).
+Next: roadmap item 3.
 - Part A: mach-lm3s and board/lm3s6965evb skeleton, run/debug targets.
   In gdb: vector table at 0 (SP 0x20010000), 1 device bound (systick,
   not probed), console_init() -ENODEV, silent panic("No console!").
