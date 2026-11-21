@@ -1,0 +1,10 @@
+#ifndef MINIBOOT_BOARD_LM3S6965EVB_H
+#define MINIBOOT_BOARD_LM3S6965EVB_H
+
+#include <mach/clock_ids.h>
+
+
+#define CONSOLE_UART_CLK  (CLK_UART0)
+
+
+#endif /* MINIBOOT_BOARD_LM3S6965EVB_H */

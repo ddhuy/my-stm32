@@ -1,5 +1,5 @@
-#ifndef MINIBOOT_BOARD_H
-#define MINIBOOT_BOARD_H
+#ifndef MINIBOOT_BOARD_STM32F429I_DISC1_H
+#define MINIBOOT_BOARD_STM32F429I_DISC1_H
 
 /*
  * Board facts: STM32F429I-DISC1. What is soldered around the SoC.
@@ -32,4 +32,4 @@
 #define LED_GREEN_PIN       13  /* LD3 */
 #define LED_RED_PIN         14  /* LD4 */
 
-#endif /* MINIBOOT_BOARD_H */
+#endif /* MINIBOOT_BOARD_STM32F429I_DISC1_H */

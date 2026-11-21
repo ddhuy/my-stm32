@@ -39,18 +39,23 @@ mini-boot/
 │   ├── cpu/armv7m/               true for every Cortex-M3/M4/M7
 │   │   ├── cpu.mk                adds its sources, names the linker script
 │   │   └── start.S, fault.c, link.ld (sections only, INCLUDE memory.ld)
-│   └── mach-stm32f4/             true for one SoC family
-│       ├── mach.mk               adds clock.c, devices.c and the drivers
-│       │                         of the in-chip devices (SysTick)
-│       ├── clock.c, devices.c    devices.c: DM_DEVICE rows for blocks
-│       │                         every board on this SoC has
-│       └── include/mach/         stm32f429.h (base addresses only),
-│                                 clock_ids.h (CLK_*), irqs.h (NR_IRQS)
+│   ├── mach-stm32f4/             true for one SoC family
+│   │   ├── mach.mk               adds clock.c, devices.c and the drivers
+│   │   │                         of the in-chip devices (SysTick)
+│   │   ├── clock.c, devices.c    devices.c: DM_DEVICE rows for blocks
+│   │   │                         every board on this SoC has
+│   │   └── include/mach/         stm32f429.h (base addresses only),
+│   │                             clock_ids.h (CLK_*), irqs.h (NR_IRQS)
+│   └── mach-lm3s/                the same files for TI Stellaris LM3S:
+│                                 lm3s6965.h, clock_ids.h (RCGC0..2),
+│                                 irqs.h, clock.c, devices.c, mach.mk
 ├── board/stm32f429i-disc1/       what is soldered on one board
 │   ├── board.mk                  ARCH, CPU, MACH, CPUFLAGS, OpenOCD config,
 │   │                             and which hardware drivers this board uses
 │   └── board.c (hooks + device table), board.h, memory.ld (FLASH/RAM,
 │                                 heap and stack sizes)
+├── board/lm3s6965evb/            QEMU machine lm3s6965evb: the same four
+│                                 files; board.mk sets QEMU_MACHINE
 ├── drivers/
 │   ├── core/                     driver.c, device.c, uclass.c, root.c
 │   ├── serial/                   serial-uclass.c (generic), stm32_serial.c
@@ -70,12 +75,28 @@ mini-boot/
 
 Adding a board on the same SoC = a new board/<name>/. A new SoC family = a
 new arch/arm/mach-<name>/. A new architecture = a new arch/<name>/.
-Planned second target to prove the split: QEMU lm3s6965evb (Cortex-M3,
-different SoC and UART), not started.
+Second target to prove the split: QEMU lm3s6965evb (Cortex-M3, different
+SoC and UART), in progress (roadmap item 2).
+
+Every mach-<soc>/ provides: include/mach/<soc>.h (base addresses),
+clock_ids.h (CLK_* IDs for its clock.c), irqs.h (NR_IRQS, used by
+start.S for the vector table length), clock.c (implements clock.h),
+devices.c (the in-chip rows, such as SysTick) and mach.mk.
 
 ## Build
 - `make` (default BOARD=stm32f429i-disc1), `make flash` (OpenOCD),
   `make disasm`, `make clean` (removes all of build/).
+- Pass BOARD= on every command for the other target:
+  `make BOARD=lm3s6965evb run` (QEMU, -nographic) and
+  `make BOARD=lm3s6965evb debug` (adds -s -S: gdb server on :1234, CPU
+  held at reset; then `arm-none-eabi-gdb build/lm3s6965evb/mini-boot.elf`,
+  `target remote :1234`). Quit QEMU with Ctrl-A then X (Ctrl-C goes to
+  the guest); in gdb, Ctrl-C only pauses the target, `monitor quit` ends
+  QEMU. A stale QEMU keeps port 1234 busy: `pkill qemu-system-arm`.
+- --gc-sections drops every function nothing calls: it is then not in the
+  image and gdb cannot `call` it (clock_enable() on lm3s in step 2 Part A,
+  before any driver used it). The map file lists it under "Discarded input
+  sections".
 - The top Makefile sets the generic SRCS (common/, lib/, drivers/core/,
   uclass files), then includes board.mk, arch.mk, cpu.mk, mach.mk in that
   order; each fragment appends with `SRCS +=`.
@@ -90,8 +111,15 @@ different SoC and UART), not started.
 - Always look at the `size` output. text = 0 means a source file fell out
   of SRCS; an unexpected drop means the compiler deleted code it proved
   unreachable (an inverted check).
-- Console: /dev/ttyACM0 at 115200 (ST-LINK VCP, USART1 on PA9/PA10 AF7).
-  LEDs: PG13 green (heartbeat), PG14 red (panic). Clock: 16 MHz HSI.
+- STM32F429I-DISC1: console /dev/ttyACM0 at 115200 (ST-LINK VCP, USART1
+  on PA9/PA10 AF7). LEDs: PG13 green (heartbeat), PG14 red (panic).
+  Clock: 16 MHz HSI.
+- lm3s6965evb (QEMU 10.2.1): flash 256K at 0x0, RAM 64K at 0x20000000,
+  64 NVIC lines. UART0 is a PL011 at 0x4000C000. QEMU's RCC reset value
+  gives a 12.5 MHz system clock (its own model, not the real chip's);
+  SysTick counts only the CPU clock; RCGC gating is stored, not enforced,
+  so a missing clock_enable() is invisible in QEMU (check RCGC in gdb).
+  No GPIO and no LED on this target.
 
 ## Layering rules
 - common/, lib/, drivers/ and include/ never include <mach/...> or board.h.
@@ -117,6 +145,10 @@ different SoC and UART), not started.
   other).
 - Linker-script symbols are addresses: declare them as arrays
   (`extern const struct driver _sdm_drivers[];`), never as pointers.
+- Header guards: MINIBOOT_ + level + owner + file name, so a guard names
+  exactly one file in the tree (MINIBOOT_MACH_LM3S_CLOCK_IDS_H,
+  MINIBOOT_BOARD_LM3S6965EVB_H). Generic headers in include/ have one copy
+  only: MINIBOOT_<FILE>_H.
 
 ## Driver model (as built)
 Decisions: drivers and devices are collected by the linker (KEEP sections
@@ -151,10 +183,11 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   by systime_elapsed_ms(). A failure before the console is up is silent;
   panic() lights the red LED if the LED port was found.
 - Timer (step 9): SysTick is a CPU block present on every board of the
-  SoC, so its DM_DEVICE row is in mach-stm32f4/devices.c, and mach.mk (not
+  SoC, so its DM_DEVICE row is in mach-<soc>/devices.c, and mach.mk (not
   board.mk) adds its driver. Its base (SYSTICK_BASE) is in asm/armv7m.h;
   its register layout is private to drivers/timer/armv7m_systick.c. Its
-  clock is CLK_HCLK (bus CLK_BUS_CORE, not an RCC bus); clock_enable()
+  clock is the SoC's CPU clock: CLK_HCLK on stm32f4, CLK_SYSCLK on lm3s
+  (both in group CLK_BUS_CORE, not a gate register); clock_enable()
   ignores it and clock_get_rate() gives the frequency. The timer uclass
   has one operation, get_ms (no error code; a missing table gives 0). The
   tick counter lives in priv: the first driver that uses priv. The
@@ -174,9 +207,23 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
   CONSOLE_GPIO_NAME).
 
-## Status (2026-11-18)
+## Status (2026-11-20)
 Steps 1-9 done, tested on the board and committed (step 9: bb0fa77,
-539fa0c, a0649bc). The rename time.* -> systime.* is not committed yet.
+539fa0c, a0649bc; rename to systime.* and -Werror: 5b66684). The
+systime/-Werror build is not yet flashed to the board.
+Roadmap item 2 (QEMU lm3s6965evb), in parts:
+- Part A done: mach-lm3s and board/lm3s6965evb skeleton, run/debug
+  targets. Checked in gdb: vector table at 0 (SP 0x20010000), dm_init()
+  binds 1 device (systick, not probed), board_init() 0, console_init()
+  -ENODEV, panic("No console!") silent. STM32 build unchanged (text 3740).
+- Next: Part B, PL011 serial driver (drivers/serial/pl011_serial.c,
+  include/platdata/pl011_serial.h), named after the IP block, not the
+  SoC; first real use of the lm3s clock_enable() (check RCGC1 bit 0).
+- Then: Part C, SysTick on the M3 and the clock rate computed from RCC
+  instead of the 12.5 MHz constant; Part D, audit of every file outside
+  the two new directories that had to change (so far: Makefile run/debug,
+  header guards), and whether the duplicated SysTick row belongs at the
+  cpu level. GPIO on lm3s skipped.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -208,11 +255,13 @@ Known limitations:
   PGPERR (seen in step 9, priv_auto removed). A driver using dev->priv must
   declare .priv_auto; nothing checks it. An MPU no-access region at 0 would
   catch it.
+- lm3s: clock_get_rate() returns a constant (QEMU's 12.5 MHz) until Part C.
 
 ## Roadmap
 The main purpose is learning the driver model. Agreed order:
 1. Timer (SysTick): done (step 9).
-2. Second target on QEMU (lm3s6965evb) to prove the four-level split.
+2. Second target on QEMU (lm3s6965evb) to prove the four-level split:
+   in progress (Part A done).
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use.
 4. SPI, with the L3GD20 gyroscope as a child device (parent/child).
 5. Command shell, including a `dm` command.

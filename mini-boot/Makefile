@@ -54,7 +54,7 @@ CFLAGS   = $(CPUFLAGS) -ffreestanding \
 LDFLAGS  = $(CPUFLAGS) -nostdlib -T $(LDSCRIPT) -L board/$(BOARD) \
 		   -Wl,--gc-sections -Wl,--fatal-warnings -Wl,-Map=$(TARGET).map
 
-.PHONY: all flash disasm clean
+.PHONY: all flash disasm clean run debug
 
 all: $(TARGET).bin
 	$(SIZE) $(TARGET).elf
@@ -84,6 +84,12 @@ flash: $(TARGET).elf
 disasm: $(TARGET).elf
 	$(OBJDUMP) -d $<
 	@echo ""
+
+run: $(TARGET).elf
+	qemu-system-arm -M $(QEMU_MACHINE) -nographic -kernel $<
+
+debug: $(TARGET).elf
+	qemu-system-arm -M $(QEMU_MACHINE) -nographic -kernel $< -s -S
 
 clean:
 	rm -rf build
