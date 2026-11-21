@@ -48,7 +48,8 @@ mini-boot/
 │   │                             clock_ids.h (CLK_*), irqs.h (NR_IRQS)
 │   └── mach-lm3s/                the same files for TI Stellaris LM3S:
 │                                 lm3s6965.h, clock_ids.h (RCGC0..2),
-│                                 irqs.h, clock.c, devices.c, mach.mk
+│                                 irqs.h, sysctl.h (lm3s_clock_init()),
+│                                 clock.c, devices.c, mach.mk
 ├── board/stm32f429i-disc1/       what is soldered on one board
 │   ├── board.mk                  ARCH, CPU, MACH, CPUFLAGS, OpenOCD config,
 │   │                             and which hardware drivers this board uses
@@ -117,10 +118,18 @@ devices.c (the in-chip rows, such as SysTick) and mach.mk.
   on PA9/PA10 AF7). LEDs: PG13 green (heartbeat), PG14 red (panic).
   Clock: 16 MHz HSI.
 - lm3s6965evb (QEMU 10.2.1): flash 256K at 0x0, RAM 64K at 0x20000000,
-  64 NVIC lines. UART0 is a PL011 at 0x4000C000. QEMU's RCC reset value
-  gives a 12.5 MHz system clock (its own model, not the real chip's);
-  SysTick counts only the CPU clock; RCGC gating is stored, not enforced,
-  so a missing clock_enable() is invisible in QEMU (check RCGC in gdb).
+  64 NVIC lines. UART0 is a PL011 at 0x4000C000. Clock: 50 MHz from the
+  PLL (8 MHz crystal, SYSDIV 3), set by board_init() through
+  lm3s_clock_init(); clock_get_rate() computes it from RCC. QEMU's model:
+  SysClk = 200 MHz / (SYSDIV + 1) whatever BYPASS / USESYSDIV say (12.5
+  MHz at reset, where the real chip would run on the raw oscillator), so
+  the only state both agree on is PLL on, not bypassed, through SYSDIV;
+  clock_get_rate() returns 0 for anything else. SysTick counts only the
+  CPU clock and is the only clock-rate witness in QEMU (the UART ignores
+  the divisor); a wrong rate still prints mdelay(1000): 1000 ms, so check
+  it against an outside clock (host time across mdelay(1000): 1.000 s).
+  RCGC gating is stored, not enforced, so a missing clock_enable() is
+  invisible in QEMU (check RCGC in gdb).
   QEMU's PL011 sends and receives even with UARTEN/TXE/RXE clear (it
   only logs "PL011 data written to disabled UART" with -d guest_errors)
   and ignores the baud divisor: working output proves the DM wiring, not
@@ -186,8 +195,13 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   name: LEDs, then console pins), console_init() (gets serial device 0,
   which probes it), systime_init() (timer device 0), then the first print.
   The main loop never blocks: continuous echo, LED toggled every BLINK_MS
-  by systime_elapsed_ms(). A failure before the console is up is silent;
-  panic() lights the red LED if the LED port was found.
+  by systime_elapsed_ms(). The echo turns Enter ('\r') into '\n' (input
+  side, like termios ICRNL); putc() turns '\n' into "\r\n" (output, like
+  ONLCR); putc() must not translate '\r' ("\r\n" strings, progress lines,
+  binary). The shell's line reader takes this over later. A failure
+  before the console is up is silent; panic() lights the red LED if the
+  LED port was found. On lm3s, board_init() sets the clock instead (no
+  GPIO).
 - Timer (step 9): SysTick is a CPU block present on every board of the
   SoC, so its DM_DEVICE row is in mach-<soc>/devices.c, and mach.mk (not
   board.mk) adds its driver. Its base (SYSTICK_BASE) is in asm/armv7m.h;
@@ -222,19 +236,31 @@ Roadmap item 2 (QEMU lm3s6965evb), in parts:
   run/debug targets. Checked in gdb: vector table at 0 (SP 0x20010000),
   dm_init() binds 1 device (systick, not probed), board_init() 0,
   console_init() -ENODEV, panic("No console!") silent.
-- Part B done: PL011 serial driver (drivers/serial/pl011_serial.c,
-  include/platdata/pl011_serial.h), named after the IP block, not the
-  SoC; row uart0 in board.c, driver chosen in board.mk. Full boot in
-  QEMU: banner, 2 devices bound, systime_mdelay(1000) 1000 ms, echo. In
+- Part B done (361e7d5): PL011 serial driver
+  (drivers/serial/pl011_serial.c, include/platdata/pl011_serial.h), named
+  after the IP block, not the SoC; row uart0 in board.c, driver chosen in
+  board.mk. Full boot in QEMU: banner, 2 devices bound,
+  systime_mdelay(1000) 1000 ms, echo. In
   gdb: RCGC1 0x1, IBRD 6, FBRD 50, LCR_H 0x70, CR 0x301; no guest_errors.
   No generic file changed: a second driver in an existing uclass needed
   nothing from console.c, serial-uclass.c or main.c. STM32 build
   unchanged (text 3740).
-- Then: Part C, SysTick on the M3 and the clock rate computed from RCC
-  instead of the 12.5 MHz constant; Part D, audit of every file outside
-  the two new directories that had to change (so far: Makefile run/debug,
-  header guards), and whether the duplicated SysTick row belongs at the
-  cpu level. GPIO on lm3s skipped.
+- Part C done: lm3s_clock_init() (mach/sysctl.h) runs the PLL at 50 MHz
+  in the datasheet / driverlib order (bypass, XTAL + PWRDN/OEN clear,
+  SYSDIV + USESYSDIV, wait for RIS PLLLRIS with a bounded loop, clear
+  BYPASS); rejects crystals not in the XTAL table and rates that are not
+  a whole divider. Checked: RCC 0x01CE0380, IBRD 27 / FBRD 8, SysTick
+  LOAD 49999, mdelay(1000) = 1.000 s of host time.
+  Also fixed for both boards: Enter did not start a new line (the echo
+  sent a bare '\r'); first generic change of step 2 (common/main.c),
+  STM32 text 3740 -> 3744, not yet run on the board.
+- Next: Part D, audit of every file outside the two new directories that
+  had to change (so far: Makefile run/debug, header guards, and the
+  Enter fix, which is a shared bug, not a cost of the second target);
+  whether the duplicated SysTick row belongs at the cpu level; whether
+  stm32_serial_plat and pl011_serial_plat (same fields) should be one;
+  the asymmetry (lm3s programs its PLL in board_init(), the STM32 still
+  runs on HSI), which leads into roadmap item 3. GPIO on lm3s skipped.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -266,7 +292,9 @@ Known limitations:
   PGPERR (seen in step 9, priv_auto removed). A driver using dev->priv must
   declare .priv_auto; nothing checks it. An MPU no-access region at 0 would
   catch it.
-- lm3s: clock_get_rate() returns a constant (QEMU's 12.5 MHz) until Part C.
+- lm3s: clock_get_rate() knows only the PLL-through-SYSDIV state (0
+  otherwise), and lm3s_clock_init() is called from board_init(), not
+  through a clock uclass (roadmap item 3).
 - lm3s: UART0's pins (PA0/PA1) are not set up; fine in QEMU, needed on a
   real LM3S6965 (GPIO on lm3s skipped).
 
@@ -274,7 +302,7 @@ Known limitations:
 The main purpose is learning the driver model. Agreed order:
 1. Timer (SysTick): done (step 9).
 2. Second target on QEMU (lm3s6965evb) to prove the four-level split:
-   in progress (Parts A and B done).
+   in progress (Parts A, B and C done).
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use.
 4. SPI, with the L3GD20 gyroscope as a child device (parent/child).
 5. Command shell, including a `dm` command.

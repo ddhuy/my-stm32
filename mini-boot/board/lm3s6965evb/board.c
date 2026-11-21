@@ -4,16 +4,19 @@
 #include <init.h>
 #include <printf.h>
 #include <dm/device.h>
+#include <mach/sysctl.h>
 #include <platdata/pl011_serial.h>
 
 
 /**
- * Bring up the board. Nothing to do: GPIO is skipped on this target, and
- * QEMU's UART needs no pin setup. Always returns 0.
+ * Bring up the board: the system clock, before any driver reads a rate.
+ * GPIO is skipped on this target, and QEMU's UART needs no pin setup.
+ *
+ * Returns 0, or the error from lm3s_clock_init().
  */
 int board_init(void)
 {
-    return SUCCESS;
+    return lm3s_clock_init(BOARD_XTAL_HZ, BOARD_SYSCLK_HZ);
 }
 
 

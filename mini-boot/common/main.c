@@ -15,15 +15,16 @@
 /**
  * Bring the system up in dependency order, then run the main loop. Each
  * init step needs the ones before it: the board needs the driver model,
- * the console needs the board's pins, and the timer goes after the console
+ * the console needs the board's pins and clock (whatever board_init() sets
+ * up), and the timer goes after the console
  * so that a failure can be reported.
  */
 int main(void)
 {
     int bound = dm_init();
 
-    /* Both are silent: the console is not up. The red LED comes on if the
-     * board got as far as finding its LED port. */
+    /* Both are silent: the console is not up. board_panic() is the only
+     * signal (the red LED on the STM32 board, if its LED port was found). */
     if (board_init())
         panic("Board init failed!");
 
@@ -53,12 +54,22 @@ int main(void)
 
     /*
      * Nothing in the loop blocks, so the echo is polled continuously and a
-     * pasted line comes back whole (USART1 holds only one received byte).
+     * pasted line comes back whole (the STM32 USART holds only one received
+     * byte).
      */
     for (;;)
     {
+        /*
+         * Enter sends '\r', which alone only returns the cursor to column
+         * 0. Echo it as '\n', which putc() sends as "\r\n". Done here, on
+         * input, not in putc(): output may use a bare '\r' on purpose.
+         */
         if (tstc())
-            putc(getc());
+        {
+            char ch = getc();
+
+            putc(ch == '\r' ? '\n' : ch);
+        }
 
         /*
          * Compare the elapsed time, never 'now >= last + BLINK_MS': that sum

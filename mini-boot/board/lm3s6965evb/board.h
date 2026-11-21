@@ -10,6 +10,10 @@
 #include <mach/lm3s6965.h>
 
 
+/* 8 MHz crystal on the main oscillator; run at the chip's maximum, 50 MHz */
+#define BOARD_XTAL_HZ     8000000
+#define BOARD_SYSCLK_HZ   50000000
+
 /*
  * Console: UART0. On the real chip its pins (PA0 / PA1) would need GPIO
  * setup; QEMU models no pins.
