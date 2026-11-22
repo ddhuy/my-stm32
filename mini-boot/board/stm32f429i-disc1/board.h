@@ -12,6 +12,11 @@
 /* 8 MHz crystal on OSC_IN / OSC_OUT */
 #define HSE_HZ              8000000
 
+/* System clock, from the PLL fed by HSE: the chip's maximum without
+ * over-drive. APB2 (the console UART) then runs at 84 MHz.
+ */
+#define BOARD_SYSCLK_HZ     168000000
+
 /* Console: USART1 on PA9 (TX) / PA10 (RX),
  * wired to the ST-LINK virtual COM port
  */

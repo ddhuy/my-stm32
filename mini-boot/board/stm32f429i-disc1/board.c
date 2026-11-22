@@ -178,10 +178,14 @@ DM_DEVICE(usart1) = {
 /**
  * RCC: the clock provider every other device here names in its clk_dev.
  * Its row is here, not in the SoC's devices.c, because its settings (the
- * crystal and the chosen speed, from item 3 Part D) are board facts.
+ * crystal and the chosen speed) are board facts.
  */
 static const struct stm32f4_rcc_plat rcc_plat = {
-    .base = RCC_BASE
+    .base       = RCC_BASE,
+    .flash_base = FLASH_R_BASE,
+    .pwr_base   = PWR_BASE,
+    .hse_hz     = HSE_HZ,
+    .sysclk_hz  = BOARD_SYSCLK_HZ
 };
 
 DM_DEVICE(rcc) = {

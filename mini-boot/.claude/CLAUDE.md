@@ -128,7 +128,12 @@ driver in drivers/clk/ since item 3.
   unreachable (an inverted check).
 - STM32F429I-DISC1: console /dev/ttyACM0 at 115200 (ST-LINK VCP, USART1
   on PA9/PA10 AF7). LEDs: PG13 green (heartbeat), PG14 red (panic).
-  Clock: 16 MHz HSI.
+  Clock: 168 MHz from the PLL (8 MHz HSE crystal), set by the rcc
+  device's probe (drivers/clk/stm32f4_rcc.c): AHB 168, APB1 42 (/4),
+  APB2 84 (/2, the console UART: BRR 729). get_rate computes each bus
+  from CFGR and PLLCFGR. A bad clock setup cannot brick the board:
+  reset returns to HSI (if OpenOCD cannot connect, hold reset, or
+  -c "reset_config connect_assert_srst").
 - lm3s6965evb (QEMU 10.2.1): flash 256K at 0x0, RAM 64K at 0x20000000,
   64 NVIC lines. UART0 is a PL011 at 0x4000C000. Clock: 50 MHz from the
   PLL (8 MHz crystal, SYSDIV 3), set by the sysctl device's probe
@@ -159,7 +164,10 @@ driver in drivers/clk/ since item 3.
 - A register layout is private to the one .c file that drives the block
   (RCC in drivers/clk/stm32f4_rcc.c, System Control in
   drivers/clk/lm3s_sysctl.c, GPIO in drivers/gpio/stm32_gpio.c).
-  mach/stm32f429.h holds base addresses only.
+  mach/stm32f429.h holds base addresses only. One exception: the RCC
+  driver also sets FLASH_ACR LATENCY and PWR_CR VOS (fields that exist
+  only because of the clock; neither block has a driver), with their
+  bases in its plat (flash_base, pwr_base). U-Boot does the same.
 - Clocks come from a clock provider device (include/clk.h); a driver
   passes the clock ID on as an opaque number. What an ID means is in the
   provider's platdata header (platdata/lm3s_sysctl.h,
@@ -276,7 +284,7 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   provider must never call the clk API on itself: probed is set last,
   so the lookup would probe it again and recurse until the stack
   overflows. A provider without a probe
-  (stm32f4_rcc at HSI) is simply marked probed on first use. Core clocks
+  is simply marked probed on first use. Core clocks
   (the CPU clock) have no gate: enable returns 0 for them. On the STM32
   the first consumer is the LED port, so an RCC lookup failure (a
   missing row, a misspelt clk_dev) fails board_init() with no LED left
@@ -340,8 +348,19 @@ Roadmap item 3 (clock uclass), in parts:
   drivers/core untouched through Parts A-C. In gdb the SysTick probe
   returns 0, LOAD 49999. Text: LM3S 3668, STM32 3992 (+20 each: the
   shims were smaller than the inline lookups replacing them).
-- Next: Part D, 168 MHz from HSE in the RCC probe (voltage scale, 5
-  flash wait states, APB1 /4, APB2 /2, per-bus get_rate).
+- Part D done, tested on the board: the stm32f4_rcc probe runs 168 MHz
+  from HSE. It computes and checks every factor before touching a
+  register (M 4, N 168, P 2, Q 7: VCO 336 MHz, USB 48; 5 wait states;
+  APB1 /4, APB2 /2; over 168 MHz is -EINVAL, still on HSI), then:
+  HSE on, PWREN + VOS scale 1, FLASH_ACR read back (-EIO), prescalers
+  while still on HSI, PLLCFGR read-modify-write (reserved bit 29), PLL
+  on, switch; each wait bounded by a loop count (-ETIMEDOUT: no timer
+  yet). get_rate per bus from the registers. On the board: CFGR
+  0x0000940A, PLLCFGR 0x27402A04, FLASH_ACR 0x00000705; banner
+  "Console clock: 84000000 Hz"; mdelay(1000) 1000 ms; 60 blinks in
+  60 s; echo works. No consumer changed: the UART and SysTick took
+  their new rates through get_rate. Text: STM32 3992 -> 4532, LM3S
+  unchanged (3668). Item 3 done.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -383,7 +402,7 @@ The main purpose is learning the driver model. Agreed order:
 2. Second target on QEMU (lm3s6965evb) to prove the four-level split:
    done (make check keeps both targets building).
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use:
-   in progress (Parts A, B and C done).
+   done (Parts A-D).
 4. SPI, with the L3GD20 gyroscope as a child device (parent/child).
 5. Command shell, including a `dm` command.
 6. Booting an application.
