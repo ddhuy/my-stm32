@@ -1,4 +1,5 @@
 #include <console.h>
+#include <gyro.h>
 #include <init.h>
 #include <panic.h>
 #include <printf.h>
@@ -10,6 +11,9 @@
 
 /* Heartbeat: the green LED changes state this often */
 #define BLINK_MS 500
+
+/* One gyroscope line this often */
+#define GYRO_PRINT_MS 1000
 
 
 /**
@@ -53,6 +57,18 @@ int main(void)
     u32 last = systime_elapsed_ms(0);
 
     /*
+     * Gyroscope device 0, if the board has one (the LM3S has none): its
+     * absence is not an error, so it is only reported once, here.
+     */
+    struct udevice *gyro;
+
+    if (uclass_get_device(UCLASS_GYRO, 0, &gyro))
+        gyro = NULL;
+
+    u32 last_gyro = last;
+    bool gyro_failed = false;
+
+    /*
      * Nothing in the loop blocks, so the echo is polled continuously and a
      * pasted line comes back whole (the STM32 USART holds only one received
      * byte).
@@ -81,6 +97,25 @@ int main(void)
         {
             board_led_toggle();
             last += BLINK_MS;
+        }
+
+        /*
+         * Same schedule form as the blink. Printing a line blocks for
+         * about 3 ms; a character pasted meanwhile can be lost (the USART
+         * holds one byte). A read error is printed once, not every second.
+         */
+        if (gyro && systime_elapsed_ms(last_gyro) >= GYRO_PRINT_MS)
+        {
+            struct gyro_data rate;
+            int ret = gyro_read(gyro, &rate);
+
+            if (!ret)
+                printf("gyro: x=%d y=%d z=%d mdps\n", rate.x, rate.y, rate.z);
+            else if (!gyro_failed)
+                printf("gyro: read error %d\n", ret);
+
+            gyro_failed = (ret != 0);
+            last_gyro += GYRO_PRINT_MS;
         }
     }
 }

@@ -9,11 +9,28 @@ struct udevice;
 
 
 /**
+ * How fast a pin's output edges are, slowest first. A slow edge means less
+ * noise and current; a fast signal (an SPI clock at several MHz) needs a
+ * fast edge, or the receiver samples it while it is still changing. A
+ * driver maps these to its own steps (on the STM32: OSPEEDR low, medium,
+ * fast, high).
+ */
+enum gpio_speed
+{
+    GPIO_SPEED_LOW,
+    GPIO_SPEED_MEDIUM,
+    GPIO_SPEED_HIGH,
+    GPIO_SPEED_VERY_HIGH,
+};
+
+
+/**
  * The operations every GPIO driver implements. One device is one port; a
  * pin is a number within its port, starting at 0.
  *
  * direction_output: make the pin a push-pull output driving 'value'
  * set_alternative:  hand the pin to an on-chip peripheral
+ * set_speed:        set how fast the pin's output edges are
  * set_value:        drive an output pin to 0 or 1
  * get_value:        return the level on the pin, 0 or 1
  *
@@ -24,6 +41,8 @@ struct gpio_ops {
     int (*direction_output) (struct udevice *dev, unsigned int pin, int value);
     int (*set_alternative) (struct udevice *dev, unsigned int pin,
                             unsigned int af);
+    int (*set_speed) (struct udevice *dev, unsigned int pin,
+                      enum gpio_speed speed);
     int (*set_value) (struct udevice *dev, unsigned int pin, int value);
     int (*get_value) (struct udevice *dev, unsigned int pin);
 };
@@ -55,6 +74,17 @@ int gpio_set_alternative(
     struct udevice *dev,
     unsigned int pin,
     unsigned int af
+);
+
+/**
+ * Set how fast the pin's output edges are. Has no effect on an input; set
+ * it before the pin starts driving a fast signal. Returns 0 or -Exxx
+ * (-EINVAL for a speed the driver does not know).
+ */
+int gpio_set_speed(
+    struct udevice *dev,
+    unsigned int pin,
+    enum gpio_speed speed
 );
 
 /**

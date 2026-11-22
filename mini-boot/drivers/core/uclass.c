@@ -78,11 +78,16 @@ void uclass_print_devices(void)
         for (int j = 0; j < dev_count; ++j)
         {
             struct udevice *dev = uc_devices[i].devps[j];
-            printf("  [%d] Name: \"%s\". Probed: %d\n",
+
+            /* "-": top level; "(missing)": an orphan, its parent not found */
+            printf("  [%d] Name: \"%s\". Parent: %s. Probed: %d\n",
                 j,
                 dev->name,
+                dev->parent ? dev->parent->name :
+                    dev->orphan ? "(missing)" : "-",
                 dev->probed
             );
+
             printf("      Drv: \"%s\". Plat: %p. Priv: %p\n",
                 dev->driver->name,
                 dev->plat,
@@ -175,4 +180,23 @@ int uclass_get_device_by_name(
     *devp = dev;
 
     return SUCCESS;
+}
+
+
+/**
+ * Every uclass in turn, through the per-uclass lookup. A find, never a
+ * get: binding must not probe anything.
+ */
+int device_find_by_name(
+    const char *name,
+    struct udevice **devp
+)
+{
+    for (int id = UCLASS_INVALID + 1; id < UCLASS_COUNT; ++id)
+    {
+        if (!uclass_find_device_by_name(id, name, devp))
+            return SUCCESS;
+    }
+
+    return -ENODEV;
 }

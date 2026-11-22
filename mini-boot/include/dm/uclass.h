@@ -34,7 +34,8 @@ int uclass_find_device(
 
 
 /**
- * Print every uclass and the devices in it. For debugging.
+ * Print every uclass and the devices in it, with each device's parent ("-"
+ * for none, "(missing)" for an orphan). For debugging.
  */
 void uclass_print_devices(void);
 
@@ -76,6 +77,20 @@ int uclass_find_device_by_name(
  */
 int uclass_get_device_by_name(
     enum uclass_id id,
+    const char *name,
+    struct udevice **devp
+);
+
+
+/**
+ * Look a device up by name in every uclass, without probing it (dm_init()
+ * uses it to link parents while binding). Device names are unique across
+ * the system, so the first match is the only one.
+ *
+ * Returns 0 and stores the device in '*devp', or -ENODEV if no device has
+ * that name. '*devp' is left alone on failure.
+ */
+int device_find_by_name(
     const char *name,
     struct udevice **devp
 );

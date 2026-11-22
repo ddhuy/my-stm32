@@ -51,9 +51,18 @@
 #define GYRO_SPI_MISO_PIN   8
 #define GYRO_SPI_MOSI_PIN   9
 #define GYRO_SPI_PIN_AF     5
+/* SCK and MOSI edges: at the reset speed (low), bit 0 of each byte read
+ * at 5.25 MHz was unreliable; "fast" on the STM32 (OSPEEDR 10)
+ */
+#define GYRO_SPI_PIN_SPEED  GPIO_SPEED_HIGH
 #define GYRO_CS_GPIO_NAME   "gpioc"
 #define GYRO_CS_GPIO_BASE   GPIOC_BASE
 #define GYRO_CS_GPIO_CLK    STM32F4_CLK_GPIOC
 #define GYRO_CS_PIN         1
+
+/* The gyroscope itself: chip select 0 of SPI5, at most 10 MHz */
+#define GYRO_NAME           "gyro"
+#define GYRO_SPI_CS         0
+#define GYRO_SPI_MAX_HZ     10000000
 
 #endif /* MINIBOOT_BOARD_STM32F429I_DISC1_H */

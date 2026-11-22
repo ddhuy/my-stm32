@@ -41,8 +41,10 @@ static int console_pins_setup(void)
 
 
 /**
- * SCK, MISO and MOSI of the gyroscope's SPI bus, handed to SPI5. Chip
- * select is not here: it is a plain GPIO, which the SPI driver owns.
+ * SCK, MISO and MOSI of the gyroscope's SPI bus, handed to SPI5. The two
+ * outputs get fast edges first, so the first clock is already sharp;
+ * MISO is an input, which a speed does not affect. Chip select is not
+ * here: it is a plain GPIO, which the SPI driver owns.
  */
 static int spi_pins_setup(void)
 {
@@ -50,6 +52,14 @@ static int spi_pins_setup(void)
     int ret;
 
     ret = uclass_get_device_by_name(UCLASS_GPIO, GYRO_SPI_GPIO_NAME, &port);
+    if (ret)
+        return ret;
+
+    ret = gpio_set_speed(port, GYRO_SPI_SCK_PIN, GYRO_SPI_PIN_SPEED);
+    if (ret)
+        return ret;
+
+    ret = gpio_set_speed(port, GYRO_SPI_MOSI_PIN, GYRO_SPI_PIN_SPEED);
     if (ret)
         return ret;
 
@@ -139,25 +149,17 @@ void board_print_info(void)
     printf(    "+-------------------------------+\n");
 
     /*
-     * Part A only: read the gyroscope's WHO_AM_I (register 0x0F, read
-     * bit 0x80) through the bus ops directly. Part B replaces this with
-     * a child device and the SPI uclass.
+     * The gyroscope's first use: probing it probes its bus first (the
+     * core does that), then checks the chip. Outside the box, and not in
+     * board_init(): a missing gyroscope must not stop the boot.
      */
-    struct udevice *bus;
-    int ret = uclass_get_device_by_name(UCLASS_SPI, GYRO_SPI_NAME, &bus);
-    if (ret) {
-        printf("SPI test: no bus (%d)\n", ret);
-        return;
-    }
+    struct udevice *gyro;
+    int ret = uclass_get_device_by_name(UCLASS_GYRO, GYRO_NAME, &gyro);
 
-    const struct spi_ops *ops = bus->driver->ops;
-    const struct spi_slave_plat slave = { 0, SPI_MODE_3, 10000000 };
-    u8 addr = 0x0F | 0x80, id = 0;
-
-    ret = ops->xfer(bus, &slave, &addr, NULL, 1, SPI_XFER_BEGIN);
-    if (!ret)
-        ret = ops->xfer(bus, &slave, NULL, &id, 1, SPI_XFER_END);
-    printf("SPI test: WHO_AM_I = 0x%x (ret %d)\n", id, ret);
+    if (ret)
+        printf("Gyro: error %d\n", ret);
+    else
+        printf("Gyro: ready\n");
 }
 
 /**
@@ -276,6 +278,25 @@ DM_DEVICE(rcc) = {
     .name = STM32F4_RCC_NAME,
     .driver = "stm32f4_rcc",
     .plat = &rcc_plat,
+};
+
+
+/**
+ * The gyroscope: a child of SPI5. It has no platform data of its own;
+ * gyro_slave tells the bus how to reach it (chip select, mode 3, speed),
+ * and only the SPI uclass reads it.
+ */
+static const struct spi_slave_plat gyro_slave = {
+    .cs = GYRO_SPI_CS,
+    .mode = SPI_MODE_3,
+    .max_hz = GYRO_SPI_MAX_HZ,
+};
+
+DM_DEVICE(gyro) = {
+    .name = GYRO_NAME,
+    .driver = "l3gd20",
+    .parent = GYRO_SPI_NAME,
+    .parent_plat = &gyro_slave,
 };
 
 

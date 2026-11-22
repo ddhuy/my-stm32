@@ -48,6 +48,24 @@ int gpio_set_alternative(
 
 
 /**
+ * A driver whose pins have one fixed speed need not provide it.
+ */
+int gpio_set_speed(
+    struct udevice *dev,
+    unsigned int pin,
+    enum gpio_speed speed
+)
+{
+    const struct gpio_ops *ops = dev->driver->ops;
+
+    if (!ops || !ops->set_speed)
+        return -ENOSYS;
+
+    return ops->set_speed(dev, pin, speed);
+}
+
+
+/**
  * See gpio.h.
  */
 int gpio_set_value(

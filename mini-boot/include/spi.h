@@ -25,7 +25,7 @@ struct udevice;
 /**
  * How one slave wants to be talked to. Defined by the SPI uclass, not by
  * a driver: every SPI bus driver reads it, and a slave's driver never
- * does. From Part B it is the slave device's parent_plat.
+ * does. It is the slave device's parent_plat.
  *
  * cs:     chip select line on its bus
  * mode:   SPI_MODE_0 .. SPI_MODE_3
@@ -51,6 +51,25 @@ struct spi_ops
     int (*xfer) (struct udevice *bus, const struct spi_slave_plat *slave,
                  const u8 *dout, u8 *din, size_t len, u32 flags);
 };
+
+
+/**
+ * Shift 'len' bytes out of 'dout' and in to 'din' (either may be NULL)
+ * for the SPI slave device 'slave'. Its bus is its parent, its settings
+ * its parent_plat. 'flags' are SPI_XFER_*: a register read is two calls,
+ * the address with SPI_XFER_BEGIN and the data with SPI_XFER_END.
+ *
+ * Returns 0, or -ENODEV if 'slave' has no parent, -EINVAL if the parent
+ * is not an SPI bus or 'slave' has no parent_plat, -ENOSYS if the bus
+ * driver has no xfer operation, or the bus driver's error.
+ */
+int spi_xfer(
+    struct udevice *slave,
+    const u8 *dout,
+    u8 *din,
+    size_t len,
+    u32 flags
+);
 
 
 #endif /* MINIBOOT_SPI_H */

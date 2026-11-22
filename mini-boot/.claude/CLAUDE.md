@@ -62,11 +62,12 @@ mini-boot/
 │   ├── serial/                   serial-uclass.c (generic), stm32_serial.c,
 │   │                             pl011_serial.c
 │   ├── gpio/                     gpio-uclass.c (generic), stm32_gpio.c
-│   ├── spi/                      stm32_spi.c (spi-uclass.c from item 4
-│   │                             Part B)
+│   ├── gyro/                     gyro-uclass.c (generic), l3gd20.c
+│   ├── spi/                      spi-uclass.c (generic), stm32_spi.c
 │   └── timer/                    timer-uclass.c (generic), armv7m_systick.c
 ├── include/                      generic APIs: types.h, errno.h, init.h,
-│   │                             clk.h, gpio.h, serial.h, spi.h, timer.h,
+│   │                             clk.h, gpio.h, gyro.h, serial.h, spi.h,
+│   │                             timer.h,
 │   │                             console.h, systime.h,
 │   │                             printf.h, string.h, malloc.h, panic.h
 │   ├── dm/                       uclass-id.h, driver.h, device.h, uclass.h,
@@ -134,6 +135,11 @@ driver in drivers/clk/ since item 3.
   Gyroscope on SPI5 (SCK PF7, MISO PF8, MOSI PF9, AF5; CS PC1, a GPIO):
   this board has the I3G4250D (WHO_AM_I 0xD3), older ones the L3GD20
   (0xD4), same registers. SPI mode 3, at most 10 MHz: 84 MHz / 16.
+  SCK and MOSI need fast edges (GYRO_SPI_PIN_SPEED, OSPEEDR 10; GPIOF
+  OSPEEDR 0x00088000): at the reset speed bit 0 of every byte read was
+  unreliable. Gyro at rest: x ~100, y ~400, z ~450 mdps (offset),
+  noise +-300; fastest seen 195 dps. The sign of z for a turn seen from
+  above is not yet measured.
   Clock: 168 MHz from the PLL (8 MHz HSE crystal), set by the rcc
   device's probe (drivers/clk/stm32f4_rcc.c): AHB 168, APB1 42 (/4),
   APB2 84 (/2, the console UART: BRR 729). get_rate computes each bus
@@ -205,15 +211,18 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
 (UCLASS_MAX_DEVICES), to become a linked list later.
 
 - DM_DRIVER(name) = { .name, .id, .probe, .ops, .priv_auto } in the driver's
-  .c file. DM_DEVICE(name) = { .name, .driver, .plat } in board.c.
+  .c file. DM_DEVICE(name) = { .name, .driver, .plat, .parent,
+  .parent_plat } in board.c (the last two only for a child).
 - dm_init() binds every DM_DEVICE: driver_find() by name, calloc a
   struct udevice, add it to the driver's uclass. No hardware is touched.
-  A failed row is reported and skipped.
+  A failed row is reported and skipped. Then a second pass links children
+  to parents (see Parent and child below).
 - uclass_find_device(id, index) only looks up. uclass_get_device() also
   calls device_probe(): allocate priv (priv_auto bytes), call the driver's
   probe, set `probed` last. Probe runs once per device, on first use.
   uclass_find_device_by_name() / uclass_get_device_by_name() do the same by
-  name; a name is unique within its uclass.
+  name. device_find_by_name() searches every uclass: device names are
+  unique across the system (two identical sensors need gyro0 / gyro1).
 - plat is the board's constant data in flash; priv is the driver's own data
   on the heap.
 - A uclass defines an ops table (struct serial_ops in serial.h, struct
@@ -221,20 +230,27 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   gpio-uclass.c) that dispatch through dev->driver->ops and return -ENOSYS
   for a missing operation.
 - GPIO: one device is one port, a pin is a number within it. Probe turns on
-  the port clock. Pin multiplexing is a GPIO operation (set_alternative);
-  there is no pinctrl uclass. The board, not the serial driver, sets up the
-  console pins.
+  the port clock. Pin multiplexing is a GPIO operation (set_alternative),
+  and so is the output edge speed (set_speed, enum gpio_speed LOW ..
+  VERY_HIGH, mapped one by one onto OSPEEDR in stm32_gpio.c; added in
+  item 4 Part C); there is no pinctrl uclass. The board, not the
+  peripheral's driver, sets up its pins (console, SPI) and chooses their
+  speed: a fast signal on a slow pin is a board bug.
 - Boot order in main(): dm_init(), board_init() (gets its GPIO ports by
   name: LEDs, then console pins), console_init() (gets serial device 0,
   which probes it), systime_init() (timer device 0), then the first print.
   The main loop never blocks: continuous echo, LED toggled every BLINK_MS
-  by systime_elapsed_ms(). The echo turns Enter ('\r') into '\n' (input
-  side, like termios ICRNL); putc() turns '\n' into "\r\n" (output, like
-  ONLCR); putc() must not translate '\r' ("\r\n" strings, progress lines,
-  binary). The shell's line reader takes this over later. A failure
-  before the console is up is silent; panic() lights the red LED if the
-  LED port was found. On lm3s, board_init() does nothing: the clock
-  provider is probed from inside the UART's probe.
+  by systime_elapsed_ms(), and (if gyro device 0 exists; not on lm3s)
+  one "gyro: x= y= z= mdps" line every GYRO_PRINT_MS (1000), a read error
+  printed once. Printing a line blocks about 3 ms, so a pasted line can
+  lose characters (the USART holds one byte); a typed one is fine. The
+  echo turns Enter ('\r') into '\n' (input side, like termios ICRNL);
+  putc() turns '\n' into "\r\n" (output, like ONLCR); putc() must not
+  translate '\r' ("\r\n" strings, progress lines, binary). The shell's
+  line reader takes this over later. A failure before the console is up
+  is silent; panic() lights the red LED if the LED port was found. On
+  lm3s, board_init() does nothing: the clock provider is probed from
+  inside the UART's probe.
 - Timer (step 9): SysTick is a CPU block present on every board of the
   SoC, so its DM_DEVICE row is in mach-<soc>/devices.c, and mach.mk (not
   board.mk) adds its driver. Its base (SYSTICK_BASE) is in asm/armv7m.h;
@@ -305,7 +321,11 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   implements struct spi_ops { xfer(bus, slave, dout, din, len, flags) }
   from include/spi.h. struct spi_slave_plat { cs, mode, max_hz } is
   defined by the uclass, not a driver: it describes one slave, only the
-  bus reads it (from Part B, the child's parent_plat). Mode and speed
+  bus reads it; it is the slave device's parent_plat. A slave's driver
+  calls spi_xfer(slave, ...) (spi-uclass.c), which takes the bus from
+  slave->parent and refuses a parent that is not in UCLASS_SPI (-EINVAL;
+  the core accepts any parent, so this is the only check) or no parent
+  (-ENODEV). Mode and speed
   are per slave, so the bus programs CR1 at SPI_XFER_BEGIN (SPE clear,
   then set; the divider from the PCLK rate kept in priv) and pulls CS
   low; SPI_XFER_END waits for BSY, then raises CS (also on an error).
@@ -316,12 +336,58 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   and MOSI are set up by the board (spi_pins_setup() in board_init()).
   The SPI_CPOL / SPI_CPHA bits are translated, not copied, though they
   match CR1 on the STM32.
+- Parent and child (item 4 Part B; the design is mine, chosen over the
+  guide's "bind children in pass 2"): a row names its parent by string
+  (.parent) and gives .parent_plat, whose type the parent's uclass
+  defines. dm_init() pass 1 binds every row (a row naming a parent
+  starts as an orphan); pass 2, when every device exists, calls
+  device_set_parent() for each child: the only place a parent is linked.
+  It refuses a cycle (-EINVAL: walking up from the parent reaches the
+  child; only the closing link can make one, so the check is complete at
+  any depth) and clears the orphan flag. So row order never matters, at
+  any depth (seen: the gyro's udevice was allocated before spi5's).
+  device_probe() refuses an orphan (-ENODEV) before anything else, then
+  probes the parent first, then allocates priv: no child driver runs
+  without its parent, and a failed parent costs the child no heap. In
+  gdb the bus probe sits under device_probe(spi5) under
+  device_probe(gyro), with no l3gd20_probe frame (in item 3 the provider
+  was probed inside the consumer's probe). The device list shows each
+  parent: "-" top level, "(missing)" an orphan. Tested on the board:
+  misspelt parent: "(missing)", -19, spi5 never probed (9 devices still
+  bound); parent "gpioc": linked, gpioc probed by the gyro's probe,
+  l3gd20_probe runs, spi_xfer() -22; self-parent: cycle refused,
+  "(missing)", -19, no stack overflow; rows swapped: still ready.
+  Decided against (for now): a parent_id in struct driver for the core to
+  check the parent's uclass; a list of children (needed by dm tree and
+  device removal); a root device (parent NULL means top level).
+- Gyroscope (item 4 Parts B-C): UCLASS_GYRO, struct gyro_ops { read }
+  in gyro.h; struct gyro_data { x, y, z } in mdps: the unit is part of
+  the uclass contract, the axes are the sensor's. l3gd20.c (L3GD20 and
+  I3G4250D) is an SPI child with no plat and no priv; registers through
+  l3gd20_read() (address with BEGIN, data with END; MS bit for more than
+  one byte) and l3gd20_write() (one BEGIN | END transfer). Probe: write
+  CTRL_REG4 whole first (BDU, BLE 0, +-250 dps, SIM 0 = 4-wire), because
+  a sensor left in 3-wire mode answers no read (all 0xFF) but still
+  takes writes and survives an MCU reset; then WHO_AM_I (-ENODEV); check
+  BDU/BLE/FS (not SIM: a 3-wire sensor could not answer); CTRL_REG1 =
+  PD | X | Y | Z, read back (-EIO). Read: six bytes from OUT_X_L, each
+  axis (s16) low | high << 8, then raw * 875 / 100 (8.75 mdps/digit).
+- Debugging lesson (item 4 Part C): CTRL_REG4 written 0x80 read back
+  0x81, CTRL_REG1 0x0F read back 0x0E; only bit 0 (the last bit of each
+  byte) was wrong, intermittently, and a pause in gdb "fixed" it. Cause:
+  SCK / MOSI at the reset output speed (low) at 5.25 MHz. A
+  read-modify-write then wrote the misread bit back and really set SIM
+  (3-wire), so every read gave 0xFF; Part B had passed only because
+  0xD3 and 0x0F end in 1. Rules: a read-back that only ever checks odd
+  values hides a stuck bit 0; check the pins' speed before blaming the
+  registers; never write back a bit you have not proved you read
+  correctly.
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
   CONSOLE_GPIO_NAME).
 
-## Status (2026-11-21)
+## Status (2026-11-22)
 Steps 1-9 done, tested on the board and committed (step 9: bb0fa77,
 539fa0c, a0649bc; rename to systime.* and -Werror: 5b66684).
 Roadmap item 2 (QEMU lm3s6965evb) done: a8655df (skeleton), 361e7d5
@@ -393,9 +459,22 @@ Roadmap item 4 (SPI, gyroscope as a child device), in parts:
   0x00000004 / ODR 0x00000002, RCC APB2ENR 0x00100010, AHB1ENR
   0x00100065. Text: STM32 4532 -> 5200; LM3S text unchanged, bss +36
   (the uclass table has one slot per uclass id).
-- Next: Part B, parent/child in the core (parent and parent_plat in
-  device_info and udevice, bind in two passes, parent probed first),
-  spi-uclass.c (spi_xfer(slave)), the gyroscope driver reads WHO_AM_I.
+- Part B done, tested on the board: parent/child in the core (see
+  Parent and child), spi_xfer(), UCLASS_GYRO, the l3gd20 driver (probe
+  only), the gyro row (cs 0, mode 3, 10 MHz in its parent_plat); the
+  Part A test replaced by "Gyro: ready" after the banner box. 9 devices
+  bound, gyro Parent: spi5; CR1 still 0x0000035F, now from the row.
+- Part C done, tested on the board: gyro.h, gyro-uclass.c, l3gd20 read
+  (mdps), the main-loop line once a second; gpio_set_speed() and fast
+  SPI pins (see the debugging lesson); CTRL_REG4 written first. 4/4
+  resets "Gyro: ready"; at rest x ~100 y ~400 z ~450 mdps; all axes
+  respond with both signs, up to 195 dps, no wrap. Text: STM32 5200 ->
+  6144; LM3S 3668 -> 4188 (the core: device_find_by_name, pass 2,
+  cycle walk, orphan; gyro_read and the loop are linked but never
+  reached; spi_xfer is dropped by --gc-sections).
+- Next: Part D, the audit (generic code changed by item 4, and why), who
+  removes the gyro offset (driver, uclass or caller), optionally the sign
+  of z, then close item 4.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -417,12 +496,18 @@ Known limitations:
 - free() does nothing, so a device that fails after allocation is leaked.
 - "Serial device 0" is the console and "timer device 0" the system timer;
   no way yet to choose among several.
-- Bind errors printed before console_init() are lost.
+- Bind errors printed before console_init() are lost (an orphan still
+  shows as "(missing)" in the device list).
+- The core accepts any parent: a gyro row naming gpioc is linked, gpioc
+  is probed by the gyro, l3gd20_probe runs; only spi_xfer() refuses it.
+- No list of children, no device removal, no root device.
+- "Gyro device 0" is the gyro the main loop prints.
 - gpio_get_value() can return a negative error; board_led_toggle() does not
   test for it.
 - The two uclass "get" functions duplicate their probe-and-return tail.
-- The stm32_spi driver has one chip select; GPIO pins keep the reset
-  output speed (low), fine for SPI5 at 5.25 MHz on the board.
+- The stm32_spi driver has one chip select.
+- The gyro reads a sample with no data-ready check (STATUS_REG), and its
+  zero-rate offset is not removed.
 - A NULL dereference does not fault: address 0 aliases flash, a read
   returns the vector table, a write is dropped and sets FLASH_SR PGSERR /
   PGPERR (seen in step 9, priv_auto removed). A driver using dev->priv must
@@ -440,7 +525,7 @@ The main purpose is learning the driver model. Agreed order:
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use:
    done (Parts A-D).
 4. SPI, with the L3GD20 gyroscope as a child device (parent/child):
-   in progress (Part A done).
+   in progress (Parts A, B and C done).
 5. Command shell, including a `dm` command.
 6. Booting an application.
 7. SDRAM (FMC at 0xD0000000), firm, likely with a pinctrl uclass.

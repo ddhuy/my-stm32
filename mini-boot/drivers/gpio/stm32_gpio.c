@@ -13,6 +13,7 @@
 
 /* STM32 GPIO port register layout */
 #define GPIO_MODER      0x00
+#define GPIO_OSPEEDR    0x08
 #define GPIO_IDR        0x10
 #define GPIO_BSRR       0x18
 #define GPIO_AFRL       0x20
@@ -31,6 +32,20 @@
 #define GPIO_MODE_ALTERNATE     0x2UL
 #define GPIO_MODE_ANALOG        0x3UL
 #define GPIO_MODER_MODE(pin, mode)  ((mode) << GPIO_MODER_SHIFT(pin))
+
+/*
+ * OSPEEDR: a 2-bit output speed field per pin, laid out like MODER. 00 at
+ * reset (low) on most pins: fine for a LED or a UART, too slow for SPI at
+ * several MHz (item 4: bit 0 of every byte read from the gyroscope was
+ * unreliable at 5.25 MHz).
+ */
+#define GPIO_OSPEEDR_SHIFT(pin) ((pin) * GPIO_MODER_BITS_PER_PIN)
+#define GPIO_OSPEEDR_MASK(pin)  (0x3UL << GPIO_OSPEEDR_SHIFT(pin))
+#define GPIO_OSPEED_LOW         0x0UL
+#define GPIO_OSPEED_MEDIUM      0x1UL
+#define GPIO_OSPEED_FAST        0x2UL
+#define GPIO_OSPEED_HIGH        0x3UL
+#define GPIO_OSPEEDR_SPEED(pin, s)  ((s) << GPIO_OSPEEDR_SHIFT(pin))
 
 /*
  * BSRR is write-only: writing 1 to bit n (0-15) sets pin n,
@@ -171,11 +186,53 @@ static int stm32_gpio_set_alternative(
 
 
 /**
+ * The generic speeds map one to one onto the four OSPEEDR steps. Mapped
+ * one by one, not by value: the enum's order is the uclass's business.
+ */
+static int stm32_gpio_set_speed(
+    struct udevice *dev,
+    unsigned int pin,
+    enum gpio_speed speed
+)
+{
+    const struct stm32_gpio_plat *plat = dev->plat;
+    u32 field;
+
+    if (pin >= GPIO_PINS_PER_PORT)
+        return -EINVAL;
+
+    switch (speed) {
+    case GPIO_SPEED_LOW:
+        field = GPIO_OSPEED_LOW;
+        break;
+    case GPIO_SPEED_MEDIUM:
+        field = GPIO_OSPEED_MEDIUM;
+        break;
+    case GPIO_SPEED_HIGH:
+        field = GPIO_OSPEED_FAST;
+        break;
+    case GPIO_SPEED_VERY_HIGH:
+        field = GPIO_OSPEED_HIGH;
+        break;
+    default:
+        return -EINVAL;
+    }
+
+    clrsetbits(plat->base + GPIO_OSPEEDR,
+               GPIO_OSPEEDR_MASK(pin),
+               GPIO_OSPEEDR_SPEED(pin, field));
+
+    return SUCCESS;
+}
+
+
+/**
  * This driver's implementation of the GPIO uclass operations.
  */
 static const struct gpio_ops stm32_gpio_ops = {
     .direction_output = stm32_gpio_direction_output,
     .set_alternative  = stm32_gpio_set_alternative,
+    .set_speed        = stm32_gpio_set_speed,
     .set_value        = stm32_gpio_set_value,
     .get_value        = stm32_gpio_get_value,
 };

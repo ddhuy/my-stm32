@@ -15,6 +15,7 @@ enum uclass_id
     UCLASS_TIMER,
     UCLASS_CLK,
     UCLASS_SPI,
+    UCLASS_GYRO,
 
     UCLASS_COUNT
 };
