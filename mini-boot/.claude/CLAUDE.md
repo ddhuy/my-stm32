@@ -139,7 +139,7 @@ driver in drivers/clk/ since item 3.
   OSPEEDR 0x00088000): at the reset speed bit 0 of every byte read was
   unreliable. Gyro at rest: x ~100, y ~400, z ~450 mdps (offset),
   noise +-300; fastest seen 195 dps. The sign of z for a turn seen from
-  above is not yet measured.
+  above was not measured (skipped in Part D).
   Clock: 168 MHz from the PLL (8 MHz HSE crystal), set by the rcc
   device's probe (drivers/clk/stm32f4_rcc.c): AHB 168, APB1 42 (/4),
   APB2 84 (/2, the console UART: BRR 729). get_rate computes each bus
@@ -246,11 +246,11 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   lose characters (the USART holds one byte); a typed one is fine. The
   echo turns Enter ('\r') into '\n' (input side, like termios ICRNL);
   putc() turns '\n' into "\r\n" (output, like ONLCR); putc() must not
-  translate '\r' ("\r\n" strings, progress lines, binary). The shell's
-  line reader takes this over later. A failure before the console is up
-  is silent; panic() lights the red LED if the LED port was found. On
-  lm3s, board_init() does nothing: the clock provider is probed from
-  inside the UART's probe.
+  translate '\r' ("\r\n" strings, progress lines, binary). A line reader
+  would take this over (the shell is out of scope). A failure before
+  the console is up is silent; panic() lights the red LED if the LED port
+  was found. On lm3s, board_init() does nothing: the clock provider is
+  probed from inside the UART's probe.
 - Timer (step 9): SysTick is a CPU block present on every board of the
   SoC, so its DM_DEVICE row is in mach-<soc>/devices.c, and mach.mk (not
   board.mk) adds its driver. Its base (SYSTICK_BASE) is in asm/armv7m.h;
@@ -472,9 +472,26 @@ Roadmap item 4 (SPI, gyroscope as a child device), in parts:
   6144; LM3S 3668 -> 4188 (the core: device_find_by_name, pass 2,
   cycle walk, orphan; gyro_read and the loop are linked but never
   reached; spi_xfer is dropped by --gc-sections).
-- Next: Part D, the audit (generic code changed by item 4, and why), who
-  removes the gyro offset (driver, uclass or caller), optionally the sign
-  of z, then close item 4.
+- Part D done: the audit, 6d998c7..c459d84, 24 files +1311 / -39.
+  New as designed: the SPI and gyro uclasses and drivers (2 uclass
+  ids). Board data: 4 rows (gpioc, gpiof, spi5, gyro), pins and their
+  speed, 3 clock ids. The core changed on purpose (it was the subject):
+  parent / parent_plat / orphan, device_set_parent(), dm_init() pass 2,
+  parent-first probe, device_find_by_name(), the parent column. The GPIO
+  uclass grew set_speed for a hardware reason, the first op added
+  because a second user (SPI) needed what the first (the UART) did not.
+  main.c got the gyro line. Untouched: start.S, fault.c, link.ld, lib/,
+  console.c, systime.c, the clk / serial / timer uclasses, every older
+  driver but stm32_gpio, all of mach-* and board/lm3s6965evb. Unlike
+  item 2 (zero generic lines) the model was extended with a concept,
+  not patched for a SoC; nothing that worked needed fixing. lm3s map:
+  spi_xfer discarded; gyro_read linked (main.c calls it) but never
+  reached, about 170 bytes.
+  Decided: the gyro offset belongs in the gyro uclass (a calibrate
+  operation, the offset in per-device uclass data), done in item 5a
+  when uclasses get their own data; until then read returns the raw
+  rate in mdps, uncorrected. The gyro line stays in main.c until
+  aliases (item 5c) replace "gyro device 0". Item 4 done.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -501,13 +518,14 @@ Known limitations:
 - The core accepts any parent: a gyro row naming gpioc is linked, gpioc
   is probed by the gyro, l3gd20_probe runs; only spi_xfer() refuses it.
 - No list of children, no device removal, no root device.
-- "Gyro device 0" is the gyro the main loop prints.
+- "Gyro device 0" is the gyro the main loop prints; the line is in
+  generic main.c, so lm3s links gyro_read too (until item 5c).
 - gpio_get_value() can return a negative error; board_led_toggle() does not
   test for it.
 - The two uclass "get" functions duplicate their probe-and-return tail.
 - The stm32_spi driver has one chip select.
 - The gyro reads a sample with no data-ready check (STATUS_REG), and its
-  zero-rate offset is not removed.
+  zero-rate offset is not removed (decided: the gyro uclass, item 5a).
 - A NULL dereference does not fault: address 0 aliases flash, a read
   returns the vector table, a write is dropped and sets FLASH_SR PGSERR /
   PGPERR (seen in step 9, priv_auto removed). A driver using dev->priv must
@@ -518,15 +536,28 @@ Known limitations:
   real LM3S6965 (GPIO on lm3s skipped).
 
 ## Roadmap
-The main purpose is learning the driver model. Agreed order:
+The main purpose is learning the driver model; nothing else is in scope.
+Agreed order:
 1. Timer (SysTick): done (step 9).
 2. Second target on QEMU (lm3s6965evb) to prove the four-level split:
    done (make check keeps both targets building).
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use:
    done (Parts A-D).
 4. SPI, with the L3GD20 gyroscope as a child device (parent/child):
-   in progress (Parts A, B and C done).
-5. Command shell, including a `dm` command.
-6. Booting an application.
-7. SDRAM (FMC at 0xD0000000), firm, likely with a pinctrl uclass.
-Linked-list uclass storage when the fixed array gets in the way.
+   done (Parts A-D).
+5. The rest of the driver model, in this order:
+   a. The uclass driver (UCLASS_DRIVER): per-uclass hooks (post_bind,
+      pre_probe, post_probe), per-device uclass data (per_device_auto)
+      and per-child data (per_child_auto). The biggest gap: a uclass is
+      today only an id and a file of functions. First use: the gyro
+      offset (a calibrate operation, the offset in uclass data).
+   b. Matching by compatible string with driver_data: one driver, a
+      table of chips (l3gd20 / i3g4250d).
+   c. Sequence numbers and aliases (dev->seq, serial0, gyro0): replaces
+      "device 0 is the console".
+   d. Children list, device_remove() and unbind (children before
+      parents), and a dm tree print at boot.
+   e. Optional: a device tree instead of the C table.
+Out of scope (decided 2026-11-22): command shell, booting an
+application, SDRAM. Linked-list uclass storage when the fixed array
+gets in the way.
