@@ -62,16 +62,19 @@ mini-boot/
 │   ├── serial/                   serial-uclass.c (generic), stm32_serial.c,
 │   │                             pl011_serial.c
 │   ├── gpio/                     gpio-uclass.c (generic), stm32_gpio.c
+│   ├── spi/                      stm32_spi.c (spi-uclass.c from item 4
+│   │                             Part B)
 │   └── timer/                    timer-uclass.c (generic), armv7m_systick.c
 ├── include/                      generic APIs: types.h, errno.h, init.h,
-│   │                             clk.h, gpio.h, serial.h, timer.h,
+│   │                             clk.h, gpio.h, serial.h, spi.h, timer.h,
 │   │                             console.h, systime.h,
 │   │                             printf.h, string.h, malloc.h, panic.h
 │   ├── dm/                       uclass-id.h, driver.h, device.h, uclass.h,
 │   │                             root.h
 │   └── platdata/                 stm32_serial.h, stm32_gpio.h,
 │                                 armv7m_systick.h, pl011_serial.h,
-│                                 lm3s_sysctl.h, stm32f4_rcc.h: what a
+│                                 lm3s_sysctl.h, stm32f4_rcc.h,
+│                                 stm32_spi.h: what a
 │                                 board (or SoC) tells a driver about one
 │                                 instance; a clock provider's header
 │                                 also holds its device name and IDs
@@ -128,6 +131,9 @@ driver in drivers/clk/ since item 3.
   unreachable (an inverted check).
 - STM32F429I-DISC1: console /dev/ttyACM0 at 115200 (ST-LINK VCP, USART1
   on PA9/PA10 AF7). LEDs: PG13 green (heartbeat), PG14 red (panic).
+  Gyroscope on SPI5 (SCK PF7, MISO PF8, MOSI PF9, AF5; CS PC1, a GPIO):
+  this board has the I3G4250D (WHO_AM_I 0xD3), older ones the L3GD20
+  (0xD4), same registers. SPI mode 3, at most 10 MHz: 84 MHz / 16.
   Clock: 168 MHz from the PLL (8 MHz HSE crystal), set by the rcc
   device's probe (drivers/clk/stm32f4_rcc.c): AHB 168, APB1 42 (/4),
   APB2 84 (/2, the console UART: BRR 729). get_rate computes each bus
@@ -295,6 +301,21 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   the only output is "PANIC: No Timer!" (tested on the STM32), the first
   clock failure that explains itself. Where a mistake shows depends on
   where its device is first probed in the boot order.
+- SPI (item 4): a bus driver (stm32_spi, device spi5, UCLASS_SPI)
+  implements struct spi_ops { xfer(bus, slave, dout, din, len, flags) }
+  from include/spi.h. struct spi_slave_plat { cs, mode, max_hz } is
+  defined by the uclass, not a driver: it describes one slave, only the
+  bus reads it (from Part B, the child's parent_plat). Mode and speed
+  are per slave, so the bus programs CR1 at SPI_XFER_BEGIN (SPE clear,
+  then set; the divider from the PCLK rate kept in priv) and pulls CS
+  low; SPI_XFER_END waits for BSY, then raises CS (also on an error).
+  A register read is two calls: address with BEGIN, data with END. DR
+  is read after every byte, wanted or not. Chip select is a GPIO owned
+  by the bus (cs_gpio_dev / cs_pin in its plat, like U-Boot cs-gpios),
+  set high in probe before anything else; one CS (cs 0) only. SCK, MISO
+  and MOSI are set up by the board (spi_pins_setup() in board_init()).
+  The SPI_CPOL / SPI_CPHA bits are translated, not copied, though they
+  match CR1 on the STM32.
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
@@ -361,6 +382,20 @@ Roadmap item 3 (clock uclass), in parts:
   60 s; echo works. No consumer changed: the UART and SysTick took
   their new rates through get_rate. Text: STM32 3992 -> 4532, LM3S
   unchanged (3668). Item 3 done.
+Roadmap item 4 (SPI, gyroscope as a child device), in parts:
+- Part A done, tested on the board: UCLASS_SPI, include/spi.h, the
+  stm32_spi bus driver; rows gpioc, gpiof, spi5 (8 devices bound; the
+  linker put gpiof and gpioc before gpioa). A temporary test after the
+  banner box calls the bus ops directly with a hand-made slave and
+  prints WHO_AM_I = 0xd3 (ret 0); Part B replaces it with a child
+  device. In gdb: SPI5 CR1 0x0000035F, SR 0x00000002, GPIOF MODER
+  0x000A8000 / AFRL 0x50000000 / AFRH 0x00000055, GPIOC MODER
+  0x00000004 / ODR 0x00000002, RCC APB2ENR 0x00100010, AHB1ENR
+  0x00100065. Text: STM32 4532 -> 5200; LM3S text unchanged, bss +36
+  (the uclass table has one slot per uclass id).
+- Next: Part B, parent/child in the core (parent and parent_plat in
+  device_info and udevice, bind in two passes, parent probed first),
+  spi-uclass.c (spi_xfer(slave)), the gyroscope driver reads WHO_AM_I.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -386,7 +421,8 @@ Known limitations:
 - gpio_get_value() can return a negative error; board_led_toggle() does not
   test for it.
 - The two uclass "get" functions duplicate their probe-and-return tail.
-- include/spi.h is an empty placeholder.
+- The stm32_spi driver has one chip select; GPIO pins keep the reset
+  output speed (low), fine for SPI5 at 5.25 MHz on the board.
 - A NULL dereference does not fault: address 0 aliases flash, a read
   returns the vector table, a write is dropped and sets FLASH_SR PGSERR /
   PGPERR (seen in step 9, priv_auto removed). A driver using dev->priv must
@@ -403,7 +439,8 @@ The main purpose is learning the driver model. Agreed order:
    done (make check keeps both targets building).
 3. Clock uclass, with the 168 MHz PLL from HSE as its first real use:
    done (Parts A-D).
-4. SPI, with the L3GD20 gyroscope as a child device (parent/child).
+4. SPI, with the L3GD20 gyroscope as a child device (parent/child):
+   in progress (Part A done).
 5. Command shell, including a `dm` command.
 6. Booting an application.
 7. SDRAM (FMC at 0xD0000000), firm, likely with a pinctrl uclass.

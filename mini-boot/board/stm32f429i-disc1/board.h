@@ -38,4 +38,22 @@
 #define LED_GREEN_PIN       13  /* LD3 */
 #define LED_RED_PIN         14  /* LD4 */
 
+/* Gyroscope (L3GD20 or I3G4250D) on SPI5: SCK PF7, MISO PF8, MOSI PF9
+ * (AF5); chip select PC1, a GPIO driven by the SPI driver
+ */
+#define GYRO_SPI_NAME       "spi5"
+#define GYRO_SPI_BASE       SPI5_BASE
+#define GYRO_SPI_CLK        STM32F4_CLK_SPI5
+#define GYRO_SPI_GPIO_NAME  "gpiof"
+#define GYRO_SPI_GPIO_BASE  GPIOF_BASE
+#define GYRO_SPI_GPIO_CLK   STM32F4_CLK_GPIOF
+#define GYRO_SPI_SCK_PIN    7
+#define GYRO_SPI_MISO_PIN   8
+#define GYRO_SPI_MOSI_PIN   9
+#define GYRO_SPI_PIN_AF     5
+#define GYRO_CS_GPIO_NAME   "gpioc"
+#define GYRO_CS_GPIO_BASE   GPIOC_BASE
+#define GYRO_CS_GPIO_CLK    STM32F4_CLK_GPIOC
+#define GYRO_CS_PIN         1
+
 #endif /* MINIBOOT_BOARD_STM32F429I_DISC1_H */

@@ -7,3 +7,4 @@ OPENOCDCFG := board/stm32f429disc1.cfg
 SRCS += board/$(BOARD)/board.c
 SRCS += drivers/gpio/stm32_gpio.c
 SRCS += drivers/serial/stm32_serial.c
+SRCS += drivers/spi/stm32_spi.c

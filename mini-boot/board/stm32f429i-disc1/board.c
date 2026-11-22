@@ -3,10 +3,12 @@
 #include <gpio.h>
 #include <init.h>
 #include <printf.h>
+#include <spi.h>
 #include <dm/device.h>
 #include <dm/uclass.h>
 #include <platdata/stm32_gpio.h>
 #include <platdata/stm32_serial.h>
+#include <platdata/stm32_spi.h>
 #include <platdata/stm32f4_rcc.h>
 
 
@@ -35,6 +37,31 @@ static int console_pins_setup(void)
         return ret;
 
     return gpio_set_alternative(port, CONSOLE_RX_PIN, CONSOLE_PIN_AF);
+}
+
+
+/**
+ * SCK, MISO and MOSI of the gyroscope's SPI bus, handed to SPI5. Chip
+ * select is not here: it is a plain GPIO, which the SPI driver owns.
+ */
+static int spi_pins_setup(void)
+{
+    struct udevice *port;
+    int ret;
+
+    ret = uclass_get_device_by_name(UCLASS_GPIO, GYRO_SPI_GPIO_NAME, &port);
+    if (ret)
+        return ret;
+
+    ret = gpio_set_alternative(port, GYRO_SPI_SCK_PIN, GYRO_SPI_PIN_AF);
+    if (ret)
+        return ret;
+
+    ret = gpio_set_alternative(port, GYRO_SPI_MISO_PIN, GYRO_SPI_PIN_AF);
+    if (ret)
+        return ret;
+
+    return gpio_set_alternative(port, GYRO_SPI_MOSI_PIN, GYRO_SPI_PIN_AF);
 }
 
 
@@ -72,7 +99,11 @@ int board_init(void)
     if (ret)
         return ret;
 
-    return console_pins_setup();
+    ret = console_pins_setup();
+    if (ret)
+        return ret;
+
+    return spi_pins_setup();
 }
 
 /**
@@ -106,6 +137,27 @@ void board_print_info(void)
     printf(    "| - Board: STM32F429I-DISC1.    |\n");
     printf(    "| - Console clock: %u Hz. |\n", rate);
     printf(    "+-------------------------------+\n");
+
+    /*
+     * Part A only: read the gyroscope's WHO_AM_I (register 0x0F, read
+     * bit 0x80) through the bus ops directly. Part B replaces this with
+     * a child device and the SPI uclass.
+     */
+    struct udevice *bus;
+    int ret = uclass_get_device_by_name(UCLASS_SPI, GYRO_SPI_NAME, &bus);
+    if (ret) {
+        printf("SPI test: no bus (%d)\n", ret);
+        return;
+    }
+
+    const struct spi_ops *ops = bus->driver->ops;
+    const struct spi_slave_plat slave = { 0, SPI_MODE_3, 10000000 };
+    u8 addr = 0x0F | 0x80, id = 0;
+
+    ret = ops->xfer(bus, &slave, &addr, NULL, 1, SPI_XFER_BEGIN);
+    if (!ret)
+        ret = ops->xfer(bus, &slave, NULL, &id, 1, SPI_XFER_END);
+    printf("SPI test: WHO_AM_I = 0x%x (ret %d)\n", id, ret);
 }
 
 /**
@@ -159,6 +211,38 @@ DM_DEVICE(gpioa) = {
 
 
 /**
+ * GPIO port C: the gyroscope's chip select (PC1).
+ */
+static const struct stm32_gpio_plat gpioc_plat = {
+    .base = GYRO_CS_GPIO_BASE,
+    .clk_dev = STM32F4_RCC_NAME,
+    .clk_id = GYRO_CS_GPIO_CLK
+};
+
+DM_DEVICE(gpioc) = {
+    .name = GYRO_CS_GPIO_NAME,
+    .driver = "stm32_gpio",
+    .plat = &gpioc_plat,
+};
+
+
+/**
+ * GPIO port F: the gyroscope's SPI pins (PF7-PF9).
+ */
+static const struct stm32_gpio_plat gpiof_plat = {
+    .base = GYRO_SPI_GPIO_BASE,
+    .clk_dev = STM32F4_RCC_NAME,
+    .clk_id = GYRO_SPI_GPIO_CLK
+};
+
+DM_DEVICE(gpiof) = {
+    .name = GYRO_SPI_GPIO_NAME,
+    .driver = "stm32_gpio",
+    .plat = &gpiof_plat,
+};
+
+
+/**
  * USART1: the console, through the ST-LINK virtual COM port.
  */
 static const struct stm32_serial_plat usart1_plat = {
@@ -192,4 +276,22 @@ DM_DEVICE(rcc) = {
     .name = STM32F4_RCC_NAME,
     .driver = "stm32f4_rcc",
     .plat = &rcc_plat,
+};
+
+
+/**
+ * SPI5: the bus the gyroscope is on, with its chip select line.
+ */
+static const struct stm32_spi_plat spi5_plat = {
+    .base = GYRO_SPI_BASE,
+    .clk_dev = STM32F4_RCC_NAME,
+    .clk_id = GYRO_SPI_CLK,
+    .cs_gpio_dev = GYRO_CS_GPIO_NAME,
+    .cs_pin = GYRO_CS_PIN,
+};
+
+DM_DEVICE(spi5) = {
+    .name = GYRO_SPI_NAME,
+    .driver = "stm32_spi",
+    .plat = &spi5_plat,
 };

@@ -14,6 +14,7 @@ enum uclass_id
     UCLASS_SERIAL,
     UCLASS_TIMER,
     UCLASS_CLK,
+    UCLASS_SPI,
 
     UCLASS_COUNT
 };
