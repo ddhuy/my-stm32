@@ -737,7 +737,9 @@ implemented at once on request.
   driver_find(), DEV_NODE_NONE, the "(missing)" column; the shared bind
   helper folded into device_bind_node(); l3gd20 always has its chip.
   Same boot on lm3s (QEMU), same 9 devices and values on the host bind
-  test. Text: STM32 12852 -> 12260, LM3S 8812 -> 8228.
+  test, and on the board the same output as before, heap addresses
+  included (udevice 48 -> 44 bytes, but calloc rounds to 8). Text: STM32
+  12852 -> 12260, LM3S 8812 -> 8228.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
