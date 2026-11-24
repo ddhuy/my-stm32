@@ -5,7 +5,9 @@
 /**
  * The kinds of device the driver model knows. Every driver names the one it
  * belongs to. The value is also the index into the core's table of uclasses,
- * so UCLASS_COUNT must stay last.
+ * so UCLASS_COUNT must stay last. Each id except UCLASS_INVALID has a
+ * UCLASS_DRIVER row in its uclass file; a device of an id without one fails
+ * to bind.
  */
 enum uclass_id
 {

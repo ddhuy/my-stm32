@@ -11,6 +11,12 @@
  * checking both the table and the entry first.
  */
 
+UCLASS_DRIVER(clk) = {
+    .name = "clk",
+    .id   = UCLASS_CLK,
+};
+
+
 /**
  * Looking the provider up by name with the "get" variant is what probes
  * it: a consumer's probe causes its provider's probe, on first use.

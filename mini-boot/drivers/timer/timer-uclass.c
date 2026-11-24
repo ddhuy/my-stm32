@@ -1,5 +1,6 @@
 #include <timer.h>
 #include <dm/device.h>
+#include <dm/uclass.h>
 
 
 /*
@@ -7,6 +8,12 @@
  * driver's table of operations through the device and calls the matching
  * entry, checking both the table and the entry first.
  */
+
+UCLASS_DRIVER(timer) = {
+    .name = "timer",
+    .id   = UCLASS_TIMER,
+};
+
 
 /**
  * A time has no room for an error code, so a driver that does not provide

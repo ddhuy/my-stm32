@@ -45,6 +45,15 @@ struct device_info
  * orphan: its device_info names a parent that is not (yet) linked. Set by
  *         device_bind(), cleared by device_set_parent(); device_probe()
  *         refuses an orphan, so no driver runs without its parent.
+ * uclass_priv: the uclass's own data about this device, allocated by
+ *         device_probe() (the uclass driver's per_device_auto bytes);
+ *         only the uclass reads it, never the driver. NULL if the uclass
+ *         asks for none
+ * parent_priv: the run-time half of parent_plat: what the parent's side
+ *         keeps about this device, allocated by device_probe() from the
+ *         PARENT's uclass driver (per_child_auto) and filled by its
+ *         child_pre_probe. Only the parent's uclass and driver read it.
+ *         NULL without a parent, or if the parent's uclass asks for none
  */
 struct udevice
 {
@@ -56,6 +65,8 @@ struct udevice
     struct udevice *parent;
     const void *parent_plat;
     bool orphan;
+    void *uclass_priv;
+    void *parent_priv;
 };
 
 
@@ -93,12 +104,15 @@ int device_set_parent(
 
 /**
  * Make a bound device ready for use: probe its parent first, then
- * allocate its private data, zeroed, and call the driver's probe
- * function. Does nothing if the device is already probed.
+ * allocate its private data, its uclass data and its parent data, zeroed,
+ * then call its uclass's pre_probe, its parent's uclass's child_pre_probe,
+ * the driver's probe and its uclass's post_probe, in that order. Does
+ * nothing if the device is already probed.
  *
  * Returns 0, or -ENODEV for an orphan, or the parent's error, or -ENOMEM
- * if the heap is full, or the error the driver's probe returned. After a
- * failure the device stays unprobed and the next call tries again.
+ * if the heap is full, or the error a hook or the driver's probe
+ * returned. After a failure the device stays unprobed and the next call
+ * tries again, from the parent on.
  */
 int device_probe(
     struct udevice *dev

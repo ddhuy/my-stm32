@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <serial.h>
 #include <dm/device.h>
+#include <dm/uclass.h>
 
 
 /*
@@ -10,6 +11,12 @@
  * Both the table and the entry are checked, so a driver may leave out an
  * operation it cannot do (a transmit-only UART, for example).
  */
+
+UCLASS_DRIVER(serial) = {
+    .name = "serial",
+    .id   = UCLASS_SERIAL,
+};
+
 
 /**
  * A driver that does not provide the operation cannot send.

@@ -205,10 +205,11 @@ driver in drivers/clk/ since item 3.
   only: MINIBOOT_<FILE>_H.
 
 ## Driver model (as built)
-Decisions: drivers and devices are collected by the linker (KEEP sections
-.dm_drivers and .dm_devices in link.ld); the board/driver contract is
-include/platdata/*.h; each uclass stores its devices in a fixed array
-(UCLASS_MAX_DEVICES), to become a linked list later.
+Decisions: drivers, devices and uclass drivers are collected by the
+linker (KEEP sections .dm_drivers, .dm_devices and .dm_uclasses in
+link.ld); the board/driver contract is include/platdata/*.h; each uclass
+stores its devices in a fixed array (UCLASS_MAX_DEVICES), to become a
+linked list later.
 
 - DM_DRIVER(name) = { .name, .id, .probe, .ops, .priv_auto } in the driver's
   .c file. DM_DEVICE(name) = { .name, .driver, .plat, .parent,
@@ -320,8 +321,10 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
 - SPI (item 4): a bus driver (stm32_spi, device spi5, UCLASS_SPI)
   implements struct spi_ops { xfer(bus, slave, dout, din, len, flags) }
   from include/spi.h. struct spi_slave_plat { cs, mode, max_hz } is
-  defined by the uclass, not a driver: it describes one slave, only the
-  bus reads it; it is the slave device's parent_plat. A slave's driver
+  defined by the uclass, not a driver: it describes one slave as the
+  board writes it; it is the slave device's parent_plat. Since item 5a
+  Part C only spi_child_pre_probe() reads it, and the bus gets struct
+  spi_slave (the run-time copy, parent_priv). A slave's driver
   calls spi_xfer(slave, ...) (spi-uclass.c), which takes the bus from
   slave->parent and refuses a parent that is not in UCLASS_SPI (-EINVAL;
   the core accepts any parent, so this is the only check) or no parent
@@ -382,12 +385,71 @@ include/platdata/*.h; each uclass stores its devices in a fixed array
   values hides a stuck bit 0; check the pins' speed before blaming the
   registers; never write back a bit you have not proved you read
   correctly.
+- Uclass driver (item 5a Part A): struct uclass_driver { name, id } in
+  dm/uclass.h, declared with UCLASS_DRIVER(gyro) in the uclass's own
+  file (one row for each of the 6 ids; none for UCLASS_INVALID). The id
+  is the key, the name is for printing. The run-time struct uclass
+  (private to uclass.c, table uclasses[]) holds uc_drv and the devices:
+  uclass_driver / uclass mirror driver / udevice. uclass_add_device()
+  looks uc_drv up (uclass_driver_find(), linear by id) for the uclass's
+  first device; none: the bind fails with -EPFNOSUPPORT (as in U-Boot),
+  printed before the console, so it shows only in the bound count. The
+  device list prints "UClass: gyro (6)", "(none)" without a row. Seen
+  on the board: z at rest -250 mdps after +450 in item 4, so the gyro
+  offset must be measured at boot, not written into the code.
+- Uclass hooks and data (item 5a Part B): struct uclass_driver adds
+  pre_probe, post_probe and per_device_auto; struct udevice adds
+  uclass_priv. device_probe(): orphan, parent, priv, uclass_priv (same
+  keep-for-retry rule), pre_probe, the driver's probe, post_probe,
+  probed = true; any error stops it and the device stays unprobed (a
+  retry runs everything again, the driver's probe too). The core
+  reaches the uclass driver through device_get_uclass_driver(dev)
+  (uclass.c; never NULL for a bound device). Hooks run with probed
+  still false: they use dev, never a lookup of their own device. The
+  device list shows UcPriv. First user, the gyro uclass:
+  struct gyro_uc_priv { offset } private to gyro-uclass.c (only the
+  uclass reads it); pre_probe refuses a driver without read (-ENOSYS)
+  before it touches the sensor; post_probe calls gyro_calibrate():
+  skip GYRO_CAL_SKIP (5) samples, average GYRO_CAL_SAMPLES (32), one
+  every GYRO_CAL_INTERVAL_MS (10, about the reset output rate), from
+  ops->read directly (through gyro_read() a second calibration would
+  average the leftover and lose the offset), s32 sum divided once, the
+  offset stored only after every read worked. gyro_read() subtracts
+  it. l3gd20.c unchanged: calibration is the uclass's, not a driver
+  op (a calibrate op was tried and removed; it was also called without
+  a NULL check). Needs systime (the gyro is first probed in
+  board_print_info(), after systime_init()) and a still board.
+- Per-child data (item 5a Part C): struct uclass_driver adds
+  child_pre_probe and per_child_auto; struct udevice adds parent_priv,
+  the run-time half of parent_plat. Both are taken from the PARENT's
+  uclass driver (device_get_uclass_driver(dev->parent), only if there
+  is a parent), never the device's own. device_probe() order: orphan,
+  parent, priv, uclass_priv, parent_priv, own pre_probe, parent's
+  child_pre_probe(child), driver probe, own post_probe, probed (U-Boot's
+  order). First user, the SPI uclass: per_child_auto = struct spi_slave
+  { cs, mode, max_hz } (spi.h); spi_child_pre_probe() refuses a missing
+  plat, mode bits outside SPI_MODE_MASK, or max_hz 0 (-EINVAL, before
+  the slave's driver runs: before, a bad row failed at the first
+  transfer inside l3gd20_probe()), then copies the plat (a copy, the
+  live state; U-Boot's spi_slave can change speed at run time).
+  spi_xfer() checks the parent's uclass first, then parent_priv: a
+  slave under a non-SPI parent never ran the hook (parent_priv NULL).
+  The CS range stays in stm32_spi_xfer() (a driver fact); CR1 is still
+  computed at each BEGIN. Decided: per-child data at the uclass level
+  only; a driver-level per_child_auto / child_pre_probe (U-Boot: the
+  parent driver's size wins; Linux: setup() and controller_state) would
+  let stm32_spi compute CR1 once per slave, deferred.
+- A uclass hook can only see devices in its uclass or children of them,
+  so child_pre_probe cannot refuse a wrong parent (a gyro under gpioc
+  is invisible to the SPI uclass); that needs the child's side to name
+  the parent kind it requires (the reverted parent_id). U-Boot relies
+  on the device tree's structure instead.
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
   CONSOLE_GPIO_NAME).
 
-## Status (2026-11-22)
+## Status (2026-11-23)
 Steps 1-9 done, tested on the board and committed (step 9: bb0fa77,
 539fa0c, a0649bc; rename to systime.* and -Werror: 5b66684).
 Roadmap item 2 (QEMU lm3s6965evb) done: a8655df (skeleton), 361e7d5
@@ -492,6 +554,52 @@ Roadmap item 4 (SPI, gyroscope as a child device), in parts:
   when uclasses get their own data; until then read returns the raw
   rate in mdps, uncorrected. The gyro line stays in main.c until
   aliases (item 5c) replace "gyro device 0". Item 4 done.
+Roadmap item 5a (the uclass driver), in parts: A. the uclass driver
+exists (name, id; bind needs one); B. per-device uclass data and the
+pre_probe / post_probe hooks, first used for the gyro offset; C.
+per-child data and child_pre_probe, first used by the SPI bus; D. the
+audit. post_bind waits for a real user (5d / 5e).
+- Part A done, tested on the board: struct uclass_driver, UCLASS_DRIVER,
+  the .dm_uclasses section (0x30 on both boards: 6 rows of 8 bytes; lm3s
+  links every uclass file too), uc_drv in struct uclass, -EPFNOSUPPORT
+  at bind, names in the device list. Same boot otherwise (9 devices
+  bound, Gyro: ready). Text: STM32 6144 -> 6292, LM3S 4188 -> 4352.
+  The gdb check and the three experiments (remove the gyro, spi, lm3s
+  serial row) were not run.
+- Part B done, tested on the board: gyro UcPriv 0x200002a8 (after
+  spi5's priv), every other device 0; at rest all values within +-333,
+  mean of 11 lines x -57, y -21, z -73 mdps (was ~+100 / +400 / +450).
+  Not checked: the boot pause, rotation, gdb steps, experiments (move
+  at reset, no post_probe, read NULL). The device list's second line
+  is now over 70 characters and wraps in minicom. Text: STM32 6292 ->
+  6668, LM3S 4352 -> 4728 (the gyro hooks are linked on lm3s too).
+  Parts A-C in one commit.
+- Part C built (make check passes), NOT yet tested on the board:
+  expected the same boot as Part B; in gdb gyro_pre_probe,
+  spi_child_pre_probe, l3gd20_probe, gyro_post_probe hit in that order;
+  dev->parent_priv 0x200002b8 = {cs 0, mode 3, max_hz 10000000}; with
+  max_hz 0 or mode 4: -22 and l3gd20_probe never hit; with parent
+  gpioc: -22 from spi_xfer, the hook never hit, parent_priv 0. grep:
+  parent_plat is read only in spi_child_pre_probe. Text: STM32 6668 ->
+  6820, LM3S 4728 -> 4876.
+- Part D, the audit (94f31eb..working tree, one commit for A-C): 15
+  source files, +507 / -49. The core gained a concept (uclass_driver,
+  three data blocks, three hook points: uclass.h, device.h, uclass.c,
+  device.c, link.ld); four uclasses got only their row (6-7 lines);
+  first users gyro (gyro-uclass.c, gyro.h) and spi (spi-uclass.c,
+  spi.h); stm32_spi.c changed 2 lines (the op's argument type).
+  Untouched: start.S, fault.c, lib/, common/ (main.c too), both boards,
+  mach-*, root.c, driver.c, every driver but stm32_spi, l3gd20.c
+  included: the gyro got calibration and its slave settings got checked
+  without a line of its driver changing. Text over 5a: STM32 6144 ->
+  6820 (+676), LM3S 4188 -> 4876 (+688; it pays for hooks of uclasses
+  it has no device in, see Known limitations). Thought questions
+  answered: a gyro row with .id UCLASS_SPI makes the gyro unbindable
+  (-96) and, if first in the section, gives spi5 the gyro's hooks
+  (gyro_pre_probe passes on spi_ops.xfer, post_probe calls xfer with
+  the wrong arguments): undefined behaviour from a clean build; a
+  second calibration through gyro_read() would restore the raw offsets.
+  Item 5a done once Part C passes on the board.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -516,16 +624,31 @@ Known limitations:
 - Bind errors printed before console_init() are lost (an orphan still
   shows as "(missing)" in the device list).
 - The core accepts any parent: a gyro row naming gpioc is linked, gpioc
-  is probed by the gyro, l3gd20_probe runs; only spi_xfer() refuses it.
+  is probed by the gyro, l3gd20_probe runs; only spi_xfer() refuses it
+  (child_pre_probe cannot: it belongs to the parent's uclass).
 - No list of children, no device removal, no root device.
 - "Gyro device 0" is the gyro the main loop prints; the line is in
   generic main.c, so lm3s links gyro_read too (until item 5c).
 - gpio_get_value() can return a negative error; board_led_toggle() does not
   test for it.
 - The two uclass "get" functions duplicate their probe-and-return tail.
+- Two UCLASS_DRIVER rows with the same id: the first in the section
+  wins, silently (U-Boot does not check either).
 - The stm32_spi driver has one chip select.
-- The gyro reads a sample with no data-ready check (STATUS_REG), and its
-  zero-rate offset is not removed (decided: the gyro uclass, item 5a).
+- The gyro reads a sample with no data-ready check (STATUS_REG). Its
+  offset is measured once at probe: a board moved during the 0.4 s
+  stores a wrong one (no check of the samples' spread); the offset
+  also drifts with temperature after that.
+- A uclass hook that is set is linked on every board, even one with no
+  device in the uclass: the row is kept (KEEP) and points at it (lm3s
+  links gyro_calibrate and spi_child_pre_probe). U-Boot compiles a
+  uclass only when Kconfig enables it; here that would mean moving the
+  gyro and spi uclass files from the generic SRCS to board.mk.
+- The device list's second line is over 70 characters and wraps in an
+  80-column minicom.
+- Parts A-C were not fully exercised: Part A's gdb check and
+  experiments, Part B's rotation / boot pause / gdb / experiments, and
+  all of Part C on the board.
 - A NULL dereference does not fault: address 0 aliases flash, a read
   returns the vector table, a write is dropped and sets FLASH_SR PGSERR /
   PGPERR (seen in step 9, priv_auto removed). A driver using dev->priv must
@@ -551,6 +674,8 @@ Agreed order:
       and per-child data (per_child_auto). The biggest gap: a uclass is
       today only an id and a file of functions. First use: the gyro
       offset (a calibrate operation, the offset in uclass data).
+      Done (Parts A-D) but for Part C's board test; post_bind deferred
+      to d / e (no user yet), driver-level child hooks deferred.
    b. Matching by compatible string with driver_data: one driver, a
       table of chips (l3gd20 / i3g4250d).
    c. Sequence numbers and aliases (dev->seq, serial0, gyro0): replaces

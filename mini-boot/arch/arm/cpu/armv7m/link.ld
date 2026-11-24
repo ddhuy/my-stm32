@@ -34,6 +34,12 @@ SECTIONS
 
         . = ALIGN(4);
 
+        _sdm_uclasses = .;
+        KEEP(*(.dm_uclasses))
+        _edm_uclasses = .;
+
+        . = ALIGN(4);
+
     } > FLASH
 
     .data : ALIGN(4)

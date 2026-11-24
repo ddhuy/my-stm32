@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <gpio.h>
 #include <dm/device.h>
+#include <dm/uclass.h>
 
 
 /*
@@ -9,6 +10,11 @@
  * matching entry. Both the table and the entry are checked, so a driver may
  * leave out an operation it cannot do.
  */
+
+UCLASS_DRIVER(gpio) = {
+    .name = "gpio",
+    .id   = UCLASS_GPIO,
+};
 
 
 /**

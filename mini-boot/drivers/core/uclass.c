@@ -5,21 +5,54 @@
 
 
 /*
- * The devices of one uclass, in the order they were bound. A fixed array
- * for now; a linked list will remove the limit.
+ * Start and end of the uclass driver array, set by the linker script around
+ * the .dm_uclasses section.
  */
-struct uclass_devices {
+extern const struct uclass_driver _sdm_uclasses[];
+extern const struct uclass_driver _edm_uclasses[];
+
+
+/*
+ * One uclass at run time: its uclass driver and its devices, in the order
+ * they were bound. To struct uclass_driver what struct udevice is to struct
+ * driver. A fixed array for now; a linked list will remove the limit.
+ */
+struct uclass {
+    const struct uclass_driver *uc_drv;  /* NULL until its first device */
     struct udevice *devps[UCLASS_MAX_DEVICES];
     int count;
 };
 
 /* One entry per uclass, indexed by enum uclass_id; all empty at boot */
-static struct uclass_devices uc_devices[UCLASS_COUNT];
+static struct uclass uclasses[UCLASS_COUNT];
+
+
+/**
+ * Linear search by id, as driver_find() searches by name; there are only a
+ * handful of uclasses.
+ */
+const struct uclass_driver *uclass_driver_find(
+    enum uclass_id id
+)
+{
+    for (const struct uclass_driver *uc_drv = _sdm_uclasses;
+         uc_drv < _edm_uclasses;
+         ++uc_drv
+        )
+    {
+        if (uc_drv->id == id)
+            return uc_drv;
+    }
+
+    return NULL;
+}
 
 
 /**
  * The uclass comes from the device's driver. The ID is checked before it is
- * used as an array index.
+ * used as an array index. The uclass driver is looked up once, for the
+ * first device, and before the full check, so a missing one is the error
+ * reported. Nothing is allocated here, so a failure leaves nothing behind.
  */
 int uclass_add_device(
     struct udevice *dev
@@ -30,13 +63,22 @@ int uclass_add_device(
     if (id == UCLASS_INVALID || id >= UCLASS_COUNT)
         return -EINVAL;
 
-    int count = uc_devices[id].count;
+    /* First device of this uclass: find its uclass driver */
+    if (!uclasses[id].uc_drv)
+    {
+        uclasses[id].uc_drv = uclass_driver_find(id);
+
+        if (!uclasses[id].uc_drv)
+            return -EPFNOSUPPORT;
+    }
+
+    int count = uclasses[id].count;
 
     if (count >= UCLASS_MAX_DEVICES)
         return -ENOMEM;
 
-    uc_devices[id].devps[count] = dev;
-    uc_devices[id].count++;
+    uclasses[id].devps[count] = dev;
+    uclasses[id].count++;
 
     return SUCCESS;
 }
@@ -55,10 +97,10 @@ int uclass_find_device(
     if (id == UCLASS_INVALID || id >= UCLASS_COUNT)
         return -EINVAL;
 
-    if (index < 0 || index >= uc_devices[id].count)
+    if (index < 0 || index >= uclasses[id].count)
         return -ENODEV;
 
-    *devp = uc_devices[id].devps[index];
+    *devp = uclasses[id].devps[index];
 
     return SUCCESS;
 }
@@ -71,16 +113,22 @@ void uclass_print_devices(void)
 {
     for (int i = UCLASS_INVALID + 1; i < UCLASS_COUNT; ++i)
     {
-        int dev_count = uc_devices[i].count;
+        int dev_count = uclasses[i].count;
+        /* Not uc_drv: a uclass with no devices never looked its row up */
+        const struct uclass_driver *uc_drv = uclass_driver_find(i);
 
-        printf("UClass-Id: %d - Count: %d\n", i, dev_count);
+        printf("UClass: %s (%d) - Count: %d\n",
+            uc_drv ? uc_drv->name : "(none)",
+            i,
+            dev_count
+        );
 
         for (int j = 0; j < dev_count; ++j)
         {
-            struct udevice *dev = uc_devices[i].devps[j];
+            struct udevice *dev = uclasses[i].devps[j];
 
             /* "-": top level; "(missing)": an orphan, its parent not found */
-            printf("  [%d] Name: \"%s\". Parent: %s. Probed: %d\n",
+            printf(" [%d] Name: \"%s\". Parent: %s. Probed: %d\n",
                 j,
                 dev->name,
                 dev->parent ? dev->parent->name :
@@ -88,11 +136,13 @@ void uclass_print_devices(void)
                 dev->probed
             );
 
-            printf("      Drv: \"%s\". Plat: %p. Priv: %p\n",
+            printf(" Drv: %s. Plat: %p. Priv: %p.\n",
                 dev->driver->name,
                 dev->plat,
                 dev->priv
             );
+
+            printf(" UcPriv: %p\n", dev->uclass_priv);
         }
     }
 }
@@ -140,9 +190,9 @@ int uclass_find_device_by_name(
     if (id == UCLASS_INVALID || id >= UCLASS_COUNT)
         return -EINVAL;
 
-    for (int i = 0; i < uc_devices[id].count; ++i)
+    for (int i = 0; i < uclasses[id].count; ++i)
     {
-        struct udevice *dev = uc_devices[id].devps[i];
+        struct udevice *dev = uclasses[id].devps[i];
 
         if ( !strcmp(dev->name, name) )
         {
@@ -199,4 +249,16 @@ int device_find_by_name(
     }
 
     return -ENODEV;
+}
+
+
+/**
+ * No id check: the bind checked it, and a bound device's uclass has its
+ * uclass driver (set by its first device).
+ */
+const struct uclass_driver *device_get_uclass_driver(
+    const struct udevice *dev
+)
+{
+    return uclasses[dev->driver->id].uc_drv;
 }

@@ -139,7 +139,7 @@ static int stm32_spi_probe(
  */
 static int stm32_spi_cr1(
     u32 clk_hz,
-    const struct spi_slave_plat *slave,
+    const struct spi_slave *slave,
     u32 *cr1
 )
 {
@@ -173,7 +173,7 @@ static int stm32_spi_cr1(
  */
 static int stm32_spi_xfer(
     struct udevice *bus,
-    const struct spi_slave_plat *slave,
+    const struct spi_slave *slave,
     const u8 *dout,
     u8 *din,
     size_t len,
