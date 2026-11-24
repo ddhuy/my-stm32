@@ -1,10 +1,12 @@
 #include <console.h>
+#include <fdt.h>
 #include <gyro.h>
 #include <init.h>
 #include <panic.h>
 #include <printf.h>
 #include <systime.h>
 #include <types.h>
+#include <dm/read.h>
 #include <dm/root.h>
 #include <dm/uclass.h>
 
@@ -14,6 +16,38 @@
 
 /* One gyroscope line this often */
 #define GYRO_PRINT_MS 1000
+
+
+/**
+ * What the blob says, read through the reader's API: the model, the root's
+ * #address-cells and the number of nodes under the root. fdt_print() would
+ * print the whole tree (about 120 lines on the STM32): call it here when
+ * debugging the .dts.
+ */
+static void dt_print_info(void)
+{
+    const void *fdt = dm_fdt();
+
+    if (!fdt)
+    {
+        printf("DT: no valid blob\n");
+        return;
+    }
+
+    const char *model = fdt_getprop(fdt, FDT_ROOT, "model", NULL);
+    u32 addr_cells = 0;
+    int nodes = 0;
+
+    fdt_read_u32(fdt, FDT_ROOT, "#address-cells", &addr_cells);
+
+    for (int node = fdt_first_child(fdt, FDT_ROOT);
+         node >= 0;
+         node = fdt_next_sibling(fdt, node))
+        nodes++;
+
+    printf("DT: \"%s\", #address-cells %u, %d nodes under /\n",
+           model ? model : "?", addr_cells, nodes);
+}
 
 
 /**
@@ -44,6 +78,8 @@ int main(void)
     printf("DM: %d devices bound\n", bound);
 
     uclass_print_devices();
+
+    dt_print_info();
 
     /* Boot-time self-check of the timer: expect 1000 (1001 at most) */
     u32 t = systime_elapsed_ms(0);

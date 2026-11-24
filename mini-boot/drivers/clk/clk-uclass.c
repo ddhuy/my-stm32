@@ -1,6 +1,7 @@
 #include <clk.h>
 #include <errno.h>
 #include <dm/device.h>
+#include <dm/read.h>
 #include <dm/uclass.h>
 
 
@@ -69,4 +70,38 @@ u32 clk_get_rate(
         return 0;
 
     return ops->get_rate(clk);
+}
+
+
+/**
+ * The phandle names a node; the device bound from that node is the
+ * provider. Its name is what clk_get_by_name() looks up later, so the
+ * plat contract of every consumer stays the same as with a C table.
+ */
+int clk_read_by_index(
+    const struct udevice *dev,
+    int index,
+    const char **provider,
+    u32 *id
+)
+{
+    struct fdt_phandle_args args;
+    struct udevice *prov;
+
+    int ret = dev_read_phandle_with_args(dev, "clocks", "#clock-cells",
+                                         index, &args);
+    if (ret)
+        return ret;
+
+    if (args.count > 1)
+        return -EINVAL;
+
+    ret = device_find_by_node(args.node, &prov);
+    if (ret)
+        return ret;
+
+    *provider = prov->name;
+    *id = args.count ? args.args[0] : 0;
+
+    return SUCCESS;
 }

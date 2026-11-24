@@ -106,4 +106,24 @@ int gpio_get_value(
 );
 
 
+
+/**
+ * For a consumer's of_to_plat: entry 'index' of the GPIO list 'list_name'
+ * of its node (cs-gpios = <&gpioc 1 GPIO_ACTIVE_LOW>), as the name of the
+ * port's device, the pin, and the flags (dt-bindings/gpio/gpio.h). The
+ * port must have #gpio-cells = <2>. The port is looked up, not probed.
+ *
+ * Returns 0; -ENODEV if the consumer has no node or the phandle points to
+ * a node without a device; -EINVAL if the port's #gpio-cells is not 2; or
+ * the error from reading the list.
+ */
+int gpio_read_by_name(
+    const struct udevice *dev,
+    const char *list_name,
+    int index,
+    const char **port,
+    u32 *pin,
+    u32 *flags
+);
+
 #endif /* MINIBOOT_GPIO_H */

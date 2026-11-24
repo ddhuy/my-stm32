@@ -2,6 +2,7 @@
 #define MINIBOOT_PLATDATA_LM3S_SYSCTL_H
 
 #include <types.h>
+#include <dt-bindings/clock/lm3s-sysctl.h>
 
 
 /*
@@ -9,22 +10,10 @@
  * it and with every consumer that names it.
  */
 
-/* The provider's device name: the board's row and every consumer use it */
+/* The provider's device name (its label in the device tree) */
 #define LM3S_SYSCTL_NAME  "sysctl"
 
-/*
- * Clock ids: gate register (RCGC0..2) and bit within it. Prefixed with
- * LM3S_ because a board may include more than one provider's header.
- */
-#define LM3S_CLK_RCGC0       0
-#define LM3S_CLK_RCGC1       1
-#define LM3S_CLK_RCGC2       2
-#define LM3S_CLK_BUS_CORE    7        /* not a gate register */
-
-#define LM3S_CLK_ID(reg, bit)  ((reg) * 32 + (bit))
-
-#define LM3S_CLK_UART0       LM3S_CLK_ID(LM3S_CLK_RCGC1, 0)
-#define LM3S_CLK_SYSCLK      LM3S_CLK_ID(LM3S_CLK_BUS_CORE, 0)
+/* The clock ids (LM3S_CLK_*) are in dt-bindings/clock/lm3s-sysctl.h */
 
 
 /**

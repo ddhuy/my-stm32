@@ -5,6 +5,7 @@
 #include <dm/device.h>
 #include <dm/driver.h>
 #include <platdata/pl011_serial.h>
+#include <dm/read.h>
 
 
 /*
@@ -149,12 +150,48 @@ static const struct serial_ops pl011_serial_ops = {
 
 
 /**
+ * The UART's node into its plat: base, clock and current-speed (the baud
+ * rate; required, probe refuses 0).
+ *
+ * Returns 0 or the error from reading the node.
+ */
+static int pl011_serial_of_to_plat(
+    struct udevice *dev
+)
+{
+    struct pl011_serial_plat *plat = dev->plat;
+    int ret = dev_read_addr_index(dev, 0, &plat->base);
+
+    if (ret)
+        return ret;
+
+    ret = clk_read_by_index(dev, 0, &plat->clk_dev, &plat->clk_id);
+    if (ret)
+        return ret;
+
+    return dev_read_u32(dev, "current-speed", &plat->baudrate);
+}
+
+
+/**
+ * The compatible strings this driver handles (Linux's for the PL011).
+ */
+static const struct udevice_id pl011_serial_ids[] = {
+    { .compatible = "arm,pl011" },
+    { }
+};
+
+/**
  * Driver model entry. No private data: everything the driver needs is in
  * the device's platform data.
  */
 DM_DRIVER(pl011_serial) = {
     .name = "pl011_serial",
     .id   = UCLASS_SERIAL,
+    .of_match = pl011_serial_ids,
+
+    .of_to_plat = pl011_serial_of_to_plat,
+    .plat_auto  = sizeof(struct pl011_serial_plat),
 
     .probe = &pl011_serial_probe,
 

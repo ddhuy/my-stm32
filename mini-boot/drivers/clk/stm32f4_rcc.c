@@ -4,6 +4,8 @@
 #include <dm/device.h>
 #include <dm/driver.h>
 #include <platdata/stm32f4_rcc.h>
+#include <fdt.h>
+#include <dm/read.h>
 
 
 /*
@@ -416,6 +418,63 @@ static const struct clk_ops stm32f4_rcc_ops = {
 };
 
 
+/* The order of the RCC node's reg entries (its reg-names) */
+#define RCC_REG_RCC     0
+#define RCC_REG_FLASH   1
+#define RCC_REG_PWR     2
+
+
+/**
+ * The RCC's node into its plat: three register blocks from reg (in the
+ * order of reg-names: rcc, flash, pwr), the crystal from the node that
+ * clocks = <&clk_hse> points to (a fixed-clock, which has no device: its
+ * clock-frequency is read directly), and the system clock to run from
+ * clock-frequency.
+ *
+ * Returns 0 or the error from reading the nodes.
+ */
+static int stm32f4_rcc_of_to_plat(
+    struct udevice *dev
+)
+{
+    struct stm32f4_rcc_plat *plat = dev->plat;
+    struct fdt_phandle_args hse;
+    int ret;
+
+    ret = dev_read_addr_index(dev, RCC_REG_RCC, &plat->base);
+    if (ret)
+        return ret;
+
+    ret = dev_read_addr_index(dev, RCC_REG_FLASH, &plat->flash_base);
+    if (ret)
+        return ret;
+
+    ret = dev_read_addr_index(dev, RCC_REG_PWR, &plat->pwr_base);
+    if (ret)
+        return ret;
+
+    ret = dev_read_phandle_with_args(dev, "clocks", "#clock-cells", 0,
+                                     &hse);
+    if (ret)
+        return ret;
+
+    ret = fdt_read_u32(dm_fdt(), hse.node, "clock-frequency",
+                       &plat->hse_hz);
+    if (ret)
+        return ret;
+
+    return dev_read_u32(dev, "clock-frequency", &plat->sysclk_hz);
+}
+
+
+/**
+ * The compatible strings this driver handles (Linux's for this RCC).
+ */
+static const struct udevice_id stm32f4_rcc_ids[] = {
+    { .compatible = "st,stm32f42xx-rcc" },
+    { }
+};
+
 /**
  * Driver model entry. Probe sets up the PLL, on the first clock request
  * (the LED port, from board_init()). No private data.
@@ -423,6 +482,10 @@ static const struct clk_ops stm32f4_rcc_ops = {
 DM_DRIVER(stm32f4_rcc) = {
     .name = "stm32f4_rcc",
     .id   = UCLASS_CLK,
+    .of_match = stm32f4_rcc_ids,
+
+    .of_to_plat = stm32f4_rcc_of_to_plat,
+    .plat_auto  = sizeof(struct stm32f4_rcc_plat),
 
     .probe = stm32f4_rcc_probe,
 

@@ -32,6 +32,37 @@ const struct driver *driver_find(
 
 
 /**
+ * Every driver's table, entry by entry, until the NULL compatible.
+ */
+const struct driver *driver_find_by_compatible(
+    const char *compatible,
+    uintptr_t *datap
+)
+{
+    for (const struct driver *drv = _sdm_drivers;
+         drv < _edm_drivers;
+         ++drv)
+    {
+        if (!drv->of_match)
+            continue;
+
+        for (const struct udevice_id *id = drv->of_match;
+             id->compatible;
+             ++id)
+        {
+            if (!strcmp(id->compatible, compatible))
+            {
+                *datap = id->data;
+                return drv;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+
+/**
  * Print all available drivers.
  */
 void driver_print_list(void)

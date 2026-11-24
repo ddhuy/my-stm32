@@ -1,0 +1,70 @@
+/dts-v1/;
+
+/*
+ * What is soldered on the STM32F429I-DISC1 and which SoC blocks it uses.
+ * Pin multiplexing is still done by board.c (no pinctrl).
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include "stm32f429.dtsi"
+
+/ {
+	model = "STMicroelectronics STM32F429I-DISC1";
+	compatible = "st,stm32f429i-disc1", "st,stm32f429";
+
+	/* 8 MHz crystal on OSC_IN / OSC_OUT */
+	clk_hse: clk-hse {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <8000000>;
+	};
+};
+
+/* The system clock it runs from the PLL, fed by the crystal */
+&rcc {
+	clocks = <&clk_hse>;
+	clock-frequency = <168000000>;
+};
+
+/* Console pins (PA9, PA10) */
+&gpioa {
+	status = "okay";
+};
+
+/* Gyroscope chip select (PC1) */
+&gpioc {
+	status = "okay";
+};
+
+/* Gyroscope SPI pins (PF7-PF9) */
+&gpiof {
+	status = "okay";
+};
+
+/* LEDs (PG13 green, PG14 red) */
+&gpiog {
+	status = "okay";
+};
+
+/* Console, through the ST-LINK virtual COM port */
+&usart1 {
+	status = "okay";
+	current-speed = <115200>;
+};
+
+&spi5 {
+	status = "okay";
+	cs-gpios = <&gpioc 1 GPIO_ACTIVE_LOW>;
+
+	/*
+	 * I3G4250D on this board, L3GD20 on older ones: same registers, so
+	 * the most specific string first, then the one an older driver knows.
+	 */
+	gyro: gyro@0 {
+		compatible = "st,i3g4250d-gyro", "st,l3gd20-gyro";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+		spi-cpol;
+		spi-cpha;
+	};
+};

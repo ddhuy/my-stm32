@@ -5,6 +5,7 @@
 #include <dm/device.h>
 #include <dm/driver.h>
 #include <platdata/stm32_serial.h>
+#include <dm/read.h>
 
 
 /* STM32 USART register layout */
@@ -118,12 +119,48 @@ static const struct serial_ops stm32_serial_ops = {
 
 
 /**
+ * The UART's node into its plat: base, clock and current-speed (the baud
+ * rate; required, probe refuses 0).
+ *
+ * Returns 0 or the error from reading the node.
+ */
+static int stm32_serial_of_to_plat(
+    struct udevice *dev
+)
+{
+    struct stm32_serial_plat *plat = dev->plat;
+    int ret = dev_read_addr_index(dev, 0, &plat->base);
+
+    if (ret)
+        return ret;
+
+    ret = clk_read_by_index(dev, 0, &plat->clk_dev, &plat->clk_id);
+    if (ret)
+        return ret;
+
+    return dev_read_u32(dev, "current-speed", &plat->baudrate);
+}
+
+
+/**
+ * The compatible strings this driver handles (Linux's for this UART).
+ */
+static const struct udevice_id stm32_serial_ids[] = {
+    { .compatible = "st,stm32-uart" },
+    { }
+};
+
+/**
  * Driver model entry. No private data: everything the driver needs is in
  * the device's platform data.
  */
 DM_DRIVER(stm32_serial) = {
     .name = "stm32_serial",
     .id   = UCLASS_SERIAL,
+    .of_match = stm32_serial_ids,
+
+    .of_to_plat = stm32_serial_of_to_plat,
+    .plat_auto  = sizeof(struct stm32_serial_plat),
 
     .probe = &stm32_serial_probe,
 

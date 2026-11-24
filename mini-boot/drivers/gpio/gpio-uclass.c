@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <gpio.h>
 #include <dm/device.h>
+#include <dm/read.h>
 #include <dm/uclass.h>
 
 
@@ -103,4 +104,41 @@ int gpio_get_value(
         return -ENOSYS;
 
     return ops->get_value(dev, pin);
+}
+
+
+/**
+ * The same shape as clk_read_by_index(): phandle, node, device, name.
+ */
+int gpio_read_by_name(
+    const struct udevice *dev,
+    const char *list_name,
+    int index,
+    const char **port,
+    u32 *pin,
+    u32 *flags
+)
+{
+    /* Pin and flags: the only layout this uclass knows */
+    enum { GPIO_CELLS = 2 };
+    struct fdt_phandle_args args;
+    struct udevice *port_dev;
+
+    int ret = dev_read_phandle_with_args(dev, list_name, "#gpio-cells",
+                                         index, &args);
+    if (ret)
+        return ret;
+
+    if (args.count != GPIO_CELLS)
+        return -EINVAL;
+
+    ret = device_find_by_node(args.node, &port_dev);
+    if (ret)
+        return ret;
+
+    *port = port_dev->name;
+    *pin = args.args[0];
+    *flags = args.args[1];
+
+    return SUCCESS;
 }

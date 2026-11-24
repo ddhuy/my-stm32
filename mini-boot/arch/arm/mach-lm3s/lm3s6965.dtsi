@@ -1,0 +1,32 @@
+/*
+ * The blocks of the LM3S6965 that mini-boot has drivers for (datasheet,
+ * memory map). Every board on this SoC includes this file. Peripherals
+ * are disabled here; a board enables the ones it uses. System Control and
+ * SysTick are always used.
+ */
+
+#include <dt-bindings/clock/lm3s-sysctl.h>
+#include "armv7-m.dtsi"
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	sysctl: sysctl@400fe000 {
+		compatible = "ti,lm3s6965-sysctl";
+		reg = <0x400fe000 0x1000>;
+		#clock-cells = <1>;
+	};
+
+	uart0: serial@4000c000 {
+		compatible = "arm,pl011";
+		reg = <0x4000c000 0x1000>;
+		clocks = <&sysctl LM3S_CLK_UART0>;
+		status = "disabled";
+	};
+};
+
+/* SysTick runs on the system clock on this SoC */
+&systick {
+	clocks = <&sysctl LM3S_CLK_SYSCLK>;
+};

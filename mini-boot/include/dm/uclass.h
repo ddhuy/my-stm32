@@ -15,6 +15,13 @@
  *
  * name:       for printing only
  * id:         the key drivers name in their .id
+ * post_bind:  called by the bind of each device of this uclass, once it is
+ *             in the uclass (a bus binds its children from the device tree
+ *             here); NULL: none. Returns 0 or -Exxx (the bind fails, the
+ *             device stays in the uclass: the heap cannot free)
+ * child_post_bind: called by the bind of each CHILD of a device in this
+ *             uclass, after the child's post_bind; fills the child's
+ *             parent_plat from its node. NULL: none. Returns 0 or -Exxx
  * pre_probe:  called by device_probe() before the driver's probe, so the
  *             uclass can refuse a driver before the hardware is touched;
  *             NULL: none. Returns 0 or -Exxx (the probe stops)
@@ -30,6 +37,9 @@
  *             probe stops)
  * per_child_auto: bytes to allocate for each child of a device in this
  *             uclass (child->parent_priv); 0: none
+ * per_child_plat_auto: bytes allocated at bind for each child bound from
+ *             the device tree under a device in this uclass
+ *             (child->parent_plat); 0: none
  *
  * A hook that is set is linked on every board, even one with no device in
  * the uclass: the row is kept by the linker and points at it.
@@ -38,11 +48,14 @@ struct uclass_driver
 {
     const char *name;
     enum uclass_id id;
+    int (*post_bind) (struct udevice *dev);
+    int (*child_post_bind) (struct udevice *dev);
     int (*pre_probe) (struct udevice *dev);
     int (*post_probe) (struct udevice *dev);
     size_t per_device_auto;
     int (*child_pre_probe) (struct udevice *dev);
     size_t per_child_auto;
+    size_t per_child_plat_auto;
 };
 
 
@@ -156,6 +169,25 @@ int device_find_by_name(
     const char *name,
     struct udevice **devp
 );
+
+
+/**
+ * Look a device up by its device tree node, in every uclass, without
+ * probing it (an of_to_plat turns a phandle into a device this way).
+ *
+ * Returns 0 and the device in '*devp', or -ENODEV if no device was bound
+ * from 'node' (a node without a driver, such as a fixed-clock, has none).
+ */
+int device_find_by_node(
+    int node,
+    struct udevice **devp
+);
+
+
+/**
+ * The number of devices bound, in every uclass.
+ */
+int uclass_device_count(void);
 
 
 /**

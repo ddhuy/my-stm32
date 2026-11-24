@@ -54,6 +54,30 @@
 #define ID_L3GD20            0xD4
 #define ID_I3G4250D          0xD3        /* on this board */
 
+
+/**
+ * One chip of the family this driver handles: what its match-table entry
+ * hands the device as driver_data.
+ *
+ * name:     for the debugger
+ * who_am_i: what its WHO_AM_I register reads
+ */
+struct l3gd20_chip
+{
+    const char *name;
+    u8 who_am_i;
+};
+
+static const struct l3gd20_chip l3gd20_chip = {
+    .name     = "L3GD20",
+    .who_am_i = ID_L3GD20,
+};
+
+static const struct l3gd20_chip i3g4250d_chip = {
+    .name     = "I3G4250D",
+    .who_am_i = ID_I3G4250D,
+};
+
 /* Sensitivity at +-250 dps: 8.75 mdps per digit, as 875 / 100 */
 #define L3GD20_MDPS_PER_DIGIT_X100  875
 #define L3GD20_SCALE_DIV            100
@@ -119,15 +143,20 @@ static int l3gd20_write(
  * probed the bus (this device's parent), so the first transfer can go
  * straight out.
  *
- * Returns 0; the error from the bus; -ENODEV if WHO_AM_I is neither
- * ID_L3GD20 nor ID_I3G4250D (another chip, or none: an absent chip reads
- * as 0x00 or 0xFF); -EIO if CTRL_REG4 (the CTRL_REG4_CHECK bits) or
- * CTRL_REG1 does not read back what was written.
+ * The device tree says which chip it is (driver_data, from the matched
+ * compatible string), so WHO_AM_I must be that chip's. A device from a
+ * C row has no driver_data: either chip is accepted.
+ *
+ * Returns 0; the error from the bus; -ENODEV if WHO_AM_I is not the
+ * expected chip's (another chip, or none: an absent chip reads as 0x00 or
+ * 0xFF); -EIO if CTRL_REG4 (the CTRL_REG4_CHECK bits) or CTRL_REG1 does
+ * not read back what was written.
  */
 static int l3gd20_probe(
     struct udevice *dev
 )
 {
+    const struct l3gd20_chip *chip = (const void *)dev->driver_data;
     u8 val;
     int ret;
 
@@ -139,7 +168,8 @@ static int l3gd20_probe(
     ret = l3gd20_read(dev, L3GD20_WHO_AM_I, &val, 1);
     if (ret)
         return ret;
-    if (val != ID_L3GD20 && val != ID_I3G4250D)
+    if (chip ? val != chip->who_am_i :
+               val != ID_L3GD20 && val != ID_I3G4250D)
         return -ENODEV;
 
     ret = l3gd20_read(dev, L3GD20_CTRL_REG4, &val, 1);
@@ -207,6 +237,16 @@ static const struct gyro_ops l3gd20_ops = {
 
 
 /**
+ * The compatible strings this driver handles, one per chip (Linux's), each
+ * with its chip as driver_data.
+ */
+static const struct udevice_id l3gd20_ids[] = {
+    { .compatible = "st,l3gd20-gyro",   .data = (uintptr_t)&l3gd20_chip },
+    { .compatible = "st,i3g4250d-gyro", .data = (uintptr_t)&i3g4250d_chip },
+    { }
+};
+
+/**
  * Driver model entry. No platform data and no private data. The device's
  * parent_plat (struct spi_slave_plat) is read by the SPI uclass, never
  * here.
@@ -214,6 +254,7 @@ static const struct gyro_ops l3gd20_ops = {
 DM_DRIVER(l3gd20) = {
     .name  = "l3gd20",
     .id    = UCLASS_GYRO,
+    .of_match = l3gd20_ids,
 
     .probe = l3gd20_probe,
 

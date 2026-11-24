@@ -5,6 +5,7 @@
 #include <dm/device.h>
 #include <dm/driver.h>
 #include <platdata/stm32_gpio.h>
+#include <dm/read.h>
 
 
 /* Every STM32 GPIO port has pins 0-15 */
@@ -239,12 +240,45 @@ static const struct gpio_ops stm32_gpio_ops = {
 
 
 /**
+ * The port's node into its plat: the base from reg, the clock from
+ * clocks = <&rcc ID> (the provider's device name and the id, as a C row
+ * would give them).
+ *
+ * Returns 0 or the error from reading the node.
+ */
+static int stm32_gpio_of_to_plat(
+    struct udevice *dev
+)
+{
+    struct stm32_gpio_plat *plat = dev->plat;
+    int ret = dev_read_addr_index(dev, 0, &plat->base);
+
+    if (ret)
+        return ret;
+
+    return clk_read_by_index(dev, 0, &plat->clk_dev, &plat->clk_id);
+}
+
+
+/**
+ * The compatible strings this driver handles.
+ */
+static const struct udevice_id stm32_gpio_ids[] = {
+    { .compatible = "st,stm32f429-gpio" },
+    { }
+};
+
+/**
  * Driver model entry. No private data: everything the driver needs is in
  * the device's platform data.
  */
 DM_DRIVER(stm32_gpio) = {
     .name = "stm32_gpio",
     .id   = UCLASS_GPIO,
+    .of_match = stm32_gpio_ids,
+
+    .of_to_plat = stm32_gpio_of_to_plat,
+    .plat_auto  = sizeof(struct stm32_gpio_plat),
 
     .probe = stm32_gpio_probe,
 

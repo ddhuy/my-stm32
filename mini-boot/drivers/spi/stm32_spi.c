@@ -7,6 +7,8 @@
 #include <dm/driver.h>
 #include <dm/uclass.h>
 #include <platdata/stm32_spi.h>
+#include <dm/read.h>
+#include <dt-bindings/gpio/gpio.h>
 
 
 /*
@@ -241,11 +243,58 @@ static const struct spi_ops stm32_spi_ops = {
 
 
 /**
+ * The bus's node into its plat: base, clock, and chip select 0 from
+ * cs-gpios = <&gpioc 1 GPIO_ACTIVE_LOW>. This driver drives CS low to
+ * select, so any other polarity is refused.
+ *
+ * Returns 0; -EINVAL for a chip select that is not active low; or the
+ * error from reading the node.
+ */
+static int stm32_spi_of_to_plat(
+    struct udevice *dev
+)
+{
+    struct stm32_spi_plat *plat = dev->plat;
+    u32 flags;
+    int ret = dev_read_addr_index(dev, 0, &plat->base);
+
+    if (ret)
+        return ret;
+
+    ret = clk_read_by_index(dev, 0, &plat->clk_dev, &plat->clk_id);
+    if (ret)
+        return ret;
+
+    ret = gpio_read_by_name(dev, "cs-gpios", 0, &plat->cs_gpio_dev,
+                            &plat->cs_pin, &flags);
+    if (ret)
+        return ret;
+
+    if (flags != GPIO_ACTIVE_LOW)
+        return -EINVAL;
+
+    return SUCCESS;
+}
+
+
+/**
+ * The compatible strings this driver handles (Linux's for this block).
+ */
+static const struct udevice_id stm32_spi_ids[] = {
+    { .compatible = "st,stm32f4-spi" },
+    { }
+};
+
+/**
  * Driver model entry. priv holds the CS port and the clock rate.
  */
 DM_DRIVER(stm32_spi) = {
     .name = "stm32_spi",
     .id   = UCLASS_SPI,
+    .of_match = stm32_spi_ids,
+
+    .of_to_plat = stm32_spi_of_to_plat,
+    .plat_auto  = sizeof(struct stm32_spi_plat),
 
     .probe = &stm32_spi_probe,
 

@@ -5,6 +5,7 @@
 #include <dm/device.h>
 #include <dm/driver.h>
 #include <platdata/armv7m_systick.h>
+#include <dm/read.h>
 
 
 /*
@@ -152,11 +153,43 @@ static const struct timer_ops armv7m_systick_ops = {
 
 
 /**
+ * SysTick's node into its plat: base and clock (which clock is a SoC
+ * fact: the SoC's .dtsi sets it on &systick).
+ *
+ * Returns 0 or the error from reading the node.
+ */
+static int armv7m_systick_of_to_plat(
+    struct udevice *dev
+)
+{
+    struct armv7m_systick_plat *plat = dev->plat;
+    int ret = dev_read_addr_index(dev, 0, &plat->base);
+
+    if (ret)
+        return ret;
+
+    return clk_read_by_index(dev, 0, &plat->clk_dev, &plat->clk_id);
+}
+
+
+/**
+ * The compatible strings this driver handles (Linux's for SysTick).
+ */
+static const struct udevice_id armv7m_systick_ids[] = {
+    { .compatible = "arm,armv7m-systick" },
+    { }
+};
+
+/**
  * Generic for any ARMv7-M core, so the name carries no SoC prefix.
  */
 DM_DRIVER(armv7m_systick) = {
     .name = "armv7m_systick",
     .id   = UCLASS_TIMER,
+    .of_match = armv7m_systick_ids,
+
+    .of_to_plat = armv7m_systick_of_to_plat,
+    .plat_auto  = sizeof(struct armv7m_systick_plat),
 
     .probe = armv7m_systick_probe,
 

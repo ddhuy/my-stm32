@@ -1,6 +1,8 @@
 #include <errno.h>
 #include <spi.h>
 #include <dm/device.h>
+#include <dm/read.h>
+#include <dm/root.h>
 #include <dm/uclass.h>
 
 
@@ -10,6 +12,41 @@
  * parent) and the slave's settings (its parent_priv), and calls the bus
  * driver's operation.
  */
+
+
+/**
+ * At the bind of a slave from the device tree, under a bus of this uclass:
+ * its node's SPI properties into its parent_plat (struct spi_slave_plat,
+ * allocated by the core, per_child_plat_auto). The same struct a C row
+ * gives, so spi_child_pre_probe() checks both the same way. 'dev' is the
+ * slave.
+ *
+ * Returns 0, or -EINVAL if the node has no reg (the chip select) or no
+ * spi-max-frequency.
+ */
+static int spi_child_post_bind(
+    struct udevice *dev
+)
+{
+    struct spi_slave_plat *plat = dev->parent_plat;
+
+    if (dev->node == DEV_NODE_NONE)
+        return SUCCESS;
+
+    if (dev_read_u32(dev, "reg", &plat->cs))
+        return -EINVAL;
+
+    if (dev_read_u32(dev, "spi-max-frequency", &plat->max_hz))
+        return -EINVAL;
+
+    plat->mode = 0;
+    if (dev_read_bool(dev, "spi-cpol"))
+        plat->mode |= SPI_CPOL;
+    if (dev_read_bool(dev, "spi-cpha"))
+        plat->mode |= SPI_CPHA;
+
+    return SUCCESS;
+}
 
 
 /**
@@ -50,8 +87,13 @@ UCLASS_DRIVER(spi) = {
     .name = "spi",
     .id   = UCLASS_SPI,
 
+    /* A bus binds its slaves, the child nodes of its own node */
+    .post_bind       = dm_scan_fdt_dev,
+    .child_post_bind = spi_child_post_bind,
     .child_pre_probe = spi_child_pre_probe,
-    .per_child_auto  = sizeof(struct spi_slave),
+
+    .per_child_plat_auto = sizeof(struct spi_slave_plat),
+    .per_child_auto      = sizeof(struct spi_slave),
 };
 
 

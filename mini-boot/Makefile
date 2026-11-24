@@ -12,11 +12,13 @@ TARGET := $(BUILD)/mini-boot
 SRCS := common/main.c
 
 SRCS += common/console.c
+SRCS += common/dtb.S
 SRCS += common/panic.c
 SRCS += common/systime.c
 
 SRCS += drivers/core/device.c
 SRCS += drivers/core/driver.c
+SRCS += drivers/core/read.c
 SRCS += drivers/core/root.c
 SRCS += drivers/core/uclass.c
 
@@ -27,6 +29,7 @@ SRCS += drivers/serial/serial-uclass.c
 SRCS += drivers/spi/spi-uclass.c
 SRCS += drivers/timer/timer-uclass.c
 
+SRCS += lib/fdt.c
 SRCS += lib/malloc.c
 SRCS += lib/printf.c
 SRCS += lib/string.c
@@ -56,6 +59,16 @@ CFLAGS   = $(CPUFLAGS) -ffreestanding \
 		   -MMD -MP
 LDFLAGS  = $(CPUFLAGS) -nostdlib -T $(LDSCRIPT) -L board/$(BOARD) \
 		   -Wl,--gc-sections -Wl,--fatal-warnings -Wl,-Map=$(TARGET).map
+
+# Device tree: board/<board>/<board>.dts, run through the C preprocessor
+# (dt-bindings headers, the cpu and SoC .dtsi files), then dtc. -undef: no
+# predefined macro may rewrite a word of the .dts. dtc -@ writes the
+# /__symbols__ node (label -> path): devices are named after their label.
+DTS := board/$(BOARD)/$(BOARD).dts
+DTB := $(BUILD)/$(BOARD).dtb
+DTC := dtc
+DTS_CPPFLAGS = -E -x assembler-with-cpp -nostdinc -undef -D__DTS__ \
+		   -Iinclude -Iarch/$(ARCH)/cpu/$(CPU) -Iarch/$(ARCH)/mach-$(MACH)
 
 # make check: every board in board/, so a new board joins automatically
 BOARDS := $(notdir $(wildcard board/*))
@@ -87,6 +100,17 @@ $(BUILD)/%.o: %.S
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 	@echo ""
+
+$(DTB): $(DTS)
+	@mkdir -p $(dir $@)
+	$(CC) $(DTS_CPPFLAGS) -MMD -MP -MT $@ -MF $@.d $< -o $@.tmp
+	$(DTC) -@ -I dts -O dtb -o $@ $@.tmp
+	@echo ""
+
+# .incbin is invisible to -MMD: without this line an edited .dts gives a
+# new .dtb and an old image
+$(BUILD)/common/dtb.o: $(DTB)
+$(BUILD)/common/dtb.o: CFLAGS += -DDTB_FILE='"$(DTB)"'
 
 flash: $(TARGET).elf
 	openocd -f $(OPENOCDCFG) -c "program $< verify reset exit"
@@ -130,3 +154,4 @@ clean:
 	rm -rf build
 
 -include $(OBJS:.o=.d)
+-include $(DTB).d

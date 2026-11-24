@@ -38,25 +38,31 @@ mini-boot/
 │   ├── include/asm/              io.h (readl/writel), armv7m.h (SCB)
 │   ├── cpu/armv7m/               true for every Cortex-M3/M4/M7
 │   │   ├── cpu.mk                adds its sources, names the linker script
+│   │   ├── armv7-m.dtsi          systick node (every Cortex-M has one)
 │   │   └── start.S, fault.c, link.ld (sections only, INCLUDE memory.ld)
 │   ├── mach-stm32f4/             true for one SoC family
-│   │   ├── mach.mk               adds clock.c, devices.c and the drivers
-│   │   │                         of the in-chip devices (SysTick, RCC)
-│   │   ├── devices.c             DM_DEVICE rows for blocks every board
-│   │   │                         on this SoC has
+│   │   ├── mach.mk               adds the drivers of the in-chip devices
+│   │   │                         (SysTick, RCC)
+│   │   ├── stm32f429.dtsi        the SoC's nodes (rcc, gpioa-g, usart1,
+│   │   │                         spi5; peripherals disabled), &systick
 │   │   └── include/mach/         stm32f429.h (base addresses only),
 │   │                             irqs.h (NR_IRQS)
 │   └── mach-lm3s/                the same files for TI Stellaris LM3S:
-│                                 lm3s6965.h, irqs.h, devices.c, mach.mk
+│                                 lm3s6965.h, irqs.h, lm3s6965.dtsi,
+│                                 mach.mk
 ├── board/stm32f429i-disc1/       what is soldered on one board
 │   ├── board.mk                  ARCH, CPU, MACH, CPUFLAGS, OpenOCD config,
 │   │                             and which hardware drivers this board uses
-│   └── board.c (hooks + device table), board.h, memory.ld (FLASH/RAM,
+│   ├── stm32f429i-disc1.dts      the board's device tree: includes the
+│   │                             SoC .dtsi, enables what it uses, crystal,
+│   │                             speeds, the gyro under spi5
+│   └── board.c (hooks), board.h (names, pins), memory.ld (FLASH/RAM,
 │                                 heap and stack sizes)
-├── board/lm3s6965evb/            QEMU machine lm3s6965evb: the same four
+├── board/lm3s6965evb/            QEMU machine lm3s6965evb: the same five
 │                                 files; board.mk sets QEMU_MACHINE
 ├── drivers/
-│   ├── core/                     driver.c, device.c, uclass.c, root.c
+│   ├── core/                     driver.c, device.c, uclass.c, root.c,
+│   │                             read.c (dev_read_*: a device's node)
 │   ├── clk/                      clk-uclass.c (generic), lm3s_sysctl.c,
 │   │                             stm32f4_rcc.c
 │   ├── serial/                   serial-uclass.c (generic), stm32_serial.c,
@@ -68,19 +74,24 @@ mini-boot/
 ├── include/                      generic APIs: types.h, errno.h, init.h,
 │   │                             clk.h, gpio.h, gyro.h, serial.h, spi.h,
 │   │                             timer.h,
-│   │                             console.h, systime.h,
+│   │                             console.h, systime.h, fdt.h,
 │   │                             printf.h, string.h, malloc.h, panic.h
 │   ├── dm/                       uclass-id.h, driver.h, device.h, uclass.h,
-│   │                             root.h
+│   │                             root.h, read.h
+│   ├── dt-bindings/              clock/stm32f4-rcc.h, clock/lm3s-sysctl.h,
+│   │                             gpio/gpio.h: defines only, shared by C
+│   │                             and the .dts (clock IDs, GPIO flags)
 │   └── platdata/                 stm32_serial.h, stm32_gpio.h,
 │                                 armv7m_systick.h, pl011_serial.h,
 │                                 lm3s_sysctl.h, stm32f4_rcc.h,
 │                                 stm32_spi.h: what a
-│                                 board (or SoC) tells a driver about one
-│                                 instance; a clock provider's header
-│                                 also holds its device name and IDs
-├── lib/                          printf, string, malloc (no hardware access)
-└── common/                       main.c, console.c, panic.c, systime.c
+│                                 driver needs about one instance (filled
+│                                 by its of_to_plat); a clock provider's
+│                                 header also holds its device name
+├── lib/                          printf, string, malloc, fdt (the blob
+│                                 reader; no hardware access)
+└── common/                       main.c, console.c, panic.c, systime.c,
+                                  dtb.S (the blob, .incbin into flash)
 
 Adding a board on the same SoC = a new board/<name>/. A new SoC family = a
 new arch/arm/mach-<name>/. A new architecture = a new arch/<name>/.
@@ -91,8 +102,8 @@ a possible third board on mach-stm32f4 (own memory.ld: 128K RAM).
 
 Every mach-<soc>/ provides: include/mach/<soc>.h (base addresses),
 irqs.h (NR_IRQS, used by start.S for the vector table length),
-devices.c (the in-chip rows, such as SysTick) and mach.mk (which also
-adds the SoC's clock provider driver). No clock code: that is a
+<soc>.dtsi (the SoC's nodes, and SysTick's clock) and mach.mk (which
+also adds the SoC's clock provider driver). No clock code: that is a
 driver in drivers/clk/ since item 3.
 
 ## Build
@@ -112,6 +123,21 @@ driver in drivers/clk/ since item 3.
   `target remote :1234`). Quit QEMU with Ctrl-A then X (Ctrl-C goes to
   the guest); in gdb, Ctrl-C only pauses the target, `monitor quit` ends
   QEMU. A stale QEMU keeps port 1234 busy: `pkill qemu-system-arm`.
+- Device tree build (item 5e): board/<board>/<board>.dts is run through
+  cpp (DTS_CPPFLAGS: -x assembler-with-cpp -nostdinc -undef; -I for
+  include/, cpu/<cpu>/ and mach-<mach>/, so it can #include the .dtsi
+  files and the dt-bindings headers), the result in
+  build/<board>/<board>.dtb.tmp; then dtc -@ makes the .dtb (merges the
+  &label overrides, evaluates the expressions, numbers the phandles,
+  writes /__symbols__). common/dtb.S .incbin's it into .rodata.dtb
+  (8-byte aligned, _dtb_start / _dtb_end); link.ld's *(.rodata*) puts
+  it in FLASH; make flash writes it with the rest. It is read in place,
+  never copied. dtb.o depends on the .dtb by an explicit rule (-MMD
+  cannot see .incbin); the .dtb on its .dts, .dtsi and headers
+  (-include $(DTB).d). Needs dtc on the host (1.7.2 here; fdtdump too).
+  Inspect: the .tmp file (after cpp), dtc -I dtb -O dts <board>.dtb
+  (what is flashed), fdtdump (header, tokens). A changed Makefile flag
+  (as -@ was) rebuilds nothing: make clean.
 - --gc-sections drops every function nothing calls: it is then not in the
   image and gdb cannot `call` it (clock_enable() on lm3s in step 2 Part A,
   before any driver used it). The map file lists it under "Discarded input
@@ -171,8 +197,9 @@ driver in drivers/clk/ since item 3.
   Check: `grep -rn "mach/\|board\.h" common drivers include lib` prints
   nothing. (Escape the dot: "board.h" also matches the words "board hook".)
 - Drivers never hardcode an instance, pins or baud rate; they receive base
-  address, clock ID and config from the board's platform data, and access
-  registers via readl/writel(base + offset) from <asm/io.h>.
+  address, clock ID and config in their plat, which their of_to_plat
+  fills from the device tree, and access registers via
+  readl/writel(base + offset) from <asm/io.h>.
 - A register layout is private to the one .c file that drives the block
   (RCC in drivers/clk/stm32f4_rcc.c, System Control in
   drivers/clk/lm3s_sysctl.c, GPIO in drivers/gpio/stm32_gpio.c).
@@ -182,14 +209,21 @@ driver in drivers/clk/ since item 3.
   bases in its plat (flash_base, pwr_base). U-Boot does the same.
 - Clocks come from a clock provider device (include/clk.h); a driver
   passes the clock ID on as an opaque number. What an ID means is in the
-  provider's platdata header (platdata/lm3s_sysctl.h,
-  platdata/stm32f4_rcc.h), prefixed with the provider (LM3S_CLK_*,
-  STM32F4_CLK_*) because a board may include several providers'
-  headers. A row at the SoC level (SysTick in devices.c) names a
-  provider declared in board.c: every board on the SoC must declare it
-  under the define's name (written above each SysTick row).
-- A board chooses its hardware drivers in board.mk. board.c contains no
-  addresses and no register offsets; everything comes from board.h.
+  provider's dt-bindings header (dt-bindings/clock/lm3s-sysctl.h,
+  dt-bindings/clock/stm32f4-rcc.h, included by its platdata header),
+  prefixed with the provider (LM3S_CLK_*, STM32F4_CLK_*) because a board
+  may include several providers' headers. SysTick's clock is set by the
+  SoC's .dtsi (&systick { clocks = <&rcc STM32F4_CLK_HCLK>; }).
+- A dt-bindings header holds defines only: the .dts includes it too, and
+  anything else would end up in the .dts. An expression in a cell must be
+  in parentheses (STM32F4_CLK_ID() is), or dtc refuses it.
+- A board chooses its hardware drivers in board.mk and describes its
+  devices in its .dts. board.c contains no addresses and no register
+  offsets; board.h holds only device names (each a label in the .dts)
+  and pins. The .dts writes addresses as numbers, as in every Linux .dts
+  (the unit address in a node's name must match its reg); IDs and flags
+  come from the dt-bindings headers. /dts-v1/; only in the board's .dts,
+  never in a .dtsi.
 - u32 is `unsigned int` (not uint32_t) so it matches printf %u / %x.
 - Functions return 0 (SUCCESS) or -Exxx from include/errno.h. A pointer
   result fails as NULL (`if (!ptr)`); an error code fails as non-zero
@@ -205,27 +239,31 @@ driver in drivers/clk/ since item 3.
   only: MINIBOOT_<FILE>_H.
 
 ## Driver model (as built)
-Decisions: drivers, devices and uclass drivers are collected by the
-linker (KEEP sections .dm_drivers, .dm_devices and .dm_uclasses in
-link.ld); the board/driver contract is include/platdata/*.h; each uclass
-stores its devices in a fixed array (UCLASS_MAX_DEVICES), to become a
-linked list later.
+Decisions: the devices come from the board's device tree (item 5e);
+drivers and uclass drivers are collected by the linker (KEEP sections
+.dm_drivers and .dm_uclasses in link.ld; .dm_devices, the C table, is
+still supported but empty); a driver's plat struct (include/platdata/)
+is what its of_to_plat fills; each uclass stores its devices in a fixed
+array (UCLASS_MAX_DEVICES), to become a linked list later.
 
-- DM_DRIVER(name) = { .name, .id, .probe, .ops, .priv_auto } in the driver's
-  .c file. DM_DEVICE(name) = { .name, .driver, .plat, .parent,
-  .parent_plat } in board.c (the last two only for a child).
-- dm_init() binds every DM_DEVICE: driver_find() by name, calloc a
-  struct udevice, add it to the driver's uclass. No hardware is touched.
-  A failed row is reported and skipped. Then a second pass links children
-  to parents (see Parent and child below).
+- DM_DRIVER(name) = { .name, .id, .of_match, .of_to_plat, .probe, .ops,
+  .plat_auto, .priv_auto } in the driver's .c file. DM_DEVICE(name) =
+  { .name, .driver, .plat, .parent, .parent_plat } (the C table; no rows
+  left since item 5e).
+- dm_init() binds the device tree first (see Device tree below), then
+  every DM_DEVICE: driver_find() by name, calloc a struct udevice, add
+  it to the driver's uclass. No hardware is touched. A failed entry is
+  reported and skipped. Then a second pass links the rows' children to
+  parents (see Parent and child below). Returns uclass_device_count().
 - uclass_find_device(id, index) only looks up. uclass_get_device() also
   calls device_probe(): allocate priv (priv_auto bytes), call the driver's
   probe, set `probed` last. Probe runs once per device, on first use.
   uclass_find_device_by_name() / uclass_get_device_by_name() do the same by
   name. device_find_by_name() searches every uclass: device names are
   unique across the system (two identical sensors need gyro0 / gyro1).
-- plat is the board's constant data in flash; priv is the driver's own data
-  on the heap.
+- plat: from the tree, plat_auto bytes on the heap filled by of_to_plat
+  (from a C row, the board's constant data in flash); priv is the
+  driver's own data on the heap.
 - A uclass defines an ops table (struct serial_ops in serial.h, struct
   gpio_ops in gpio.h) and generic functions (serial-uclass.c,
   gpio-uclass.c) that dispatch through dev->driver->ops and return -ENOSYS
@@ -253,8 +291,11 @@ linked list later.
   was found. On lm3s, board_init() does nothing: the clock provider is
   probed from inside the UART's probe.
 - Timer (step 9): SysTick is a CPU block present on every board of the
-  SoC, so its DM_DEVICE row is in mach-<soc>/devices.c, and mach.mk (not
-  board.mk) adds its driver. Its base (SYSTICK_BASE) is in asm/armv7m.h;
+  SoC, so its node is in cpu/armv7m/armv7-m.dtsi, its clock in each
+  SoC's .dtsi (until item 5e: a DM_DEVICE row in mach-<soc>/devices.c),
+  and mach.mk (not board.mk) adds its driver. Its base (reg; also
+  SYSTICK_BASE in asm/armv7m.h, for code outside the driver model) is
+  0xe000e010;
   its register layout is private to drivers/timer/armv7m_systick.c. Its
   clock is the SoC's CPU clock: STM32F4_CLK_HCLK on stm32f4,
   LM3S_CLK_SYSCLK on lm3s (both in the core group, not a gate register);
@@ -277,7 +318,8 @@ linked list later.
   systime_mdelay() before systime_init() never returns.
 - Decided in step 2 (Part D):
   - The SysTick row stays per SoC (mach-<soc>/devices.c, driver line in
-    mach.mk), though both copies differ only in the clock ID: which
+    mach.mk; since item 5e the node is per CPU and only &systick's
+    clocks is per SoC), though both copies differ only in the clock ID: which
     clock feeds SysTick is a SoC fact (some SoCs feed a divided
     reference), and moving it to cpu/armv7m would need every mach to
     export one agreed clock name. Linux does the same (SysTick in each
@@ -444,6 +486,54 @@ linked list later.
   is invisible to the SPI uclass); that needs the child's side to name
   the parent kind it requires (the reverted parent_id). U-Boot relies
   on the device tree's structure instead.
+- Device tree (item 5e; 5b's matching folded in): three levels of
+  source like the C tree: cpu/armv7m/armv7-m.dtsi (systick),
+  mach-<soc>/<soc>.dtsi (the SoC's blocks, peripherals status
+  "disabled"), board/<board>/<board>.dts (#includes the SoC's, model,
+  fixed-clock crystal, &label overrides: status "okay", speeds, the
+  gyro node inside &spi5). Reader: lib/fdt.c, read-only, in place, no
+  allocation (one bounded token walker, fdt_next_tag(); numbers read
+  byte by byte big-endian, fdt32_ld(); nodes and properties are offsets
+  into the structure block, root 0; first_child / next_sibling /
+  getprop / read_u32 / first_prop / next_prop / node_by_phandle /
+  path_offset / get_label / print, the last identical to dtc -O dts).
+  Driver-model side:
+  - Matching: struct udevice_id { compatible, data } tables (of_match);
+    a node's compatible strings are tried in order (most specific
+    first), driver_find_by_compatible(); the entry's data becomes
+    dev->driver_data (l3gd20: a struct l3gd20_chip, probe checks
+    WHO_AM_I against it: one driver, a table of chips).
+  - device_bind_node(parent, node): status "okay"/"ok"/absent, a driver
+    that matches, else -ENODEV (skipped quietly: clk-hse, a fixed-clock,
+    has no driver). Named after its label (/__symbols__, dtc -@), else
+    its node name: board.h's names stayed (U-Boot names devices by node
+    name). device_bind_common() (both paths): udevice, plat_auto,
+    parent_plat (the parent's uclass per_child_plat_auto), uclass add,
+    own post_bind, parent's uclass child_post_bind. dev->node
+    (DEV_NODE_NONE for a C row).
+  - of_to_plat runs first in device_probe() (before the parent's probe),
+    on every attempt (idempotent). Drivers read their node with
+    dm/read.h: dm_fdt(), dev_read_prop / u32 / bool, dev_read_addr_index
+    (reg; cell counts from the parent node, 1-cell addresses only),
+    dev_read_phandle_with_args (list walked from the start; argument
+    count from the target's #clock-cells / #gpio-cells).
+  - A phandle becomes the provider's device NAME (clk_read_by_index() in
+    clk-uclass.c, gpio_read_by_name() in gpio-uclass.c, via
+    device_find_by_node()), so every plat struct, probe and op stayed as
+    with the C table and clk_get_by_name() is still the lookup. A
+    fixed-clock has no device: the RCC / sysctl of_to_plat read its
+    clock-frequency through the phandle directly. RCC: three reg entries
+    (reg-names rcc, flash, pwr; read by index), clock-frequency = the
+    SYSCLK to run.
+  - Children: the SPI uclass's post_bind is dm_scan_fdt_dev() (binds the
+    child nodes; post_bind's first user); spi_child_post_bind() fills
+    spi_slave_plat from reg (CS), spi-max-frequency, spi-cpol, spi-cpha;
+    spi_child_pre_probe() then checks and copies it as before. The bus's
+    cs-gpios = <&gpioc 1 GPIO_ACTIVE_LOW> (anything but active low
+    -EINVAL). A child from the tree has its parent at bind: pass 2 and
+    the orphan flag serve only C rows now.
+  - Uclass device order is now the tree's (gpioa, gpioc, gpiof, gpiog;
+    systick bound first, armv7-m.dtsi being included first).
 - The order of entries in a linker section is not guaranteed; never assume
   an index means a particular device (gpioa came out as GPIO device 0).
   Use the lookup by name; the names are in board.h (LED_GPIO_NAME,
@@ -599,7 +689,46 @@ audit. post_bind waits for a real user (5d / 5e).
   (gyro_pre_probe passes on spi_ops.xfer, post_probe calls xfer with
   the wrong arguments): undefined behaviour from a clean build; a
   second calibration through gyro_read() would restore the raw offsets.
-  Item 5a done once Part C passes on the board.
+  Item 5a done: Part C passed on the board with item 5e's run (the
+  tree-filled spi_slave_plat went through spi_child_pre_probe, Gyro:
+  ready).
+Roadmap item 5e (device tree instead of the C table; 5b folded in),
+decided: a real FDT blob and our own reader (not OF_PLATDATA), the C
+table kept working until the end, the STM32 first. Parts: A the blob
+and the reader; B matching; C of_to_plat and phandles; D children from
+the tree; E the rest, the rows removed, lm3s, audit. A was guided, B-E
+implemented at once on request.
+- Part A, tested on lm3s (QEMU) and against dtc: the three .dts levels,
+  dt-bindings headers (clock IDs moved out of platdata), the cpp + dtc
+  rule, common/dtb.S, lib/fdt.c. fdt_print() identical to dtc -O dts on
+  both blobs (STM32 read by a host build of lib/fdt.c); -V 16 gives
+  header -134; a 3-byte property keeps the padding; the .incbin
+  dependency rebuilds the image. Text: STM32 6820 -> 10332, LM3S 4876
+  -> 6484 (blob + reader).
+- Parts B-E done, tested on both boards. lm3s in QEMU: 3 devices from
+  the tree (uart0, systick, sysctl), plat on the heap, console clock
+  50 MHz (crystal through the fixed-clock). STM32 bind and of_to_plat
+  first checked on the host (real core, uclasses and drivers built for
+  x86 with the real blob, no probes; needs -malign-data=abi, x86-64
+  aligns 32-byte structs to 32 and gaps the linker arrays): 9 devices,
+  every value equal to the old rows. On the board: same boot, Console
+  clock 84000000 Hz, 9 bound, names from labels, plat 0x2000xxxx, gyro
+  under spi5, Gyro: ready (WHO_AM_I 0xd3 = the I3G4250D the tree
+  names), at rest within +-260 mdps, DT summary "13 nodes under /" (12
+  + __symbols__). The boot prints the DT summary only, not the tree.
+  Text: STM32 6820 -> 12852, LM3S 4876 -> 8812 (two blobs with
+  __symbols__ and phandles, the reader, dm/read.h, of_to_plat in every
+  driver). The rows and both mach-*/devices.c are gone; board.h keeps
+  names and pins.
+  Audit (since c148894, 5a's commit): the core gained the tree path
+  (device_bind_node, device_bind_common shared with C rows, of_to_plat
+  in probe, post_bind / child_post_bind / per_child_plat_auto,
+  device_find_by_node, uclass_device_count, read.c); every driver
+  gained of_match, of_to_plat, plat_auto (probes and ops unchanged but
+  l3gd20's WHO_AM_I check); clk and gpio uclasses one helper each; spi
+  uclass the child binding. Untouched: start.S, fault.c, link.ld,
+  lib/ but fdt.c, console.c, systime.c, the gyro, serial and timer
+  uclasses, every platdata struct. Item 5e done.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -620,7 +749,7 @@ audit. post_bind waits for a real user (5d / 5e).
 Known limitations:
 - free() does nothing, so a device that fails after allocation is leaked.
 - "Serial device 0" is the console and "timer device 0" the system timer;
-  no way yet to choose among several.
+  no way yet to choose among several (5c: /aliases, chosen).
 - Bind errors printed before console_init() are lost (an orphan still
   shows as "(missing)" in the device list).
 - The core accepts any parent: a gyro row naming gpioc is linked, gpioc
@@ -644,11 +773,26 @@ Known limitations:
   links gyro_calibrate and spi_child_pre_probe). U-Boot compiles a
   uclass only when Kconfig enables it; here that would mean moving the
   gyro and spi uclass files from the generic SRCS to board.mk.
-- The device list's second line is over 70 characters and wraps in an
-  80-column minicom.
-- Parts A-C were not fully exercised: Part A's gdb check and
-  experiments, Part B's rotation / boot pause / gdb / experiments, and
-  all of Part C on the board.
+- Item 5a was not fully exercised: Part A's gdb check and experiments,
+  Part B's rotation / boot pause / gdb / experiments, Part C's gdb
+  checks and experiments (its board run passed with 5e).
+- The C-table path (DM_DEVICE, device_info, dm_init pass 2, the orphan
+  flag) is still in the core with no rows (like U-Boot's
+  U_BOOT_DRVINFO): kept, unexercised.
+- Device names are DT labels (our choice, for board.h's lookups); a node
+  without a label gets its node name ("gpio@40020000"). U-Boot uses the
+  node name.
+- The console's clock is written twice: in the .dts (usart1's clocks)
+  and in board.h (CONSOLE_UART_CLK_DEV / _CLK, for the banner).
+- fdt_node_by_phandle() and fdt_get_label() are linear searches of the
+  whole tree, done at every bind / of_to_plat; dm_fdt() checks the
+  header on every call. Fine for 13 nodes.
+- dev_read_addr_index() takes only 1-cell addresses; no ranges (no
+  simple-bus: every device node is a child of / or of a bus driver).
+- No pinctrl in the tree: board.c still sets up the pins (names and
+  pins in board.h).
+- A changed Makefile flag does not rebuild the .dtb (or any object):
+  make clean.
 - A NULL dereference does not fault: address 0 aliases flash, a read
   returns the vector table, a write is dropped and sets FLASH_SR PGSERR /
   PGPERR (seen in step 9, priv_auto removed). A driver using dev->priv must
@@ -674,15 +818,17 @@ Agreed order:
       and per-child data (per_child_auto). The biggest gap: a uclass is
       today only an id and a file of functions. First use: the gyro
       offset (a calibrate operation, the offset in uclass data).
-      Done (Parts A-D) but for Part C's board test; post_bind deferred
-      to d / e (no user yet), driver-level child hooks deferred.
+      Done (Parts A-D; Part C's board run passed with 5e); post_bind
+      got its user in e; driver-level child hooks deferred.
    b. Matching by compatible string with driver_data: one driver, a
-      table of chips (l3gd20 / i3g4250d).
+      table of chips (l3gd20 / i3g4250d). Done inside e.
    c. Sequence numbers and aliases (dev->seq, serial0, gyro0): replaces
-      "device 0 is the console".
+      "device 0 is the console". Next; with the tree, an /aliases node
+      (and /chosen stdout-path, as Linux).
    d. Children list, device_remove() and unbind (children before
       parents), and a dm tree print at boot.
-   e. Optional: a device tree instead of the C table.
+   e. Optional: a device tree instead of the C table. Done (Parts A-E),
+      tested on both boards.
 Out of scope (decided 2026-11-22): command shell, booting an
 application, SDRAM. Linked-list uclass storage when the fixed array
 gets in the way.

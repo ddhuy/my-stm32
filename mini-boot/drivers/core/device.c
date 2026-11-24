@@ -1,12 +1,99 @@
 #include <errno.h>
+#include <fdt.h>
 #include <malloc.h>
+#include <string.h>
 #include <dm/device.h>
+#include <dm/read.h>
 #include <dm/uclass.h>
 
 
 /**
+ * Both ways of binding end here. The device joins its uclass first, so
+ * that its post_bind (a bus binding its children) finds it complete; the
+ * parent's child_post_bind runs last, when the child is fully bound. On a
+ * failure after the uclass took the device, it stays there: the heap
+ * cannot free, and the uclass has no remove.
+ */
+static int device_bind_common(
+    struct udevice *parent,
+    const struct driver *driver,
+    const char *name,
+    void *plat,
+    int node,
+    uintptr_t driver_data,
+    struct udevice **devp
+)
+{
+    struct udevice *dev = calloc(1, sizeof(struct udevice));
+
+    if (!dev)
+        return -ENOMEM;
+
+    dev->name = name;
+    dev->driver = driver;
+    dev->plat = plat;
+    dev->node = node;
+    dev->driver_data = driver_data;
+    dev->parent = parent;
+
+    /* From the device tree: of_to_plat fills it at probe */
+    if (node != DEV_NODE_NONE && driver->plat_auto > 0)
+    {
+        dev->plat = calloc(1, driver->plat_auto);
+
+        if (!dev->plat)
+            return -ENOMEM;
+    }
+
+    /* Under a parent from the tree: its uclass fills it in child_post_bind */
+    const struct uclass_driver *parent_uc_drv =
+        parent ? device_get_uclass_driver(parent) : NULL;
+
+    if (parent_uc_drv && parent_uc_drv->per_child_plat_auto > 0)
+    {
+        dev->parent_plat = calloc(1, parent_uc_drv->per_child_plat_auto);
+
+        if (!dev->parent_plat)
+            return -ENOMEM;
+    }
+
+    int ret = uclass_add_device(dev);
+
+    /* The device is lost on this path: the heap cannot free */
+    if (ret)
+        return ret;
+
+    /* Never NULL: uclass_add_device() checked it */
+    const struct uclass_driver *uc_drv = device_get_uclass_driver(dev);
+
+    if (uc_drv->post_bind)
+    {
+        ret = uc_drv->post_bind(dev);
+
+        if (ret)
+            return ret;
+    }
+
+    if (parent_uc_drv && parent_uc_drv->child_post_bind)
+    {
+        ret = parent_uc_drv->child_post_bind(dev);
+
+        if (ret)
+            return ret;
+    }
+
+    if (devp)
+        *devp = dev;
+
+    return SUCCESS;
+}
+
+
+/**
  * The driver is looked up before anything is allocated, so a device without
- * a driver costs no heap.
+ * a driver costs no heap. The board's plat is in flash; the cast only
+ * drops const from the type: a driver writes only plat it allocated
+ * (plat_auto), which a device from a device_info never has.
  */
 int device_bind(
     const struct device_info *info,
@@ -18,26 +105,92 @@ int device_bind(
     if (!driver)
         return -ENOENT;
 
-    struct udevice *dev = calloc(1, sizeof(struct udevice));
+    struct udevice *dev;
+    int ret = device_bind_common(NULL, driver, info->name,
+                                 (void *)info->plat, DEV_NODE_NONE, 0, &dev);
 
-    if (!dev)
-        return -ENOMEM;
-
-    dev->name = info->name;
-    dev->driver = driver;
-    dev->plat = info->plat;
-    /* Waiting for device_set_parent(); refused by probe until then */
-    dev->orphan = (info->parent != NULL);
-
-    int ret = uclass_add_device(dev);
-
-    /* The device is lost on this path: the heap cannot free */
     if (ret)
         return ret;
+
+    /* Waiting for device_set_parent(); refused by probe until then */
+    dev->orphan = (info->parent != NULL);
 
     *devp = dev;
 
     return SUCCESS;
+}
+
+
+/**
+ * "okay" (or "ok", the older spelling) or no status at all: enabled.
+ */
+static bool node_enabled(
+    const void *fdt,
+    int node
+)
+{
+    const char *status = fdt_getprop(fdt, node, "status", NULL);
+
+    return !status || !strcmp(status, "okay") || !strcmp(status, "ok");
+}
+
+
+/**
+ * The compatible property is a list of strings, most specific first; the
+ * first one that has a driver decides.
+ */
+static const struct driver *node_match(
+    const void *fdt,
+    int node,
+    uintptr_t *datap
+)
+{
+    int len;
+    const char *list = fdt_getprop(fdt, node, "compatible", &len);
+
+    if (!list)
+        return NULL;
+
+    for (int i = 0; i < len; i += strlen(&list[i]) + 1)
+    {
+        const struct driver *drv = driver_find_by_compatible(&list[i],
+                                                             datap);
+
+        if (drv)
+            return drv;
+    }
+
+    return NULL;
+}
+
+
+/**
+ * Nothing is allocated for a node that is disabled or has no driver: the
+ * checks come first.
+ */
+int device_bind_node(
+    struct udevice *parent,
+    int node,
+    struct udevice **devp
+)
+{
+    const void *fdt = dm_fdt();
+
+    if (!fdt || !node_enabled(fdt, node))
+        return -ENODEV;
+
+    uintptr_t data = 0;
+    const struct driver *driver = node_match(fdt, node, &data);
+
+    if (!driver)
+        return -ENODEV;
+
+    const char *name = fdt_get_label(fdt, node);
+
+    if (!name)
+        name = fdt_get_name(fdt, node);
+
+    return device_bind_common(parent, driver, name, NULL, node, data, devp);
 }
 
 
@@ -57,7 +210,8 @@ int device_set_parent(
             return -EINVAL;
 
     dev->parent = parent;
-    dev->parent_plat = parent_plat;
+    /* The board's, in flash: see device_bind() for the cast */
+    dev->parent_plat = (void *)parent_plat;
     dev->orphan = false;
 
     return SUCCESS;
@@ -86,6 +240,19 @@ int device_probe(
     /* Its parent is missing or was refused: it cannot be reached */
     if (dev->orphan)
         return -ENODEV;
+
+    /*
+     * Its node into its plat, first: the parent's probe does not need it,
+     * and a node that cannot be read costs the parent nothing. Run again
+     * on a retry; reading the blob twice gives the same plat.
+     */
+    if (dev->node != DEV_NODE_NONE && dev->driver->of_to_plat)
+    {
+        int ret = dev->driver->of_to_plat(dev);
+
+        if (ret)
+            return ret;
+    }
 
     /*
      * The parent first, whatever the driver: a child can only be reached

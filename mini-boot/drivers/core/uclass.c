@@ -253,6 +253,47 @@ int device_find_by_name(
 
 
 /**
+ * The same walk as device_find_by_name(). A device from a device_info has
+ * DEV_NODE_NONE, which no node offset equals.
+ */
+int device_find_by_node(
+    int node,
+    struct udevice **devp
+)
+{
+    for (int id = UCLASS_INVALID + 1; id < UCLASS_COUNT; ++id)
+    {
+        for (int i = 0; i < uclasses[id].count; ++i)
+        {
+            struct udevice *dev = uclasses[id].devps[i];
+
+            if (dev->node == node)
+            {
+                *devp = dev;
+                return SUCCESS;
+            }
+        }
+    }
+
+    return -ENODEV;
+}
+
+
+/**
+ * Every uclass's count; UCLASS_INVALID never holds a device.
+ */
+int uclass_device_count(void)
+{
+    int total = 0;
+
+    for (int id = UCLASS_INVALID + 1; id < UCLASS_COUNT; ++id)
+        total += uclasses[id].count;
+
+    return total;
+}
+
+
+/**
  * No id check: the bind checked it, and a bound device's uclass has its
  * uclass driver (set by its first device).
  */

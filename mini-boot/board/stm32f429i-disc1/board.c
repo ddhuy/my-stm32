@@ -3,13 +3,7 @@
 #include <gpio.h>
 #include <init.h>
 #include <printf.h>
-#include <spi.h>
-#include <dm/device.h>
 #include <dm/uclass.h>
-#include <platdata/stm32_gpio.h>
-#include <platdata/stm32_serial.h>
-#include <platdata/stm32_spi.h>
-#include <platdata/stm32f4_rcc.h>
 
 
 /*
@@ -130,9 +124,10 @@ void board_led_toggle(void)
 
 /**
  * Boot banner. The board prints it because only the board knows which clock
- * feeds the console. The clock is looked up with the same two names as the
- * usart1 row (board.h); a failed lookup prints 0, since the banner only
- * informs (and the console working means the provider is there).
+ * feeds the console. The clock is looked up by the names in board.h, which
+ * must agree with the usart1 node's clocks in the .dts; a failed lookup
+ * prints 0, since the banner only informs (and the console working means
+ * the provider is there).
  */
 void board_print_info(void)
 {
@@ -173,146 +168,3 @@ void board_panic(void)
 
     gpio_set_value(led_port, LED_RED_PIN, 1);
 }
-
-
-/*
- * The devices on this board, for the driver model. dm_init() binds each
- * DM_DEVICE entry to the driver it names.
- */
-
-/**
- * GPIO port G: the two user LEDs.
- */
-static const struct stm32_gpio_plat gpiog_plat = {
-    .base = LED_GPIO_BASE,
-    .clk_dev = STM32F4_RCC_NAME,
-    .clk_id = LED_GPIO_CLK
-};
-
-DM_DEVICE(gpiog) = {
-    .name = LED_GPIO_NAME,
-    .driver = "stm32_gpio",
-    .plat = &gpiog_plat,
-};
-
-
-/**
- * GPIO port A: the console pins, PA9 and PA10.
- */
-static const struct stm32_gpio_plat gpioa_plat = {
-    .base = CONSOLE_GPIO_BASE,
-    .clk_dev = STM32F4_RCC_NAME,
-    .clk_id = CONSOLE_GPIO_CLK
-};
-
-DM_DEVICE(gpioa) = {
-    .name = CONSOLE_GPIO_NAME,
-    .driver = "stm32_gpio",
-    .plat = &gpioa_plat,
-};
-
-
-/**
- * GPIO port C: the gyroscope's chip select (PC1).
- */
-static const struct stm32_gpio_plat gpioc_plat = {
-    .base = GYRO_CS_GPIO_BASE,
-    .clk_dev = STM32F4_RCC_NAME,
-    .clk_id = GYRO_CS_GPIO_CLK
-};
-
-DM_DEVICE(gpioc) = {
-    .name = GYRO_CS_GPIO_NAME,
-    .driver = "stm32_gpio",
-    .plat = &gpioc_plat,
-};
-
-
-/**
- * GPIO port F: the gyroscope's SPI pins (PF7-PF9).
- */
-static const struct stm32_gpio_plat gpiof_plat = {
-    .base = GYRO_SPI_GPIO_BASE,
-    .clk_dev = STM32F4_RCC_NAME,
-    .clk_id = GYRO_SPI_GPIO_CLK
-};
-
-DM_DEVICE(gpiof) = {
-    .name = GYRO_SPI_GPIO_NAME,
-    .driver = "stm32_gpio",
-    .plat = &gpiof_plat,
-};
-
-
-/**
- * USART1: the console, through the ST-LINK virtual COM port.
- */
-static const struct stm32_serial_plat usart1_plat = {
-    .base = CONSOLE_UART_BASE,
-    .baudrate = CONSOLE_BAUDRATE,
-    .clk_dev = CONSOLE_UART_CLK_DEV,
-    .clk_id = CONSOLE_UART_CLK,
-};
-
-DM_DEVICE(usart1) = {
-    .name = "usart1",
-    .driver = "stm32_serial",
-    .plat = &usart1_plat,
-};
-
-
-/**
- * RCC: the clock provider every other device here names in its clk_dev.
- * Its row is here, not in the SoC's devices.c, because its settings (the
- * crystal and the chosen speed) are board facts.
- */
-static const struct stm32f4_rcc_plat rcc_plat = {
-    .base       = RCC_BASE,
-    .flash_base = FLASH_R_BASE,
-    .pwr_base   = PWR_BASE,
-    .hse_hz     = HSE_HZ,
-    .sysclk_hz  = BOARD_SYSCLK_HZ
-};
-
-DM_DEVICE(rcc) = {
-    .name = STM32F4_RCC_NAME,
-    .driver = "stm32f4_rcc",
-    .plat = &rcc_plat,
-};
-
-
-/**
- * The gyroscope: a child of SPI5. It has no platform data of its own;
- * gyro_slave tells the bus how to reach it (chip select, mode 3, speed),
- * and only the SPI uclass reads it.
- */
-static const struct spi_slave_plat gyro_slave = {
-    .cs = GYRO_SPI_CS,
-    .mode = SPI_MODE_3,
-    .max_hz = GYRO_SPI_MAX_HZ,
-};
-
-DM_DEVICE(gyro) = {
-    .name = GYRO_NAME,
-    .driver = "l3gd20",
-    .parent = GYRO_SPI_NAME,
-    .parent_plat = &gyro_slave,
-};
-
-
-/**
- * SPI5: the bus the gyroscope is on, with its chip select line.
- */
-static const struct stm32_spi_plat spi5_plat = {
-    .base = GYRO_SPI_BASE,
-    .clk_dev = STM32F4_RCC_NAME,
-    .clk_id = GYRO_SPI_CLK,
-    .cs_gpio_dev = GYRO_CS_GPIO_NAME,
-    .cs_pin = GYRO_CS_PIN,
-};
-
-DM_DEVICE(spi5) = {
-    .name = GYRO_SPI_NAME,
-    .driver = "stm32_spi",
-    .plat = &spi5_plat,
-};

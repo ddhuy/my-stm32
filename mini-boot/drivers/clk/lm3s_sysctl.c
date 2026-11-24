@@ -4,6 +4,8 @@
 #include <dm/device.h>
 #include <dm/driver.h>
 #include <platdata/lm3s_sysctl.h>
+#include <fdt.h>
+#include <dm/read.h>
 
 
 /*
@@ -208,11 +210,57 @@ static const struct clk_ops lm3s_sysctl_ops = {
 
 
 /**
+ * System Control's node into its plat: base, the crystal from the node
+ * that clocks = <&clk_xtal> points to (a fixed-clock, no device: its
+ * clock-frequency is read directly), and the system clock to run from
+ * clock-frequency.
+ *
+ * Returns 0 or the error from reading the nodes.
+ */
+static int lm3s_sysctl_of_to_plat(
+    struct udevice *dev
+)
+{
+    struct lm3s_sysctl_plat *plat = dev->plat;
+    struct fdt_phandle_args xtal;
+    int ret;
+
+    ret = dev_read_addr_index(dev, 0, &plat->base);
+    if (ret)
+        return ret;
+
+    ret = dev_read_phandle_with_args(dev, "clocks", "#clock-cells", 0,
+                                     &xtal);
+    if (ret)
+        return ret;
+
+    ret = fdt_read_u32(dm_fdt(), xtal.node, "clock-frequency",
+                       &plat->xtal_hz);
+    if (ret)
+        return ret;
+
+    return dev_read_u32(dev, "clock-frequency", &plat->sysclk_hz);
+}
+
+
+/**
+ * The compatible strings this driver handles.
+ */
+static const struct udevice_id lm3s_sysctl_ids[] = {
+    { .compatible = "ti,lm3s6965-sysctl" },
+    { }
+};
+
+/**
  * Driver model entry. No private data: the rate is read back from RCC.
  */
 DM_DRIVER(lm3s_sysctl) = {
     .name = "lm3s_sysctl",
     .id   = UCLASS_CLK,
+    .of_match = lm3s_sysctl_ids,
+
+    .of_to_plat = lm3s_sysctl_of_to_plat,
+    .plat_auto  = sizeof(struct lm3s_sysctl_plat),
 
     .probe = &lm3s_sysctl_probe,
 

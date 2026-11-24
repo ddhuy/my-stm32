@@ -1,0 +1,13 @@
+/*
+ * What every ARMv7-M CPU has, whatever the SoC: the SysTick timer. Its
+ * clock is a SoC fact, so the SoC's .dtsi adds it (&systick).
+ *
+ * A fragment: no /dts-v1/ here, only in the board's .dts.
+ */
+
+/ {
+	systick: timer@e000e010 {
+		compatible = "arm,armv7m-systick";
+		reg = <0xe000e010 0x10>;
+	};
+};
