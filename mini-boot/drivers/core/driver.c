@@ -13,26 +13,8 @@ extern const struct driver _edm_drivers[];
 
 
 /**
- * Linear search; there are only a handful of drivers.
- */
-const struct driver *driver_find(
-    const char *name
-)
-{
-    for (const struct driver *drv = _sdm_drivers;
-         drv < _edm_drivers;
-         ++drv)
-    {
-        if ( !strcmp(drv->name, name) )
-            return drv;
-    }
-
-    return NULL;
-}
-
-
-/**
- * Every driver's table, entry by entry, until the NULL compatible.
+ * Every driver's table, entry by entry, until the NULL compatible. A
+ * linear search; there are only a handful of drivers.
  */
 const struct driver *driver_find_by_compatible(
     const char *compatible,

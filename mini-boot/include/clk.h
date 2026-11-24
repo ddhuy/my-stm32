@@ -77,7 +77,7 @@ u32 clk_get_rate(
  * What the consumer's probe then passes to clk_get_by_name(). The provider
  * is looked up, not probed: binding is over, probing has not started.
  *
- * Returns 0; -ENODEV if the consumer has no node or the phandle points to
+ * Returns 0; -ENODEV if there is no valid blob or the phandle points to
  * a node without a device (a fixed-clock: read its clock-frequency
  * instead); -EINVAL if the provider has more than one argument cell; or
  * the error from reading the list.

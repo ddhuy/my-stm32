@@ -28,12 +28,6 @@ SECTIONS
 
         . = ALIGN(4);
 
-        _sdm_devices = .;
-        KEEP(*(.dm_devices))
-        _edm_devices = .;
-
-        . = ALIGN(4);
-
         _sdm_uclasses = .;
         KEEP(*(.dm_uclasses))
         _edm_uclasses = .;

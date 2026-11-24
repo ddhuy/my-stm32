@@ -25,17 +25,16 @@ struct udevice_id
  * The code that operates one kind of hardware block. There is one copy per
  * driver, in flash, however many devices use it.
  *
- * name:       what a device_info asks for in its 'driver' field
+ * name:       the driver's name, for printing
  * id:         the uclass this driver's devices join
- * of_match:   the compatible strings this driver handles; NULL: none (it
- *             can only be bound from a device_info)
+ * of_match:   the compatible strings this driver handles (no device can
+ *             be bound to a driver without one)
  * of_to_plat: reads the device's node into its plat (plat_auto bytes,
- *             allocated at bind), before probe; only for a device bound
- *             from the device tree. Returns 0 or -Exxx (the probe stops)
+ *             allocated at bind), before probe. Returns 0 or -Exxx (the
+ *             probe stops)
  * probe:      sets up the hardware of one device
  * ops:        the uclass's table of operations, implemented by this driver
- * plat_auto:  bytes of platform data to allocate for a device bound from
- *             the device tree (one from a device_info has the board's)
+ * plat_auto:  bytes of platform data to allocate for each device
  * priv_auto:  bytes of private data to allocate for each device
  */
 struct driver
@@ -64,14 +63,6 @@ struct driver
 #define DM_DRIVER(_name)                        \
     static const struct driver _name##_driver     \
     __attribute__((used, section(".dm_drivers")))
-
-
-/**
- * Look a driver up by name. Returns NULL if no driver has that name.
- */
-const struct driver *driver_find(
-    const char *name
-);
 
 
 /**

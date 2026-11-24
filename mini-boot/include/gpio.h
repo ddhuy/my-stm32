@@ -113,7 +113,7 @@ int gpio_get_value(
  * port's device, the pin, and the flags (dt-bindings/gpio/gpio.h). The
  * port must have #gpio-cells = <2>. The port is looked up, not probed.
  *
- * Returns 0; -ENODEV if the consumer has no node or the phandle points to
+ * Returns 0; -ENODEV if there is no valid blob or the phandle points to
  * a node without a device; -EINVAL if the port's #gpio-cells is not 2; or
  * the error from reading the list.
  */

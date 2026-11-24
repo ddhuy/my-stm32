@@ -76,7 +76,7 @@ u32 clk_get_rate(
 /**
  * The phandle names a node; the device bound from that node is the
  * provider. Its name is what clk_get_by_name() looks up later, so the
- * plat contract of every consumer stays the same as with a C table.
+ * plat contract of every consumer stayed what it was with the C table.
  */
 int clk_read_by_index(
     const struct udevice *dev,

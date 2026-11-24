@@ -28,8 +28,8 @@ static struct uclass uclasses[UCLASS_COUNT];
 
 
 /**
- * Linear search by id, as driver_find() searches by name; there are only a
- * handful of uclasses.
+ * Linear search by id, as driver_find_by_compatible() searches its
+ * tables; there are only a handful of uclasses.
  */
 const struct uclass_driver *uclass_driver_find(
     enum uclass_id id
@@ -127,12 +127,11 @@ void uclass_print_devices(void)
         {
             struct udevice *dev = uclasses[i].devps[j];
 
-            /* "-": top level; "(missing)": an orphan, its parent not found */
+            /* "-": top level */
             printf(" [%d] Name: \"%s\". Parent: %s. Probed: %d\n",
                 j,
                 dev->name,
-                dev->parent ? dev->parent->name :
-                    dev->orphan ? "(missing)" : "-",
+                dev->parent ? dev->parent->name : "-",
                 dev->probed
             );
 
@@ -234,27 +233,8 @@ int uclass_get_device_by_name(
 
 
 /**
- * Every uclass in turn, through the per-uclass lookup. A find, never a
- * get: binding must not probe anything.
- */
-int device_find_by_name(
-    const char *name,
-    struct udevice **devp
-)
-{
-    for (int id = UCLASS_INVALID + 1; id < UCLASS_COUNT; ++id)
-    {
-        if (!uclass_find_device_by_name(id, name, devp))
-            return SUCCESS;
-    }
-
-    return -ENODEV;
-}
-
-
-/**
- * The same walk as device_find_by_name(). A device from a device_info has
- * DEV_NODE_NONE, which no node offset equals.
+ * Every uclass in turn, every device in it. A find, never a get: an
+ * of_to_plat must not probe the provider it names.
  */
 int device_find_by_node(
     int node,

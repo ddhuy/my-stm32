@@ -30,20 +30,6 @@ const void *dm_fdt(void)
 
 
 /**
- * The blob, if the device has a node in one.
- */
-static const void *dev_fdt(
-    const struct udevice *dev
-)
-{
-    if (dev->node == DEV_NODE_NONE)
-        return NULL;
-
-    return dm_fdt();
-}
-
-
-/**
  * See dm/read.h.
  */
 const void *dev_read_prop(
@@ -52,7 +38,7 @@ const void *dev_read_prop(
     int *lenp
 )
 {
-    const void *fdt = dev_fdt(dev);
+    const void *fdt = dm_fdt();
 
     if (!fdt)
         return NULL;
@@ -70,7 +56,7 @@ int dev_read_u32(
     u32 *val
 )
 {
-    const void *fdt = dev_fdt(dev);
+    const void *fdt = dm_fdt();
 
     if (!fdt)
         return -ENODEV;
@@ -120,7 +106,7 @@ int dev_read_addr_index(
     uintptr_t *addr
 )
 {
-    const void *fdt = dev_fdt(dev);
+    const void *fdt = dm_fdt();
 
     if (!fdt)
         return -ENODEV;
@@ -159,7 +145,7 @@ int dev_read_phandle_with_args(
     struct fdt_phandle_args *out
 )
 {
-    const void *fdt = dev_fdt(dev);
+    const void *fdt = dm_fdt();
 
     if (!fdt)
         return -ENODEV;

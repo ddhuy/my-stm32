@@ -8,120 +8,6 @@
 
 
 /**
- * Both ways of binding end here. The device joins its uclass first, so
- * that its post_bind (a bus binding its children) finds it complete; the
- * parent's child_post_bind runs last, when the child is fully bound. On a
- * failure after the uclass took the device, it stays there: the heap
- * cannot free, and the uclass has no remove.
- */
-static int device_bind_common(
-    struct udevice *parent,
-    const struct driver *driver,
-    const char *name,
-    void *plat,
-    int node,
-    uintptr_t driver_data,
-    struct udevice **devp
-)
-{
-    struct udevice *dev = calloc(1, sizeof(struct udevice));
-
-    if (!dev)
-        return -ENOMEM;
-
-    dev->name = name;
-    dev->driver = driver;
-    dev->plat = plat;
-    dev->node = node;
-    dev->driver_data = driver_data;
-    dev->parent = parent;
-
-    /* From the device tree: of_to_plat fills it at probe */
-    if (node != DEV_NODE_NONE && driver->plat_auto > 0)
-    {
-        dev->plat = calloc(1, driver->plat_auto);
-
-        if (!dev->plat)
-            return -ENOMEM;
-    }
-
-    /* Under a parent from the tree: its uclass fills it in child_post_bind */
-    const struct uclass_driver *parent_uc_drv =
-        parent ? device_get_uclass_driver(parent) : NULL;
-
-    if (parent_uc_drv && parent_uc_drv->per_child_plat_auto > 0)
-    {
-        dev->parent_plat = calloc(1, parent_uc_drv->per_child_plat_auto);
-
-        if (!dev->parent_plat)
-            return -ENOMEM;
-    }
-
-    int ret = uclass_add_device(dev);
-
-    /* The device is lost on this path: the heap cannot free */
-    if (ret)
-        return ret;
-
-    /* Never NULL: uclass_add_device() checked it */
-    const struct uclass_driver *uc_drv = device_get_uclass_driver(dev);
-
-    if (uc_drv->post_bind)
-    {
-        ret = uc_drv->post_bind(dev);
-
-        if (ret)
-            return ret;
-    }
-
-    if (parent_uc_drv && parent_uc_drv->child_post_bind)
-    {
-        ret = parent_uc_drv->child_post_bind(dev);
-
-        if (ret)
-            return ret;
-    }
-
-    if (devp)
-        *devp = dev;
-
-    return SUCCESS;
-}
-
-
-/**
- * The driver is looked up before anything is allocated, so a device without
- * a driver costs no heap. The board's plat is in flash; the cast only
- * drops const from the type: a driver writes only plat it allocated
- * (plat_auto), which a device from a device_info never has.
- */
-int device_bind(
-    const struct device_info *info,
-    struct udevice **devp
-)
-{
-    const struct driver *driver = driver_find(info->driver);
-
-    if (!driver)
-        return -ENOENT;
-
-    struct udevice *dev;
-    int ret = device_bind_common(NULL, driver, info->name,
-                                 (void *)info->plat, DEV_NODE_NONE, 0, &dev);
-
-    if (ret)
-        return ret;
-
-    /* Waiting for device_set_parent(); refused by probe until then */
-    dev->orphan = (info->parent != NULL);
-
-    *devp = dev;
-
-    return SUCCESS;
-}
-
-
-/**
  * "okay" (or "ok", the older spelling) or no status at all: enabled.
  */
 static bool node_enabled(
@@ -166,7 +52,11 @@ static const struct driver *node_match(
 
 /**
  * Nothing is allocated for a node that is disabled or has no driver: the
- * checks come first.
+ * checks come first. The device joins its uclass before the hooks run, so
+ * that its post_bind (a bus binding its children) finds it complete; the
+ * parent's child_post_bind runs last, when the child is fully bound. On a
+ * failure after the uclass took the device, it stays there: the heap
+ * cannot free, and the uclass has no remove.
  */
 int device_bind_node(
     struct udevice *parent,
@@ -190,29 +80,65 @@ int device_bind_node(
     if (!name)
         name = fdt_get_name(fdt, node);
 
-    return device_bind_common(parent, driver, name, NULL, node, data, devp);
-}
+    struct udevice *dev = calloc(1, sizeof(struct udevice));
 
+    if (!dev)
+        return -ENOMEM;
 
-/**
- * Only the link that closes a cycle can create one, and at that moment
- * the rest of it is already linked, so walking up from the parent finds
- * 'dev'. The walk ends: there is no cycle before this link.
- */
-int device_set_parent(
-    struct udevice *dev,
-    struct udevice *parent,
-    const void *parent_plat
-)
-{
-    for (const struct udevice *up = parent; up; up = up->parent)
-        if (up == dev)
-            return -EINVAL;
-
+    dev->name = name;
+    dev->driver = driver;
+    dev->node = node;
+    dev->driver_data = data;
     dev->parent = parent;
-    /* The board's, in flash: see device_bind() for the cast */
-    dev->parent_plat = (void *)parent_plat;
-    dev->orphan = false;
+
+    /* of_to_plat fills it at probe */
+    if (driver->plat_auto > 0)
+    {
+        dev->plat = calloc(1, driver->plat_auto);
+
+        if (!dev->plat)
+            return -ENOMEM;
+    }
+
+    /* Under a parent: its uclass fills it in child_post_bind */
+    const struct uclass_driver *parent_uc_drv =
+        parent ? device_get_uclass_driver(parent) : NULL;
+
+    if (parent_uc_drv && parent_uc_drv->per_child_plat_auto > 0)
+    {
+        dev->parent_plat = calloc(1, parent_uc_drv->per_child_plat_auto);
+
+        if (!dev->parent_plat)
+            return -ENOMEM;
+    }
+
+    int ret = uclass_add_device(dev);
+
+    /* The device is lost on this path: the heap cannot free */
+    if (ret)
+        return ret;
+
+    /* Never NULL: uclass_add_device() checked it */
+    const struct uclass_driver *uc_drv = device_get_uclass_driver(dev);
+
+    if (uc_drv->post_bind)
+    {
+        ret = uc_drv->post_bind(dev);
+
+        if (ret)
+            return ret;
+    }
+
+    if (parent_uc_drv && parent_uc_drv->child_post_bind)
+    {
+        ret = parent_uc_drv->child_post_bind(dev);
+
+        if (ret)
+            return ret;
+    }
+
+    if (devp)
+        *devp = dev;
 
     return SUCCESS;
 }
@@ -220,7 +146,8 @@ int device_set_parent(
 
 /**
  * The parent is probed first, so the recursion goes up one generation per
- * call (device_set_parent() refuses a cycle, which would never end).
+ * call; it ends at the top: a parent is the node a device is nested in,
+ * so there is no cycle.
  * The flag is set last, so a device whose probe failed is never marked
  * ready, not even when only post_probe failed. Its private, uclass and
  * parent data are kept for the retry: the heap cannot free, and allocating
@@ -237,16 +164,12 @@ int device_probe(
     if (dev->probed)
         return SUCCESS;
 
-    /* Its parent is missing or was refused: it cannot be reached */
-    if (dev->orphan)
-        return -ENODEV;
-
     /*
      * Its node into its plat, first: the parent's probe does not need it,
      * and a node that cannot be read costs the parent nothing. Run again
      * on a retry; reading the blob twice gives the same plat.
      */
-    if (dev->node != DEV_NODE_NONE && dev->driver->of_to_plat)
+    if (dev->driver->of_to_plat)
     {
         int ret = dev->driver->of_to_plat(dev);
 

@@ -239,30 +239,28 @@ driver in drivers/clk/ since item 3.
   only: MINIBOOT_<FILE>_H.
 
 ## Driver model (as built)
-Decisions: the devices come from the board's device tree (item 5e);
-drivers and uclass drivers are collected by the linker (KEEP sections
-.dm_drivers and .dm_uclasses in link.ld; .dm_devices, the C table, is
-still supported but empty); a driver's plat struct (include/platdata/)
-is what its of_to_plat fills; each uclass stores its devices in a fixed
+Decisions: the devices come only from the board's device tree (item
+5e; the C table was removed after it); drivers and uclass drivers are
+collected by the linker (KEEP sections .dm_drivers and .dm_uclasses in
+link.ld); a driver's plat struct (include/platdata/) is what its
+of_to_plat fills; each uclass stores its devices in a fixed
 array (UCLASS_MAX_DEVICES), to become a linked list later.
 
 - DM_DRIVER(name) = { .name, .id, .of_match, .of_to_plat, .probe, .ops,
-  .plat_auto, .priv_auto } in the driver's .c file. DM_DEVICE(name) =
-  { .name, .driver, .plat, .parent, .parent_plat } (the C table; no rows
-  left since item 5e).
-- dm_init() binds the device tree first (see Device tree below), then
-  every DM_DEVICE: driver_find() by name, calloc a struct udevice, add
-  it to the driver's uclass. No hardware is touched. A failed entry is
-  reported and skipped. Then a second pass links the rows' children to
-  parents (see Parent and child below). Returns uclass_device_count().
+  .plat_auto, .priv_auto } in the driver's .c file; .name is only
+  printed (no lookup by driver name since the C table went).
+- dm_init() binds the device tree (see Device tree below): every
+  enabled node with a driver, calloc a struct udevice, add it to the
+  driver's uclass. No hardware is touched. A failed node is reported and
+  skipped. Returns uclass_device_count().
 - uclass_find_device(id, index) only looks up. uclass_get_device() also
   calls device_probe(): allocate priv (priv_auto bytes), call the driver's
   probe, set `probed` last. Probe runs once per device, on first use.
   uclass_find_device_by_name() / uclass_get_device_by_name() do the same by
-  name. device_find_by_name() searches every uclass: device names are
-  unique across the system (two identical sensors need gyro0 / gyro1).
-- plat: from the tree, plat_auto bytes on the heap filled by of_to_plat
-  (from a C row, the board's constant data in flash); priv is the
+  name. Device names are unique across the system (DT labels are; two
+  identical sensors need gyro0 / gyro1). device_find_by_node() searches
+  every uclass for the device of a node (phandle resolution).
+- plat: plat_auto bytes on the heap, filled by of_to_plat; priv is the
   driver's own data on the heap.
 - A uclass defines an ops table (struct serial_ops in serial.h, struct
   gpio_ops in gpio.h) and generic functions (serial-uclass.c,
@@ -381,8 +379,10 @@ array (UCLASS_MAX_DEVICES), to become a linked list later.
   and MOSI are set up by the board (spi_pins_setup() in board_init()).
   The SPI_CPOL / SPI_CPHA bits are translated, not copied, though they
   match CR1 on the STM32.
-- Parent and child (item 4 Part B; the design is mine, chosen over the
-  guide's "bind children in pass 2"): a row names its parent by string
+- Parent and child (item 4 Part B; HISTORY: removed with the C table
+  after item 5e, where a parent is the node a device is nested in, set
+  at bind; the design is mine, chosen over the guide's "bind children in
+  pass 2"): a row names its parent by string
   (.parent) and gives .parent_plat, whose type the parent's uclass
   defines. dm_init() pass 1 binds every row (a row naming a parent
   starts as an orphan); pass 2, when every device exists, calls
@@ -441,7 +441,8 @@ array (UCLASS_MAX_DEVICES), to become a linked list later.
   offset must be measured at boot, not written into the code.
 - Uclass hooks and data (item 5a Part B): struct uclass_driver adds
   pre_probe, post_probe and per_device_auto; struct udevice adds
-  uclass_priv. device_probe(): orphan, parent, priv, uclass_priv (same
+  uclass_priv. device_probe(): (of_to_plat since 5e), parent, priv,
+  uclass_priv (same
   keep-for-retry rule), pre_probe, the driver's probe, post_probe,
   probed = true; any error stops it and the device stays unprobed (a
   retry runs everything again, the driver's probe too). The core
@@ -507,7 +508,7 @@ array (UCLASS_MAX_DEVICES), to become a linked list later.
     that matches, else -ENODEV (skipped quietly: clk-hse, a fixed-clock,
     has no driver). Named after its label (/__symbols__, dtc -@), else
     its node name: board.h's names stayed (U-Boot names devices by node
-    name). device_bind_common() (both paths): udevice, plat_auto,
+    name). Then: udevice, plat_auto,
     parent_plat (the parent's uclass per_child_plat_auto), uclass add,
     own post_bind, parent's uclass child_post_bind. dev->node
     (DEV_NODE_NONE for a C row).
@@ -530,8 +531,8 @@ array (UCLASS_MAX_DEVICES), to become a linked list later.
     spi_slave_plat from reg (CS), spi-max-frequency, spi-cpol, spi-cpha;
     spi_child_pre_probe() then checks and copies it as before. The bus's
     cs-gpios = <&gpioc 1 GPIO_ACTIVE_LOW> (anything but active low
-    -EINVAL). A child from the tree has its parent at bind: pass 2 and
-    the orphan flag serve only C rows now.
+    -EINVAL). A child has its parent at bind: no second pass, no
+    orphans, and no cycle can exist (nesting is a tree).
   - Uclass device order is now the tree's (gpioa, gpioc, gpiof, gpiog;
     systick bound first, armv7-m.dtsi being included first).
 - The order of entries in a linker section is not guaranteed; never assume
@@ -728,7 +729,15 @@ implemented at once on request.
   l3gd20's WHO_AM_I check); clk and gpio uclasses one helper each; spi
   uclass the child binding. Untouched: start.S, fault.c, link.ld,
   lib/ but fdt.c, console.c, systime.c, the gyro, serial and timer
-  uclasses, every platdata struct. Item 5e done.
+  uclasses, every platdata struct. Item 5e done (d477536).
+- After 5e, the C-table path removed (decided: no user left, and
+  unexercised code cannot be trusted): struct device_info, DM_DEVICE,
+  .dm_devices in link.ld, device_bind(), device_set_parent(),
+  dev->orphan, dm_init()'s two passes, device_find_by_name(),
+  driver_find(), DEV_NODE_NONE, the "(missing)" column; the shared bind
+  helper folded into device_bind_node(); l3gd20 always has its chip.
+  Same boot on lm3s (QEMU), same 9 devices and values on the host bind
+  test. Text: STM32 12852 -> 12260, LM3S 8812 -> 8228.
 - Steps 1-3: startup, linker script, Makefile, clock and GPIO drivers,
   LED heartbeat.
 - Step 4: polled USART driver and console; banner and echo.
@@ -750,11 +759,11 @@ Known limitations:
 - free() does nothing, so a device that fails after allocation is leaked.
 - "Serial device 0" is the console and "timer device 0" the system timer;
   no way yet to choose among several (5c: /aliases, chosen).
-- Bind errors printed before console_init() are lost (an orphan still
-  shows as "(missing)" in the device list).
-- The core accepts any parent: a gyro row naming gpioc is linked, gpioc
-  is probed by the gyro, l3gd20_probe runs; only spi_xfer() refuses it
-  (child_pre_probe cannot: it belongs to the parent's uclass).
+- Bind errors printed before console_init() are lost (a device that did
+  not bind is simply missing from the device list).
+- A child node is bound only if its parent's uclass scans children in
+  post_bind (only SPI does): a gyro node nested in gpioc would never be
+  bound, silently. spi_xfer() still checks the parent's uclass.
 - No list of children, no device removal, no root device.
 - "Gyro device 0" is the gyro the main loop prints; the line is in
   generic main.c, so lm3s links gyro_read too (until item 5c).
@@ -776,9 +785,8 @@ Known limitations:
 - Item 5a was not fully exercised: Part A's gdb check and experiments,
   Part B's rotation / boot pause / gdb / experiments, Part C's gdb
   checks and experiments (its board run passed with 5e).
-- The C-table path (DM_DEVICE, device_info, dm_init pass 2, the orphan
-  flag) is still in the core with no rows (like U-Boot's
-  U_BOOT_DRVINFO): kept, unexercised.
+- No device can be declared outside the tree (the C table, U-Boot's
+  U_BOOT_DRVINFO, was removed: no user).
 - Device names are DT labels (our choice, for board.h's lookups); a node
   without a label gets its node name ("gpio@40020000"). U-Boot uses the
   node name.

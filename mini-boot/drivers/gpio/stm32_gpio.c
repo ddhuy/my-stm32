@@ -241,8 +241,7 @@ static const struct gpio_ops stm32_gpio_ops = {
 
 /**
  * The port's node into its plat: the base from reg, the clock from
- * clocks = <&rcc ID> (the provider's device name and the id, as a C row
- * would give them).
+ * clocks = <&rcc ID> (the provider's device name and the id).
  *
  * Returns 0 or the error from reading the node.
  */

@@ -17,9 +17,8 @@
 /**
  * At the bind of a slave from the device tree, under a bus of this uclass:
  * its node's SPI properties into its parent_plat (struct spi_slave_plat,
- * allocated by the core, per_child_plat_auto). The same struct a C row
- * gives, so spi_child_pre_probe() checks both the same way. 'dev' is the
- * slave.
+ * allocated by the core, per_child_plat_auto), which
+ * spi_child_pre_probe() then checks and copies. 'dev' is the slave.
  *
  * Returns 0, or -EINVAL if the node has no reg (the chip select) or no
  * spi-max-frequency.
@@ -29,9 +28,6 @@ static int spi_child_post_bind(
 )
 {
     struct spi_slave_plat *plat = dev->parent_plat;
-
-    if (dev->node == DEV_NODE_NONE)
-        return SUCCESS;
 
     if (dev_read_u32(dev, "reg", &plat->cs))
         return -EINVAL;

@@ -9,9 +9,8 @@ struct udevice;
 
 /*
  * Reading a device's device tree node, for a driver's of_to_plat (U-Boot's
- * dev_read_*). Every function reads 'dev->node' in the board's blob; on a
- * device bound from a device_info (no node) they fail with -ENODEV, or
- * return NULL / false.
+ * dev_read_*). Every function reads 'dev->node' in the board's blob; if
+ * the blob is not valid they fail with -ENODEV, or return NULL / false.
  */
 
 /* Most argument cells a phandle reference may have (<&gpioc 1 0>: 2) */
@@ -40,7 +39,7 @@ const void *dm_fdt(void);
 
 /**
  * The value of the property 'name' of the device's node, its length in
- * '*lenp' (if not NULL). NULL if absent or the device has no node.
+ * '*lenp' (if not NULL). NULL if absent (or no valid blob).
  */
 const void *dev_read_prop(
     const struct udevice *dev,
@@ -52,7 +51,7 @@ const void *dev_read_prop(
 /**
  * The property 'name' as one cell.
  *
- * Returns 0 and the value in '*val'; -ENODEV without a node, -ENOENT if
+ * Returns 0 and the value in '*val'; -ENODEV without a blob, -ENOENT if
  * absent, -EINVAL if not exactly one cell.
  */
 int dev_read_u32(
@@ -77,7 +76,7 @@ bool dev_read_bool(
  * as the spec says): the root for a top-level device. Only one-cell
  * (32-bit) addresses are accepted.
  *
- * Returns 0 and the address in '*addr'; -ENODEV without a node; -ENOENT
+ * Returns 0 and the address in '*addr'; -ENODEV without a blob; -ENOENT
  * without reg or past its end; -EINVAL if an address is not one cell.
  */
 int dev_read_addr_index(
@@ -93,7 +92,7 @@ int dev_read_addr_index(
  * the 'cells_name' property (#clock-cells) of that node. The entries may
  * have different lengths, so the list is walked from the start.
  *
- * Returns 0 and the entry in '*out'; -ENODEV without a node; -ENOENT if
+ * Returns 0 and the entry in '*out'; -ENODEV without a blob; -ENOENT if
  * the list is absent, too short, or a phandle points nowhere; -EINVAL if
  * that node has no 'cells_name' or more than FDT_MAX_PHANDLE_ARGS.
  */

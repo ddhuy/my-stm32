@@ -144,8 +144,7 @@ static int l3gd20_write(
  * straight out.
  *
  * The device tree says which chip it is (driver_data, from the matched
- * compatible string), so WHO_AM_I must be that chip's. A device from a
- * C row has no driver_data: either chip is accepted.
+ * compatible string), so WHO_AM_I must be that chip's.
  *
  * Returns 0; the error from the bus; -ENODEV if WHO_AM_I is not the
  * expected chip's (another chip, or none: an absent chip reads as 0x00 or
@@ -168,8 +167,7 @@ static int l3gd20_probe(
     ret = l3gd20_read(dev, L3GD20_WHO_AM_I, &val, 1);
     if (ret)
         return ret;
-    if (chip ? val != chip->who_am_i :
-               val != ID_L3GD20 && val != ID_I3G4250D)
+    if (val != chip->who_am_i)
         return -ENODEV;
 
     ret = l3gd20_read(dev, L3GD20_CTRL_REG4, &val, 1);
